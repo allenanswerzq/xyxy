@@ -1,0 +1,21 @@
+qian_cc_library(
+  NAME
+    chunk
+  HDRS
+    "chunk.h"
+  COPTS
+    ${QIAN_DEFAULT_COPTS}
+  PUBLIC
+)
+
+qian_cc_test(
+  NAME
+    chunk_test
+  SRCS
+    "chunk_test.cc"
+  COPTS
+    ${QIAN_TEST_COPTS}
+  DEPS
+    qian::chunk
+    gmock_main
+)
