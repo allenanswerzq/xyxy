@@ -14,7 +14,7 @@ class Disassembler {
   int DisassembleInst(int offset);
 
  private:
-  Chunk* chunk_;  // not owned
+  Chunk* chunk_; // not owned
   string name_;
 };
 
@@ -31,17 +31,10 @@ void Disassembler::DisassembleChunk() {
 }
 
 int Disassembler::DisassembleInst(int offset) {
-  printf("%04d ", offset);
-  uint8_t inst = chunk_->GetCode(offset);
-  switch (inst) {
-    case OP_RETURN: {
-      printf("OP_RETURN\n");
-      return offset + 1;
-    }
-    default: {
-      printf("Unknow opcode %d\n", inst);
-    }
-  }
+  printf("%4d ", offset);
+  Inst inst = Inst(chunk_->GetCode(offset));
+  inst.ShowInfo();
+  return offset + inst.Length();
 }
 
 void DisassembleChunk(Chunk* chunk, string& name) {

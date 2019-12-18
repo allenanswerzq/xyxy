@@ -1,8 +1,9 @@
 qian_cc_library(
   NAME
-    chunk
+    base
   HDRS
     "chunk.h"
+    "vector.h"
   COPTS
     ${QIAN_DEFAULT_COPTS}
   PUBLIC
@@ -16,6 +17,6 @@ qian_cc_test(
   COPTS
     ${QIAN_TEST_COPTS}
   DEPS
-    qian::chunk
+    qian::base
     gmock_main
 )

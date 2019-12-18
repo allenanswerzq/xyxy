@@ -8,5 +8,6 @@
 #include <string>
 
 using std::string;
+using Value = double;
 
 #endif  // QIAN_BASE_H_

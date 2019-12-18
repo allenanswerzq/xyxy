@@ -2,27 +2,29 @@
 #define QIAN_CHUNK_H_
 
 #include "base.h"
+#include "vector.h"
 
 class Chunk {
  public:
   Chunk();
   virtual ~Chunk();
+
   void WriteChunk(uint8_t byte);
   uint8_t GetCode(int p);
-  uint32_t Size() { return count_; }
 
-  void grow_chunk();
+  uint32_t Size() { return code_->Size(); }
+
+  int AddConstant(Value value);
 
  private:
-  int count_;
-  int capacity_;
-  uint8_t* code_;
+  Vector<uint8_t>* code_;
+  Vector<Value>* value_array_;
+  Vector<int>* lines_;
 };
 
 Chunk::Chunk() {
-  capacity_ = 0;
-  count_ = 0;
-  code_ = nullptr;
+  code_ = new Vector<uint8_t>();
+  value_array_  = new Vector<Value>();
 }
 
 Chunk::~Chunk() {
@@ -30,25 +32,26 @@ Chunk::~Chunk() {
     free(code_);
     code_ = nullptr;
   }
-}
-
-void Chunk::grow_chunk() {
-  uint32_t size = (capacity_ < 8 ? 8 : 2 * capacity_);
-  capacity_ = size;
-  void* mem = realloc(code_, capacity_);
-  code_ = static_cast<uint8_t*>(mem);
+  if (value_array_) {
+    free(value_array_);
+    value_array_ = nullptr;
+  }
 }
 
 void Chunk::WriteChunk(uint8_t byte) {
-  if (capacity_ < count_ + 1) {
-    grow_chunk();
-  }
-  code_[count_++] = byte;
+  assert(code_);
+  code_->Write(byte);
 }
 
-uint8_t Chunk::GetCode(int p) {
-  assert(code_ && p < capacity_);
-  return code_[p];
+uint8_t Chunk::GetCode(int index) {
+  assert(code_);
+  return code_->Get(index);
+}
+
+int Chunk::AddConstant(Value value) {
+  assert(value_array_);
+  value_array_->Write(value);
+  return value_array_->Size() - 1;
 }
 
 #endif  // QIAN_CHUNK_H_
