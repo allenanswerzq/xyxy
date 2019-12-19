@@ -4,42 +4,45 @@
 #include "chunk.h"
 #include "inst.h"
 
-class Disassembler {
+namespace qian {
+class Disambler {
  public:
-  Disassembler(Chunk* chunk, string& name);
-  virtual ~Disassembler() {}
+  Disambler(Chunk* chunk, const string& name);
+  virtual ~Disambler() {}
 
-  void DisassembleChunk();
+  void DisambleChunk();
 
-  int DisassembleInst(int offset);
+  int DisambleInst(int offset);
 
  private:
   Chunk* chunk_; // not owned
   string name_;
 };
 
-Disassembler::Disassembler(Chunk* chunk, string& name) {
+Disambler::Disambler(Chunk* chunk, const string& name) {
   chunk_ = chunk;
   name_ = name;
 }
 
-void Disassembler::DisassembleChunk() {
-  printf("== %s ==", name_.c_str());
-  for (int offset = 0; offset < chunk_->Size();) {
-    offset = DisassembleInst(offset);
+void Disambler::DisambleChunk() {
+  printf("== %s ==\n", name_.c_str());
+  for (int offset = 0; offset < chunk_->Size(); ) {
+    offset = DisambleInst(offset);
   }
 }
 
-int Disassembler::DisassembleInst(int offset) {
-  printf("%4d ", offset);
-  Inst inst = Inst(chunk_->GetCode(offset));
-  inst.ShowInfo();
-  return offset + inst.Length();
+int Disambler::DisambleInst(int offset) {
+  printf("%04d ", offset);
+  Inst* inst = GetInst(chunk_, offset);
+  inst->DebugInfo();
+  offset += inst->Length();
+  return offset;
 }
 
-void DisassembleChunk(Chunk* chunk, string& name) {
-  Disassembler dis(chunk, name);
-  dis.DisassembleChunk();
+void DisambleChunk(Chunk* chunk, const string& name) {
+  Disambler dis(chunk, name);
+  dis.DisambleChunk();
 }
+} // namespace qian
 
 #endif  // QIAN_DEBUG_H_

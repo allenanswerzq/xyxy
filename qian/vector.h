@@ -1,11 +1,14 @@
 #ifndef QIAN_VECTOR_H_
 #define QIAN_VECTOR_H_
 
+namespace qian {
+
 template <class T>
 class Vector {
  public:
   Vector();
   virtual ~Vector();
+
   void Write(T value);
   T Get(int index);
   uint32_t Size() { return count_; }
@@ -35,10 +38,9 @@ Vector<T>::~Vector() {
 
 template <class T>
 void Vector<T>::grow_vector() {
-  uint32_t size = (capacity_ < 8 ? 8 : 2 * capacity_);
-  capacity_ = size;
+  capacity_ = (capacity_ < 8 ? 8 : 2 * capacity_);
   void* mem = realloc(container_, capacity_);
-  container_ = static_cast<uint8_t*>(mem);
+  container_ = static_cast<T*>(mem);
 }
 
 template <class T>
@@ -54,5 +56,6 @@ T Vector<T>::Get(int index) {
   assert(container_ && index < capacity_);
   return container_[index];
 }
+} // namespace qian
 
 #endif // QIAN_VECTOR_H_

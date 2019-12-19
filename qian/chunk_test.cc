@@ -2,7 +2,7 @@
 
 #include "chunk.h"
 
-namespace {
+namespace qian {
 
 TEST(TestChunkSmall, TestChunkWrite) {
   Chunk chunk;
@@ -25,4 +25,4 @@ TEST(TestChunkBig, TestChunkWrite) {
   }
 }
 
-}
+} // namespace qian

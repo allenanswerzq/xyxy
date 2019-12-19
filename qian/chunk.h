@@ -4,6 +4,7 @@
 #include "base.h"
 #include "vector.h"
 
+namespace qian {
 class Chunk {
  public:
   Chunk();
@@ -52,6 +53,7 @@ int Chunk::AddConstant(Value value) {
   assert(value_array_);
   value_array_->Write(value);
   return value_array_->Size() - 1;
+}
 }
 
 #endif  // QIAN_CHUNK_H_
