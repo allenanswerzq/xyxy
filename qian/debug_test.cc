@@ -1,14 +1,13 @@
 #include "gtest/gtest.h"
 
 #include "chunk.h"
-#include "inst.h"
 #include "debug.h"
 
 namespace qian {
 
 TEST(TestReturnInst, TestDisassembler) {
   Chunk chunk;
-  chunk.WriteChunk(0);
+  chunk.WriteByte(0);
 
   ::testing::internal::CaptureStdout();
   DisambleChunk(&chunk, "test_op");

@@ -12,6 +12,7 @@ class Vector {
   void Write(T value);
   T Get(int index);
   uint32_t Size() { return count_; }
+  T* Address() { return container_; }
 
  private:
   void grow_vector();
@@ -31,7 +32,7 @@ Vector<T>::Vector() {
 template <class T>
 Vector<T>::~Vector() {
   if (container_) {
-    free(container_);
+    delete container_;
     container_ = nullptr;
   }
 }
@@ -56,6 +57,6 @@ T Vector<T>::Get(int index) {
   assert(container_ && index < capacity_);
   return container_[index];
 }
-} // namespace qian
+}  // namespace qian
 
 #endif // QIAN_VECTOR_H_

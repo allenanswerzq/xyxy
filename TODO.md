@@ -1,5 +1,10 @@
-Add logging
 
-Add docker
+### TODO:
+  1. Add logging
 
-Add cpplint
+  2. Add docker
+
+  3. Add cpplint
+
+  4. Add benchmark
+

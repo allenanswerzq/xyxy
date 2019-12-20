@@ -8,6 +8,7 @@ qian_cc_library(
     "inst.h"
     "debug.h"
     "status.h"
+    "stack.h"
   SRCS
     "status.cc"
   COPTS
@@ -32,6 +33,30 @@ qian_cc_test(
     debug_test
   SRCS
     "debug_test.cc"
+  COPTS
+    ${QIAN_TEST_COPTS}
+  DEPS
+    qian::base
+    gmock_main
+)
+
+qian_cc_test(
+  NAME
+    stack_test
+  SRCS
+    "stack_test.cc"
+  COPTS
+    ${QIAN_TEST_COPTS}
+  DEPS
+    qian::base
+    gmock_main
+)
+
+qian_cc_test(
+  NAME
+    vector_test
+  SRCS
+    "vector_test.cc"
   COPTS
     ${QIAN_TEST_COPTS}
   DEPS
