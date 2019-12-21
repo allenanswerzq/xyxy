@@ -1,6 +1,8 @@
 #ifndef QIAN_VECTOR_H_
 #define QIAN_VECTOR_H_
 
+#include "base.h"
+
 namespace qian {
 
 template <class T>
@@ -17,8 +19,8 @@ class Vector {
  private:
   void grow_vector();
 
-  int count_;
-  int capacity_;
+  uint32_t count_;
+  uint32_t capacity_;
   T* container_;
 };
 
@@ -32,7 +34,7 @@ Vector<T>::Vector() {
 template <class T>
 Vector<T>::~Vector() {
   if (container_) {
-    delete container_;
+    free(container_);
     container_ = nullptr;
   }
 }
@@ -40,13 +42,14 @@ Vector<T>::~Vector() {
 template <class T>
 void Vector<T>::grow_vector() {
   capacity_ = (capacity_ < 8 ? 8 : 2 * capacity_);
-  void* mem = realloc(container_, capacity_);
+  void* mem = realloc(container_, capacity_ * sizeof(T));
+  assert(mem);
   container_ = static_cast<T*>(mem);
 }
 
 template <class T>
 void Vector<T>::Write(T value) {
-  if (capacity_ < count_ + 1) {
+  if (count_ + 1 > capacity_) {
     grow_vector();
   }
   container_[count_++] = value;

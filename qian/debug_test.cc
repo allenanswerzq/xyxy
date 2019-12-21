@@ -1,11 +1,9 @@
 #include "gtest/gtest.h"
-
-#include "chunk.h"
 #include "debug.h"
 
 namespace qian {
 
-TEST(TestReturnInst, TestDisassembler) {
+TEST(Return, TestDisassembler) {
   Chunk chunk;
   chunk.WriteByte(0);
 

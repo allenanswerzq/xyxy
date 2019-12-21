@@ -69,3 +69,9 @@ if(BUILD_TESTING)
 endif()
 
 add_subdirectory(qian)
+
+# add_custom_target(graphviz ALL
+#   COMMAND ${CMAKE_COMMAND} "--graphviz=qian.dot" .
+#   COMMAND dot -Tpng qian.dot -o qian.png
+#   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+# )
