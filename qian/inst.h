@@ -10,7 +10,7 @@ namespace qian {
 typedef enum {
   OP_RETURN,
   OP_CONSTANT,
-} OPCODE;
+} OpCode;
 
 class Inst {
  public:
@@ -29,6 +29,8 @@ class Inst {
   void DebugInfo() { debug_info_(this); }
 
   void Opcode(uint8_t opcode) { opcode_ = opcode; }
+  uint8_t Opcode() { return opcode_; }
+
   void Operand(Value operand) { operands_.Write(operand); }
   Vector<Value>* Operands() { return &operands_; }
 
@@ -40,7 +42,7 @@ class Inst {
   FuncDebugInfo debug_info_;
 };
 
-static Vector<Inst*>* Global() {
+static Vector<Inst*>* GlobalInst() {
   static Vector<Inst*>* registry_;
   if (registry_ == nullptr) {
     registry_ = new Vector<Inst*> ();
@@ -55,44 +57,43 @@ Inst* DispathInst(Chunk* chunk, uint8_t offset);
 
 namespace register_inst {
 
-using ::qian::Inst;
-using ::qian::Status;
-
 struct InstDefWrapper {
-  InstDefWrapper() {
-    inst_ = new Inst();
-    ::qian::Global()->Write(inst_);
-  }
+  InstDefWrapper(const string& name) {
+    inst = new ::qian::Inst();
+    inst->Name(name);
+    printf("register inst...%s\n", inst->Name().c_str());
+    ::qian::GlobalInst()->Write(inst);
+    }
   InstDefWrapper& Name(const string& name) {
-    inst_->Name(name);
+    inst->Name(name);
     return *this;
   }
   InstDefWrapper& Length(uint8_t len) {
-    inst_->Length(len);
+    inst->Length(len);
     return *this;
   }
   InstDefWrapper& Opcode(uint8_t opcode) {
-    inst_->Opcode(opcode);
+    inst->Opcode(opcode);
     return *this;
   }
   InstDefWrapper& Operand(uint8_t operand) {
-    inst_->Operand(operand);
+    inst->Operand(operand);
     return *this;
   }
-  InstDefWrapper& DebugInfo(const std::function<void(Inst*)>& f) {
-    inst_->DebugInfo(f);
+  InstDefWrapper& DebugInfo(const std::function<void(::qian::Inst*)>& f) {
+    inst->DebugInfo(f);
     return *this;
   }
  private:
-  Inst* inst_;
+  ::qian::Inst* inst;
 };
 
 } // namespace register_inst
 
-#define REGISTER_INST() REGISTER_INST_UNIQ_HELPER(__COUNTER__)
-#define REGISTER_INST_UNIQ_HELPER(ctr) REGISTER_INST_UNIQ(ctr)
-#define REGISTER_INST_UNIQ(ctr)                                 \
-  static ::register_inst::InstDefWrapper register_inst##ctr     \
-    __attribute__ ((unused)) = ::register_inst::InstDefWrapper()
+#define REGISTER_INST(name) REGISTER_INST_UNIQ_HELPER(__COUNTER__, name)
+#define REGISTER_INST_UNIQ_HELPER(ctr, name) REGISTER_INST_UNIQ(ctr, name)
+#define REGISTER_INST_UNIQ(ctr, name)                                 \
+  static ::register_inst::InstDefWrapper register_inst##ctr           \
+    __attribute__ ((unused)) = ::register_inst::InstDefWrapper(name)
 
 #endif  // QIAN_INST_H_

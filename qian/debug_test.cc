@@ -5,7 +5,7 @@ namespace qian {
 
 TEST(Return, TestDisassembler) {
   Chunk chunk;
-  chunk.WriteByte(0);
+  chunk.WriteByte(OP_RETURN);
 
   ::testing::internal::CaptureStdout();
   DisambleChunk(&chunk, "test_op");

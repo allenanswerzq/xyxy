@@ -14,7 +14,20 @@ Status VM::Run() {
 }
 
 Status VM::Run(Inst* inst) {
-
+  auto f = GlobalFunc()->Get(inst->Opcode());
+  return f(this);
 }
+
+REGISTER_FUNC()
+  .Name("OP_RETURN")
+  .Func([](VM* vm) {
+    return Status();
+  });
+
+REGISTER_FUNC()
+  .Name("OP_CONSTANT")
+  .Func([](VM* vm) {
+    return Status();
+  });
 
 }  // namespace qian

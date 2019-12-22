@@ -13,8 +13,9 @@ class Chunk {
   virtual ~Chunk();
 
   void WriteByte(uint8_t byte);
-  void WriteChunk(uint8_t byte, uint32_t ln);
-  void WriteChunk(uint8_t byte, Value value, uint32_t ln);
+  void WriteChunk(uint8_t byte, int ln);
+  void WriteChunk(uint8_t byte, int index, Value value);
+  void WriteChunk(uint8_t byte, int index, Value value, int ln);
   uint8_t GetByte(int index);
   uint8_t GetLine(int index);
 
@@ -27,7 +28,7 @@ class Chunk {
  private:
   Vector<uint8_t>* code_;
   Vector<Value>* value_array_;
-  Vector<uint32_t>* lines_;
+  Vector<int>* lines_;
 };
 
 } // namespace qian

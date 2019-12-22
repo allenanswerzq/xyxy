@@ -48,11 +48,9 @@ static Vector<InstRunFunc>* GlobalFunc() {
 
 namespace register_func {
 
-using ::qian::InstRunFunc;
-
 struct InstRunDefWrapper {
   InstRunDefWrapper() {}
-  InstRunDefWrapper& Func(const InstRunFunc& f) {
+  InstRunDefWrapper& Func(const ::qian::InstRunFunc& f) {
     ::qian::GlobalFunc()->Write(f);
     return *this;
   }
@@ -67,22 +65,7 @@ struct InstRunDefWrapper {
 #define REGISTER_FUNC() REGISTER_FUNC_UNIQ_HELPER(__COUNTER__)
 #define REGISTER_FUNC_UNIQ_HELPER(ctr) REGISTER_FUNC_UNIQ(ctr)
 #define REGISTER_FUNC_UNIQ(ctr)                                 \
-  static ::register_func::InstRunDefWrapper register_func##ctr     \
+  static ::register_func::InstRunDefWrapper register_func##ctr  \
     __attribute__ ((unused)) = ::register_func::InstRunDefWrapper()
-
-namespace qian {
-
-REGISTER_FUNC()
-  .Name("OP_RETURN")
-  .Func([](VM* vm) {
-    return Status();
-  });
-
-REGISTER_FUNC()
-  .Name("OP_CONSTANT")
-  .Func([](VM* vm) {
-    return Status();
-  });
-}  // namespace qian
 
 #endif  // QIAN_VM_H_
