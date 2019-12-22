@@ -1,0 +1,93 @@
+qian_cc_library(
+  NAME
+    base
+  HDRS
+    "status.h"
+    "base.h"
+    "stack.h"
+    "vector.h"
+    "chunk.h"
+  SRCS
+    "chunk.cc"
+  COPTS
+    ${QIAN_DEFAULT_COPTS}
+  PUBLIC
+)
+
+qian_cc_library(
+  NAME
+    inst
+  HDRS
+    "vm.h"
+    "inst.h"
+    "debug.h"
+  SRCS
+    "inst.cc"
+    "debug.cc"
+    "vm.cc"
+  COPTS
+    ${QIAN_DEFAULT_COPTS}
+  PUBLIC
+)
+
+qian_cc_test(
+  NAME
+    chunk_test
+  SRCS
+    "chunk_test.cc"
+  COPTS
+    ${QIAN_TEST_COPTS}
+  DEPS
+    qian::base
+    gmock_main
+)
+
+qian_cc_test(
+  NAME
+    stack_test
+  SRCS
+    "stack_test.cc"
+  COPTS
+    ${QIAN_TEST_COPTS}
+  DEPS
+    qian::base
+    gmock_main
+)
+
+qian_cc_test(
+  NAME
+    vector_test
+  SRCS
+    "vector_test.cc"
+  COPTS
+    ${QIAN_TEST_COPTS}
+  DEPS
+    qian::base
+    gmock_main
+)
+
+qian_cc_test(
+  NAME
+    debug_test
+  SRCS
+    "debug_test.cc"
+  COPTS
+    ${QIAN_TEST_COPTS}
+  DEPS
+    qian::base
+    qian::inst
+    gmock_main
+)
+
+qian_cc_test(
+  NAME
+    vm_test
+  SRCS
+    "vm_test.cc"
+  COPTS
+    ${QIAN_TEST_COPTS}
+  DEPS
+    qian::base
+    qian::inst
+    gmock_main
+)
