@@ -32,12 +32,12 @@ TEST(PushDeath, TestStack) {
   }
 }
 
-TEST(DebugInfo, TestStack) {
+TEST(Dump, TestStack) {
   Stack<int, 4> stk;
   for (int i = 0; i < 4; i++) {
     stk.Push(i);
   }
-  stk.DebugInfo();
+  stk.Dump();
 }
 
 } // namespace qian

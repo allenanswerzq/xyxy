@@ -38,7 +38,7 @@ class Stack {
   }
 
   // Dump stack content.
-  void DebugInfo() {
+  void Dump() {
     for (T* idx = stk_; idx < top_; idx++) {
       printf("[ %g ]\n", *idx);
     }

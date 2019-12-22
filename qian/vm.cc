@@ -3,7 +3,7 @@
 namespace qian {
 
 Status VM::Run() {
-  for (;;) {
+  for (; pc_ < chunk_->Size(); ) {
     Inst* inst = DispathInst(chunk_, pc_);
 #ifndef NDEBUG
     disambler_->DisambleInst(inst);
@@ -11,6 +11,7 @@ Status VM::Run() {
     Run(inst);
     pc_ += inst->Length();
   }
+  return Status();
 }
 
 Status VM::Run(Inst* inst) {
@@ -21,12 +22,15 @@ Status VM::Run(Inst* inst) {
 REGISTER_FUNC()
   .Name("OP_RETURN")
   .Func([](VM* vm) {
+    vm->GetStack()->Dump();
     return Status();
   });
 
 REGISTER_FUNC()
   .Name("OP_CONSTANT")
   .Func([](VM* vm) {
+    // Push something onto the stack.
+    vm->GetStack()->Push(1.24);
     return Status();
   });
 

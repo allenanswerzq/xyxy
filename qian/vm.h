@@ -13,6 +13,7 @@ namespace qian {
 // VM class.
 class VM {
  public:
+  VM();
   VM(Chunk* chunk);
   ~VM() { if (stk_) delete stk_; }
 
@@ -32,6 +33,13 @@ class VM {
 inline VM::VM(Chunk* chunk) : chunk_(chunk) {
   stk_ = new Stack<Value, MAX_STACK> ();
   disambler_ = new Disambler(chunk, "default_vm");
+  pc_ = 0;
+}
+
+inline VM::VM() {
+  chunk_ = new Chunk();
+  stk_ = new Stack<Value, MAX_STACK> ();
+  disambler_ = new Disambler(chunk_, "default_vm");
   pc_ = 0;
 }
 

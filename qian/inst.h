@@ -61,7 +61,9 @@ struct InstDefWrapper {
   InstDefWrapper(const string& name) {
     inst = new ::qian::Inst();
     inst->Name(name);
+#ifndef NDEBUG
     printf("register inst...%s\n", inst->Name().c_str());
+#endif
     ::qian::GlobalInst()->Write(inst);
     }
   InstDefWrapper& Name(const string& name) {

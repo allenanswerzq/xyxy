@@ -1,10 +1,10 @@
+TODO:
 
-### TODO:
-  1. Add logging
+- Consider to add logging feature.
 
-  2. Add docker
+- Add a docker enviroment since valgrind has some issue running on latest osx so
+  that I can do memory leak check.
 
-  3. Add cpplint
+- Add cpplint for linting check.
 
-  4. Add benchmark
-
+- Add benchmark feature to test the speed of code.

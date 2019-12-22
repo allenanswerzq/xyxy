@@ -10,4 +10,6 @@
 using std::string;
 using Value = double;
 
+#define NDEBUG
+
 #endif  // QIAN_BASE_H_
