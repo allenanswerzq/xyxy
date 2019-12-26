@@ -5,7 +5,7 @@
 
 namespace qian {
 
-enum class TokenType {
+typedef enum {
   // Single character tokens.
   TOKEN_LEFT_PAREN,     // "("
   TOKEN_RIGHT_PAREN,    // ")"
@@ -55,16 +55,24 @@ enum class TokenType {
   TOKEN_NEWLINE,        // "\n"
   TOKEN_WHITESPACE,     // "white"
 
-  TOKEN_ERROR,           // error
-  TOKEN_EOF,             // "eof"
-
-};
+  TOKEN_ERROR,          // "error"
+  TOKEN_EOF,            // "eof"
+} TokenType;
 
 struct Token {
-  TokenType type;
-  int start;
-  int length;
-  int line;
+  TokenType type_;
+  int start_;
+  int length_;
+  int line_;
+};
+
+// This may looks ugly.
+struct ErrorToken : public Token {
+  TokenType type_;
+  int line_;
+  string msg_;
+  ErrorToken(TokenType type, int line, string msg)
+    : type_(type), line_(line), msg_(msg) {}
 };
 
 class Scanner {
@@ -76,14 +84,57 @@ class Scanner {
     line_ = 1;
   }
 
+  Token ScanToken();
+
  private:
+  bool at_end() {
+    return current_ == source_.size();
+  }
+
+  Token make_token(TokenType type) {
+    return Token{type, start_, current_ - start_ + 1, line_};
+  }
+
+  Token make_error_token(const string& msg) {
+    return ErrorToken(TOKEN_ERROR, line_, msg);
+  }
+
+  char advance() {
+    return source_[current_++];
+  }
+
+  char peek() {
+    return source_[current_];
+  }
+
+  char peek_next() {
+    return source_[current_ + 1];
+  }
+
+  string get_lexeme() {
+    return source_.substr(start_, current_ - start_ + 1);
+  }
+
+  bool match(char c) {
+    bool ok = !at_end() && source_[current_ + 1] == c;
+    if (ok) current_++;
+    return ok;
+  }
+
+  void skip_whitespace();
+  Token process_string();
+  Token process_number();
+
+  TokenType check_keyword(const string& key, TokenType type);
+  TokenType identifier_type();
+  Token process_identifier_keyword();
+
   string source_;
   int start_;
   int current_;
   int line_;
 };
 
-} // namespace qian
-
+}  // namespace qian
 
 #endif // QIAN_SCANNER_H_
