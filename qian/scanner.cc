@@ -29,9 +29,11 @@ Token Scanner::process_string() {
   while (!at_end() && peek() != '"') {
     advance();
   }
-  if (at_end() || peek() != '"' {
+  if (at_end() || peek() != '"') {
     return make_error_token("Unterminated string.");
   }
+  // Skip the second quote sign.
+  advance();
   return make_token(TokenType::TOKEN_STRING);
 }
 

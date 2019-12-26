@@ -86,13 +86,12 @@ class Scanner {
 
   Token ScanToken();
 
- private:
   bool at_end() {
     return current_ == source_.size();
   }
 
   Token make_token(TokenType type) {
-    return Token{type, start_, current_ - start_ + 1, line_};
+    return Token{type, start_, current_ - start_, line_};
   }
 
   Token make_error_token(const string& msg) {
@@ -112,11 +111,11 @@ class Scanner {
   }
 
   string get_lexeme() {
-    return source_.substr(start_, current_ - start_ + 1);
+    return source_.substr(start_, current_ - start_);
   }
 
   bool match(char c) {
-    bool ok = !at_end() && source_[current_ + 1] == c;
+    bool ok = !at_end() && source_[current_] == c;
     if (ok) current_++;
     return ok;
   }
@@ -129,6 +128,7 @@ class Scanner {
   TokenType identifier_type();
   Token process_identifier_keyword();
 
+ private:
   string source_;
   int start_;
   int current_;
