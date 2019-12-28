@@ -66,7 +66,7 @@ struct Token {
   int line_;
 };
 
-// This may looks ugly.
+// This may look ugly.
 struct ErrorToken : public Token {
   TokenType type_;
   int line_;

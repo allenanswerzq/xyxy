@@ -22,7 +22,6 @@ REGISTER_INST("OP_RETURN")
     printf("%s\n", inst->Name().c_str());
   });
 
-
 REGISTER_INST("OP_CONSTANT")
   .Opcode(OP_CONSTANT)
   .Length(2)
