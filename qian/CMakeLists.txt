@@ -16,15 +16,17 @@ qian_cc_library(
 
 qian_cc_library(
   NAME
-    inst
+    qian
   HDRS
     "vm.h"
     "inst.h"
     "debug.h"
+    "scanner.h"
   SRCS
+    "vm.cc"
     "inst.cc"
     "debug.cc"
-    "vm.cc"
+    "scanner.cc"
   COPTS
     ${QIAN_DEFAULT_COPTS}
   PUBLIC
@@ -75,7 +77,7 @@ qian_cc_test(
     ${QIAN_TEST_COPTS}
   DEPS
     qian::base
-    qian::inst
+    qian::qian
     gmock_main
 )
 
@@ -88,6 +90,19 @@ qian_cc_test(
     ${QIAN_TEST_COPTS}
   DEPS
     qian::base
-    qian::inst
+    qian::qian
+    gmock_main
+)
+
+qian_cc_test(
+  NAME
+    scanner_test
+  SRCS
+    "scanner_test.cc"
+  COPTS
+    ${QIAN_TEST_COPTS}
+  DEPS
+    qian::base
+    qian::qian
     gmock_main
 )

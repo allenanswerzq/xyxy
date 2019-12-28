@@ -20,7 +20,7 @@ TEST(Address, TestVector) {
   for (int i = 0; i < 1024; i++) {
     v.Write(i);
   }
-  int const *addr = v.Address();
+  const int *addr = v.Address();
   for (int i = 0; i < 1024; i++) {
     EXPECT_EQ(addr[i], i);
   }
