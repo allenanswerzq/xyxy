@@ -4,12 +4,14 @@
 #include "vector.h"
 #include "chunk.h"
 #include "status.h"
+#include "logging.h"
 
 namespace qian {
 
 typedef enum {
   OP_RETURN,
   OP_CONSTANT,
+  OP_NEGATE,
 } OpCode;
 
 class Inst {
@@ -22,22 +24,22 @@ class Inst {
   void Name(const string& name) { name_ = name; }
   string Name() { return name_; }
 
-  void Length(uint8_t length) { length_ = length; }
-  uint8_t Length() { return length_; }
+  void Length(uint8 length) { length = length; }
+  uint8 Length() { return length; }
 
   void DebugInfo(const FuncDebugInfo& f) { debug_info_ = f; }
   void DebugInfo() { debug_info_(this); }
 
-  void Opcode(uint8_t opcode) { opcode_ = opcode; }
-  uint8_t Opcode() { return opcode_; }
+  void Opcode(uint8 opcode) { opcode_ = opcode; }
+  uint8 Opcode() { return opcode_; }
 
   void Operand(Value operand) { operands_.Write(operand); }
   Vector<Value>* Operands() { return &operands_; }
 
  private:
   string name_;
-  uint8_t opcode_;
-  uint8_t length_;
+  uint8 opcode_;
+  uint8 length;
   Vector<Value> operands_;
   FuncDebugInfo debug_info_;
 };
@@ -50,7 +52,7 @@ static Vector<Inst*>* GlobalInst() {
   return registry_;
 }
 
-Inst* DispathInst(Chunk* chunk, uint8_t offset);
+Inst* DispathInst(Chunk* chunk, uint8 offset);
 
 } // namespace qian
 
@@ -61,24 +63,22 @@ struct InstDefWrapper {
   InstDefWrapper(const string& name) {
     inst = new ::qian::Inst();
     inst->Name(name);
-#ifndef NDEBUG
-    printf("register inst...%s\n", inst->Name().c_str());
-#endif
+    LOG(INFO) << "register inst..." << inst->Name();
     ::qian::GlobalInst()->Write(inst);
-    }
+  }
   InstDefWrapper& Name(const string& name) {
     inst->Name(name);
     return *this;
   }
-  InstDefWrapper& Length(uint8_t len) {
+  InstDefWrapper& Length(uint8 len) {
     inst->Length(len);
     return *this;
   }
-  InstDefWrapper& Opcode(uint8_t opcode) {
+  InstDefWrapper& Opcode(uint8 opcode) {
     inst->Opcode(opcode);
     return *this;
   }
-  InstDefWrapper& Operand(uint8_t operand) {
+  InstDefWrapper& Operand(uint8 operand) {
     inst->Operand(operand);
     return *this;
   }

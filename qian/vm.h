@@ -15,7 +15,11 @@ class VM {
  public:
   VM();
   VM(Chunk* chunk);
-  ~VM() { if (stk_) delete stk_; }
+
+  ~VM() {
+    if (stk_) delete stk_;
+    if (disambler_) delete disambler_;
+  }
 
   Status Run();
   Status Run(Inst* inst);
