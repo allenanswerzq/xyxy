@@ -7,8 +7,10 @@ qian_cc_library(
     "stack.h"
     "vector.h"
     "chunk.h"
+    "logging.h"
   SRCS
     "chunk.cc"
+    "logging.cc"
   COPTS
     ${QIAN_DEFAULT_COPTS}
   PUBLIC

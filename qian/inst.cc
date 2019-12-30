@@ -2,8 +2,8 @@
 
 namespace qian {
 
-Inst* DispathInst(Chunk* chunk, uint8_t offset) {
-  uint8_t byte = chunk->GetByte(offset);
+Inst* DispathInst(Chunk* chunk, uint8 offset) {
+  uint8 byte = chunk->GetByte(offset);
   assert(byte < GlobalInst()->Size());
   Inst* inst = GlobalInst()->Get(byte);
   for (int i = 1; i <= inst->Length() - 1; i++) {
@@ -29,6 +29,12 @@ REGISTER_INST("OP_CONSTANT")
     auto oprd = inst->Operands();
     Value val = oprd->Get(0);
     printf("%-16s %4f\n", inst->Name().c_str(), val);
+  });
+
+REGISTER_INST("OP_NEGATE")
+  .Opcode(OP_NEGATE)
+  .Length(2)
+  .DebugInfo([](Inst* inst) {
   });
 
 }  // namespace qian

@@ -57,22 +57,24 @@ typedef enum {
 
   TOKEN_ERROR,          // "error"
   TOKEN_EOF,            // "eof"
+
+  TOKEN_NONE,           // None token
 } TokenType;
 
 struct Token {
-  TokenType type_;
-  int start_;
-  int length_;
-  int line_;
+  TokenType type;
+  int start;
+  int length;
+  int line;
 };
 
 // This may look ugly.
 struct ErrorToken : public Token {
-  TokenType type_;
-  int line_;
-  string msg_;
+  TokenType type;
+  int line;
+  string msg;
   ErrorToken(TokenType type, int line, string msg)
-    : type_(type), line_(line), msg_(msg) {}
+    : type(type), line(line), msg(msg) {}
 };
 
 class Scanner {
@@ -91,7 +93,7 @@ class Scanner {
   }
 
   Token make_token(TokenType type) {
-    return Token{type, start_, current_ - start_, line_};
+    return Token{type, start, current_ - start_, line_};
   }
 
   Token make_error_token(const string& msg) {
@@ -111,7 +113,7 @@ class Scanner {
   }
 
   string get_lexeme() {
-    return source_.substr(start_, current_ - start_);
+    return source_.substr(start, current_ - start_);
   }
 
   bool match(char c) {

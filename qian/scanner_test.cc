@@ -47,10 +47,10 @@ TEST(Basic, TestScanner) {
 
 static bool CompareToken(Scanner& sc, string lexeme, const Token& b) {
   Token a = sc.ScanToken();
-  bool r = a.type_ == b.type_;
-  r &= a.start_ == b.start_;
-  r &= a.length_ == b.length_;
-  r &= a.line_ == b.line_;
+  bool r = a.type == b.type;
+  r &= a.start == b.start;
+  r &= a.length == b.length;
+  r &= a.line == b.line;
   r &= sc.get_lexeme() == lexeme;
   return r;
 }
