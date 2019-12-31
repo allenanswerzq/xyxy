@@ -6,7 +6,7 @@
 #include "stack.h"
 #include "debug.h"
 
-#define MAX_STACK 256
+#define STACK_SIZE 256
 
 namespace qian {
 
@@ -25,24 +25,24 @@ class VM {
   Status Run(Inst* inst);
 
   Chunk* GetChunk() { return chunk_; }
-  Stack<Value, MAX_STACK>* GetStack() { return stk_; }
+  Stack<Value, STACK_SIZE>* GetStack() { return stk_; }
 
  private:
   Chunk* chunk_; // not owned.
-  Stack<Value, MAX_STACK>* stk_;
+  Stack<Value, STACK_SIZE>* stk_;
   uint32_t pc_;
   Disambler* disambler_;
 };
 
 inline VM::VM(Chunk* chunk) : chunk_(chunk) {
-  stk_ = new Stack<Value, MAX_STACK> ();
+  stk_ = new Stack<Value, STACK_SIZE> ();
   disambler_ = new Disambler(chunk, "default_vm");
   pc_ = 0;
 }
 
 inline VM::VM() {
   chunk_ = new Chunk();
-  stk_ = new Stack<Value, MAX_STACK> ();
+  stk_ = new Stack<Value, STACK_SIZE> ();
   disambler_ = new Disambler(chunk_, "default_vm");
   pc_ = 0;
 }
@@ -78,6 +78,6 @@ struct InstRunDefWrapper {
 #define REGISTER_FUNC_UNIQ_HELPER(ctr) REGISTER_FUNC_UNIQ(ctr)
 #define REGISTER_FUNC_UNIQ(ctr)                                 \
   static ::register_func::InstRunDefWrapper register_func##ctr  \
-    __attribute__ ((unused)) = ::register_func::InstRunDefWrapper()
+    QI_ATTRIBUTE_UNUSED = ::register_func::InstRunDefWrapper()
 
 #endif  // QIAN_VM_H_

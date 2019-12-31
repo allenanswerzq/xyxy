@@ -24,11 +24,13 @@ qian_cc_library(
     "inst.h"
     "debug.h"
     "scanner.h"
+    "parser.h"
   SRCS
     "vm.cc"
     "inst.cc"
     "debug.cc"
     "scanner.cc"
+    "parser.cc"
   COPTS
     ${QIAN_DEFAULT_COPTS}
   PUBLIC

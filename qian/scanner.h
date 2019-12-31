@@ -68,7 +68,6 @@ struct Token {
   int line;
 };
 
-// This may look ugly.
 struct ErrorToken : public Token {
   TokenType type;
   int line;
@@ -93,7 +92,7 @@ class Scanner {
   }
 
   Token make_token(TokenType type) {
-    return Token{type, start, current_ - start_, line_};
+    return Token{type, start_, current_ - start_, line_};
   }
 
   Token make_error_token(const string& msg) {
@@ -113,7 +112,11 @@ class Scanner {
   }
 
   string get_lexeme() {
-    return source_.substr(start, current_ - start_);
+    return source_.substr(start_, current_ - start_);
+  }
+
+  string get_lexeme(Token tk) {
+    return source_.substr(tk.start, tk.length);
   }
 
   bool match(char c) {
