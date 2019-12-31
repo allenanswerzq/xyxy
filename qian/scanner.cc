@@ -67,7 +67,7 @@ TokenType Scanner::check_keyword(const string& key, TokenType type) {
 }
 
 TokenType Scanner::identifier_type() {
-  char c = source_[start];
+  char c = source_[start_];
   if (c == 'a') return check_keyword("and", TOKEN_AND);
   if (c == 'c') return check_keyword("class", TOKEN_CLASS);
   if (c == 'e') return check_keyword("else", TOKEN_ELSE);
@@ -80,13 +80,13 @@ TokenType Scanner::identifier_type() {
   if (c == 'v') return check_keyword("var", TOKEN_VAR);
   if (c == 'w') return check_keyword("while", TOKEN_WHILE);
   if (c == 'f') {
-    char n = source_[start + 1];
+    char n = source_[start_ + 1];
     if (n == 'a') return check_keyword("false", TOKEN_FALSE);
     if (n == 'o') return check_keyword("for", TOKEN_FOR);
     if (n == 'u') return check_keyword("fun", TOKEN_FUN);
   }
   if (c == 't') {
-    char n = source_[start + 1];
+    char n = source_[start_ + 1];
     if (n == 'h') return check_keyword("this", TOKEN_THIS);
     if (n == 'r') return check_keyword("true", TOKEN_TRUE);
   }
@@ -105,7 +105,7 @@ Token Scanner::ScanToken() {
     return make_token(TOKEN_EOF);
   }
   skip_whitespace();
-  start = current_;
+  start_ = current_;
   char c = advance();
   if (c == ',') return make_token(TOKEN_COMMA);
   if (c == '.') return make_token(TOKEN_DOT);
@@ -122,7 +122,7 @@ Token Scanner::ScanToken() {
   if (c == '=') return make_token(match('=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
   if (c == '<') return make_token(match('=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
   if (c == '>') return make_token(match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
-  if (c == '\n') { line++; advance(); }
+  if (c == '\n') { line_++; advance(); }
   if (c == '"') return process_string();
   if (is_digit(c)) return process_number();
   if (is_alpha(c)) return process_identifier_keyword();

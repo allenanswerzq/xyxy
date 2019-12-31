@@ -96,6 +96,6 @@ struct InstDefWrapper {
 #define REGISTER_INST_UNIQ_HELPER(ctr, name) REGISTER_INST_UNIQ(ctr, name)
 #define REGISTER_INST_UNIQ(ctr, name)                                 \
   static ::register_inst::InstDefWrapper register_inst##ctr           \
-    __attribute__ ((unused)) = ::register_inst::InstDefWrapper(name)
+    QI_ATTRIBUTE_UNUSED = ::register_inst::InstDefWrapper(name)
 
 #endif  // QIAN_INST_H_
