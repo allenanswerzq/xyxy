@@ -1,25 +1,22 @@
 #include "debug.h"
-#include "inst.h"
 
 namespace qian {
 
-void Disambler::DisambleChunk() {
-  printf("== %s ==\n", name_.c_str());
-  for (int offset = 0; offset < chunk_->Size(); ) {
-    printf("%04d ", offset);
-    Inst* inst = DispathInst(chunk_, offset);
-    inst->DebugInfo();
-    offset += inst->Length();
+string Strip(const string& str) {
+  int n = str.size();
+  int i = 0;
+  while (i < n && (str[i]  == '\n' || str[i] == ' ')) {
+    i++;
   }
+  int j = n - 1;
+  while (j > i && (str[j] == '\n' || str[j] == ' ')) {
+    j--;
+  }
+  return str.substr(i, j - i + 1);
 }
 
-void Disambler::DisambleInst(Inst* inst) {
-  inst->DebugInfo();
-}
-
-void DisambleChunk(Chunk* chunk, const string& name) {
-  Disambler dis(chunk, name);
-  dis.DisambleChunk();
+void DumpStack(Stack<Value, STACK_SIZE>* stk) {
+  // TODO(zq7): dump stack content.
 }
 
 } // namespace qian

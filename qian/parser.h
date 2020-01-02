@@ -3,6 +3,7 @@
 
 #include <functional>
 
+#include "type.h"
 #include "chunk.h"
 #include "vector.h"
 #include "scanner.h"
@@ -44,8 +45,10 @@ inline Vector<PrecRule*>* GlobalPrecRule() {
 
 class Parser {
  public:
-  Parser(const string& source);
+  Parser() {}
   ~Parser();
+
+  Parser(const string& source, Chunk* chunk);
 
   void advance();
   void consume(TokenType type, const string& msg);
@@ -64,8 +67,12 @@ class Parser {
   void unary();
   void binary();
   void expression();
+  void literal();
 
   Chunk* GetChunk() { return chunk_; }
+
+  Token prev_token() { return prev_; }
+  Token curr_token() { return curr_; }
 
   string get_lexeme(Token tk) {
     return scanner_->get_lexeme(tk);
@@ -76,19 +83,22 @@ class Parser {
     return GlobalPrecRule()->Get(type);
   }
 
-  Chunk* chunk_;  // not owned.
   Token curr_;
   Token prev_;
+  Chunk* chunk_;  // not owned.
   bool has_error_ = false;
   bool panic_mode_ = false;
   Scanner* scanner_;
 };
 
-Parser::Parser(const string& source) {
+inline Parser::Parser(const string& source, Chunk* chunk) {
   scanner_ = new Scanner(source);
+  chunk_ = chunk;
+  curr_ = CreateToken(TOKEN_NONE, -1, -1, -1);
+  prev_ = CreateToken(TOKEN_NONE, -1, -1, -1);
 }
 
-Parser::~Parser() {
+inline Parser::~Parser() {
   if (scanner_) delete scanner_;
 }
 

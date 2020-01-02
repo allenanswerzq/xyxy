@@ -2,11 +2,10 @@
 #define QIAN_VM_H_
 
 #include "chunk.h"
+#include "debug.h"
+#include "inst.h"
 #include "status.h"
 #include "stack.h"
-#include "debug.h"
-
-#define STACK_SIZE 256
 
 namespace qian {
 
@@ -18,7 +17,6 @@ class VM {
 
   ~VM() {
     if (stk_) delete stk_;
-    if (disambler_) delete disambler_;
   }
 
   Status Run();
@@ -31,19 +29,16 @@ class VM {
   Chunk* chunk_; // not owned.
   Stack<Value, STACK_SIZE>* stk_;
   uint32_t pc_;
-  Disambler* disambler_;
 };
 
 inline VM::VM(Chunk* chunk) : chunk_(chunk) {
   stk_ = new Stack<Value, STACK_SIZE> ();
-  disambler_ = new Disambler(chunk, "default_vm");
   pc_ = 0;
 }
 
 inline VM::VM() {
   chunk_ = new Chunk();
   stk_ = new Stack<Value, STACK_SIZE> ();
-  disambler_ = new Disambler(chunk_, "default_vm");
   pc_ = 0;
 }
 
@@ -56,11 +51,13 @@ static Vector<InstRunFunc>* GlobalFunc() {
   }
   return registry_;
 }
+
 }  // namespace qian
 
 namespace register_func {
 
 struct InstRunDefWrapper {
+  // TDDO(zq7): add santiy check to ensure the inst defined before adding func.
   InstRunDefWrapper() {}
   InstRunDefWrapper& Func(const ::qian::InstRunFunc& f) {
     ::qian::GlobalFunc()->Write(f);

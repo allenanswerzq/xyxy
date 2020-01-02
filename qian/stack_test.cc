@@ -32,12 +32,4 @@ TEST(PushDeath, TestStack) {
   }
 }
 
-TEST(Dump, TestStack) {
-  Stack<int, 4> stk;
-  for (int i = 0; i < 4; i++) {
-    stk.Push(i);
-  }
-  stk.Dump();
-}
-
 } // namespace qian

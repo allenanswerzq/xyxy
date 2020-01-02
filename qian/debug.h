@@ -1,28 +1,15 @@
 #ifndef QIAN_DEBUG_H_
 #define QIAN_DEBUG_H_
 
-#include "inst.h"
-#include "chunk.h"
+#include "base.h"
+#include "stack.h"
+#include "type.h"
 
 namespace qian {
 
-class Disambler {
- public:
-  Disambler(Chunk* chunk, const string& name)
-    : chunk_(chunk), name_(name) {}
+string Strip(const string& str);
 
-  virtual ~Disambler() {}
-
-  void DisambleChunk();
-
-  void DisambleInst(Inst* inst);
-
- private:
-  Chunk* chunk_; // not owned
-  string name_;
-};
-
-void DisambleChunk(Chunk* chunk, const string& name);
+void DumpStack(Stack<Value, STACK_SIZE>* stk);
 
 } // namespace qian
 

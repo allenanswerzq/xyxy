@@ -33,8 +33,81 @@ REGISTER_INST("OP_CONSTANT")
 
 REGISTER_INST("OP_NEGATE")
   .Opcode(OP_NEGATE)
-  .Length(2)
+  .Length(1)
   .DebugInfo([](Inst* inst) {
+  });
+
+REGISTER_INST("OP_ADD")
+  .Opcode(OP_ADD)
+  .Length(1)
+  .DebugInfo([](Inst* inst) {
+  });
+
+REGISTER_INST("OP_SUB")
+  .Opcode(OP_SUB)
+  .Length(1)
+  .DebugInfo([](Inst* inst) {
+  });
+
+REGISTER_INST("OP_MUL")
+  .Opcode(OP_MUL)
+  .Length(1)
+  .DebugInfo([](Inst* inst) {
+  });
+
+REGISTER_INST("OP_DIV")
+  .Opcode(OP_DIV)
+  .Length(1)
+  .DebugInfo([](Inst* inst) {
+  });
+
+REGISTER_INST("OP_NIL")
+  .Opcode(OP_NIL)
+  .Length(1)
+  .DebugInfo([](Inst* inst) {
+    printf("OP_NIL\n");
+  });
+
+REGISTER_INST("OP_TRUE")
+  .Opcode(OP_TRUE)
+  .Length(1)
+  .DebugInfo([](Inst* inst) {
+    printf("OP_TRUE\n");
+  });
+
+REGISTER_INST("OP_FALSE")
+  .Opcode(OP_FALSE)
+  .Length(1)
+  .DebugInfo([](Inst* inst) {
+    printf("OP_FALSE\n");
+  });
+
+REGISTER_INST("OP_NOT")
+  .Opcode(OP_NOT)
+  .Length(1)
+  .DebugInfo([](Inst* inst) {
+    printf("OP_NOT\n");
+  });
+
+REGISTER_INST("OP_EQUAL")
+  .Opcode(OP_EQUAL)
+  .Length(1)
+  .DebugInfo([](Inst* inst) {
+    printf("OP_EQUAL\n");
+  });
+
+REGISTER_INST("OP_GREATER")
+  .Opcode(OP_GREATER)
+  .Length(1)
+  .DebugInfo([](Inst* inst) {
+    printf("OP_GREATER\n");
+  });
+
+REGISTER_INST("OP_LESS")
+  .Opcode(OP_LESS)
+  .Length(1)
+  .DebugInfo([](Inst* inst) {
+    printf("OP_LESS\n");
   });
 
 }  // namespace qian
