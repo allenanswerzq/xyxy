@@ -12,6 +12,17 @@ typedef enum {
   OP_RETURN,
   OP_CONSTANT,
   OP_NEGATE,
+  OP_ADD,
+  OP_SUB,
+  OP_MUL,
+  OP_DIV,
+  OP_NIL,
+  OP_TRUE,
+  OP_FALSE,
+  OP_NOT,
+  OP_EQUAL,
+  OP_GREATER,
+  OP_LESS,
 } OpCode;
 
 class Inst {
@@ -47,7 +58,7 @@ class Inst {
 static Vector<Inst*>* GlobalInst() {
   static Vector<Inst*>* registry_;
   if (registry_ == nullptr) {
-    registry_ = new Vector<Inst*> ();
+    registry_ = new Vector<Inst*>;
   }
   return registry_;
 }
@@ -78,7 +89,7 @@ struct InstDefWrapper {
     inst->Opcode(opcode);
     return *this;
   }
-  InstDefWrapper& Operand(uint8 operand) {
+  InstDefWrapper& Operand(::qian::Value operand) {
     inst->Operand(operand);
     return *this;
   }

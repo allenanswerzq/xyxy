@@ -1,5 +1,7 @@
-#include "gtest/gtest.h"
 #include "chunk.h"
+
+#include "type.h"
+#include "gtest/gtest.h"
 
 namespace qian {
 
@@ -30,17 +32,17 @@ TEST(WriteChunk, TestChunk) {
     chunk.WriteChunk(0, 0);
   }
   for (int i = 0; i < 8; i++) {
-    chunk.WriteChunk(i, 1.23 + i, i);
+    chunk.WriteChunk(i, 1.23 + i, QIAN_NUMBER(i));
   }
 }
 
 TEST(AddValue, TestChunk) {
   Chunk chunk;
   for (int i = 0; i < 4; i++) {
-    chunk.AddValue(i);
+    chunk.AddValue(QIAN_NUMBER(i));
   }
   for (int i = 0; i < 4; i++) {
-    EXPECT_FLOAT_EQ(i, chunk.GetValue(i));
+    EXPECT_FLOAT_EQ(i, AS_CXX_NUMBER(chunk.GetValue(i)));
   }
 }
 

@@ -2,6 +2,7 @@
 #define QIAN_CHUNK_H_
 
 #include "base.h"
+#include "type.h"
 #include "vector.h"
 
 namespace qian {

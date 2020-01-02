@@ -3,7 +3,7 @@
 
 namespace qian {
 
-template <class T, uint32_t N>
+template <class T, int N>
 class Stack {
  public:
   Stack() {
@@ -37,11 +37,8 @@ class Stack {
     return *(--top_);
   }
 
-  // Dump stack content.
-  void Dump() {
-    for (T* idx = stk_; idx < top_; idx++) {
-      printf("[ %g ]\n", *idx);
-    }
+  T Top() {
+    return *top_;
   }
 
  private:

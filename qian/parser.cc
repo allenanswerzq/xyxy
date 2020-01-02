@@ -36,14 +36,35 @@ REGISTER_PREC_RULE(TOKEN_STAR       )
   .Infix_Rule(&Parser::binary)
   .Prec_Order(PREC_FACTOR);
 
-REGISTER_PREC_RULE(TOKEN_BANG       );
-REGISTER_PREC_RULE(TOKEN_BANG_EQUAL );
+REGISTER_PREC_RULE(TOKEN_BANG       )
+  .Prefix_Rule(&Parser::unary);
+
+REGISTER_PREC_RULE(TOKEN_BANG_EQUAL )
+  .Infix_Rule(&Parser::binary)
+  .Prec_Order(PREC_EQUALITY);
+
 REGISTER_PREC_RULE(TOKEN_EQUAL      );
-REGISTER_PREC_RULE(TOKEN_EQUAL_EQUAL);
-REGISTER_PREC_RULE(TOKEN_GREATER    );
-REGISTER_PREC_RULE(TOKEN_GREATER_EQUAL);
-REGISTER_PREC_RULE(TOKEN_LESS       );
-REGISTER_PREC_RULE(TOKEN_LESS_EQUAL );
+
+REGISTER_PREC_RULE(TOKEN_EQUAL_EQUAL)
+  .Infix_Rule(&Parser::binary)
+  .Prec_Order(PREC_EQUALITY);
+
+REGISTER_PREC_RULE(TOKEN_GREATER    )
+  .Infix_Rule(&Parser::binary)
+  .Prec_Order(PREC_COMPARISON);
+
+REGISTER_PREC_RULE(TOKEN_GREATER_EQUAL)
+  .Infix_Rule(&Parser::binary)
+  .Prec_Order(PREC_COMPARISON);
+
+REGISTER_PREC_RULE(TOKEN_LESS       )
+  .Infix_Rule(&Parser::binary)
+  .Prec_Order(PREC_COMPARISON);
+
+REGISTER_PREC_RULE(TOKEN_LESS_EQUAL )
+  .Infix_Rule(&Parser::binary)
+  .Prec_Order(PREC_COMPARISON);
+
 REGISTER_PREC_RULE(TOKEN_IDENTIFIER );
 REGISTER_PREC_RULE(TOKEN_STRING     );
 
@@ -53,17 +74,25 @@ REGISTER_PREC_RULE(TOKEN_NUMBER     )
 REGISTER_PREC_RULE(TOKEN_AND        );
 REGISTER_PREC_RULE(TOKEN_CLASS      );
 REGISTER_PREC_RULE(TOKEN_ELSE       );
-REGISTER_PREC_RULE(TOKEN_FALSE      );
+REGISTER_PREC_RULE(TOKEN_FALSE      )
+  .Prefix_Rule(&Parser::literal);
+
 REGISTER_PREC_RULE(TOKEN_FOR        );
 REGISTER_PREC_RULE(TOKEN_FUN        );
 REGISTER_PREC_RULE(TOKEN_IF         );
-REGISTER_PREC_RULE(TOKEN_NIL        );
+
+REGISTER_PREC_RULE(TOKEN_NIL        )
+  .Prefix_Rule(&Parser::literal);
+
 REGISTER_PREC_RULE(TOKEN_OR         );
 REGISTER_PREC_RULE(TOKEN_PRINT      );
 REGISTER_PREC_RULE(TOKEN_RETURN     );
 REGISTER_PREC_RULE(TOKEN_SUPER      );
 REGISTER_PREC_RULE(TOKEN_THIS       );
-REGISTER_PREC_RULE(TOKEN_TRUE       );
+
+REGISTER_PREC_RULE(TOKEN_TRUE       )
+  .Prefix_Rule(&Parser::literal);
+
 REGISTER_PREC_RULE(TOKEN_VAR        );
 REGISTER_PREC_RULE(TOKEN_WHILE      );
 REGISTER_PREC_RULE(TOKEN_ERROR      );
@@ -113,11 +142,8 @@ void Parser::emit_constant(Value val) {
 }
 
 void Parser::number() {
-  char *end;
-  Value val = strtod(get_lexeme(prev_).c_str(), &end);
-  // Avoid the not used error.
-  (void) end;
-  emit_constant(val);
+  double val = strtod(get_lexeme(prev_).c_str(), nullptr);
+  emit_constant(QIAN_NUMBER(val));
 }
 
 void Parser::expression() {
@@ -135,12 +161,54 @@ void Parser::unary() {
   if (op_type == TOKEN_MINUS) {
     emit_byte(OP_NEGATE);
   }
+  else if (op_type == TOKEN_BANG) {
+    emit_byte(OP_NOT);
+  }
+  else {
+    CHECK(false) << "Unreachable.";
+  }
 }
 
 void Parser::binary() {
   TokenType op_type = prev_.type;
   PrecRule* rule = get_rule(op_type);
   parse_with_prec_order(PrecOrder(rule->prec_order + 1));
+  if (op_type == TOKEN_BANG_EQUAL) {
+    emit_byte(OP_EQUAL, OP_NOT);
+  }
+  else if (op_type == TOKEN_EQUAL_EQUAL) {
+    emit_byte(OP_EQUAL);
+  }
+  else if (op_type == TOKEN_GREATER) {
+    emit_byte(OP_GREATER);
+  }
+  else if (op_type == TOKEN_GREATER_EQUAL) {
+    emit_byte(OP_LESS, OP_NOT);
+  }
+  else if (op_type == TOKEN_LESS) {
+    emit_byte(OP_LESS);
+  }
+  else if (op_type == TOKEN_LESS_EQUAL) {
+    emit_byte(OP_GREATER, OP_NOT);
+  }
+  else {
+    CHECK(false) << "Unreachable.";
+  }
+}
+
+void Parser::literal() {
+  if (prev_.type == TOKEN_FALSE) {
+    emit_byte(OP_FALSE);
+  }
+  else if (prev_.type == TOKEN_TRUE) {
+    emit_byte(OP_TRUE);
+  }
+  else if (prev_.type == TOKEN_NIL) {
+    emit_byte(OP_NIL);
+  }
+  else {
+    CHECK(false) << "Unreachable.";
+  }
 }
 
 void Parser::parse_with_prec_order(PrecOrder prec_order) {

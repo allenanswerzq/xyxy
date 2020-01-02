@@ -8,9 +8,9 @@
 
 // #define NDEBUG
 
-using std::string;
+#define STACK_SIZE 256
 
-typedef double Value;
+using std::string;
 
 typedef signed char int8;
 typedef short int16;

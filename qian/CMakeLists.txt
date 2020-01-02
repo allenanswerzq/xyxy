@@ -11,6 +11,7 @@ qian_cc_library(
   SRCS
     "chunk.cc"
     "logging.cc"
+    "status.cc"
   COPTS
     ${QIAN_DEFAULT_COPTS}
   PUBLIC
@@ -21,6 +22,7 @@ qian_cc_library(
     qian
   HDRS
     "vm.h"
+    "type.h"
     "inst.h"
     "debug.h"
     "scanner.h"
@@ -103,6 +105,19 @@ qian_cc_test(
     scanner_test
   SRCS
     "scanner_test.cc"
+  COPTS
+    ${QIAN_TEST_COPTS}
+  DEPS
+    qian::base
+    qian::qian
+    gmock_main
+)
+
+qian_cc_test(
+  NAME
+    parser_test
+  SRCS
+    "parser_test.cc"
   COPTS
     ${QIAN_TEST_COPTS}
   DEPS

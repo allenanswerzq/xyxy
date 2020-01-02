@@ -68,6 +68,10 @@ struct Token {
   int line;
 };
 
+inline Token CreateToken(TokenType type, int start, int leng, int line) {
+  return Token{type, start, leng, line};
+}
+
 struct ErrorToken : public Token {
   TokenType type;
   int line;
@@ -92,7 +96,7 @@ class Scanner {
   }
 
   Token make_token(TokenType type) {
-    return Token{type, start_, current_ - start_, line_};
+    return CreateToken(type, start_, current_ - start_, line_);
   }
 
   Token make_error_token(const string& msg) {

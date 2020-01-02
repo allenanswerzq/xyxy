@@ -1,20 +1,9 @@
-#include "gtest/gtest.h"
 #include "scanner.h"
 
-namespace qian {
+#include "debug.h"
+#include "gtest/gtest.h"
 
-static string Strip(const string& str) {
-  int n = str.size();
-  int i = 0;
-  while (i < n && (str[i]  == '\n' || str[i] == ' ')) {
-    i++;
-  }
-  int j = n - 1;
-  while (j > i && (str[j] == '\n' || str[j] == ' ')) {
-    j--;
-  }
-  return str.substr(i, j - i + 1);
-}
+namespace qian {
 
 TEST(Basic, TestScanner) {
   string source = Strip(R"(
