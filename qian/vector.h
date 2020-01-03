@@ -57,7 +57,7 @@ void Vector<T>::Write(T value) {
 
 template <class T>
 T Vector<T>::Get(int index) {
-  assert(container_ && index < capacity_);
+  assert(container_ && index < Size());
   return container_[index];
 }
 }  // namespace qian

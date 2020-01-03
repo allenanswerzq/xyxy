@@ -2,7 +2,9 @@
 #define QIAN_DEBUG_H_
 
 #include "base.h"
+#include "logging.h"
 #include "stack.h"
+#include "scanner.h"
 #include "type.h"
 
 namespace qian {

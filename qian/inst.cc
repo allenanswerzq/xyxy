@@ -6,6 +6,9 @@ Inst* DispathInst(Chunk* chunk, uint8 offset) {
   uint8 byte = chunk->GetByte(offset);
   assert(byte < GlobalInst()->Size());
   Inst* inst = GlobalInst()->Get(byte);
+  // TODO(zq7): better handle inst operands, for now assume
+  // all insts will have one `Value` as operand, but it maybe not
+  // applicable in the future.
   for (int i = 1; i <= inst->Length() - 1; i++) {
     // Get the index of the value.
     int index = chunk->GetByte(offset + i);
@@ -28,7 +31,7 @@ REGISTER_INST("OP_CONSTANT")
   .DebugInfo([](Inst* inst) {
     auto oprd = inst->Operands();
     Value val = oprd->Get(0);
-    printf("%-16s %4f\n", inst->Name().c_str(), val);
+    printf("%-16s %4f\n", inst->Name().c_str(), AS_CXX_NUMBER(val));
   });
 
 REGISTER_INST("OP_NEGATE")

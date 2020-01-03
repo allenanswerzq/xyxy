@@ -17,6 +17,7 @@ class Chunk {
   void WriteChunk(uint8 byte, int ln);
   void WriteChunk(uint8 byte, int index, Value value);
   void WriteChunk(uint8 byte, int index, Value value, int ln);
+
   uint8 GetByte(int index);
   uint8 GetLine(int index);
 
