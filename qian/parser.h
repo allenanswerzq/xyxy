@@ -3,10 +3,12 @@
 
 #include <functional>
 
-#include "type.h"
 #include "chunk.h"
+#include "debug.h"
+#include "logging.h"
 #include "vector.h"
 #include "scanner.h"
+#include "type.h"
 
 namespace qian {
 
@@ -45,29 +47,29 @@ inline Vector<PrecRule*>* GlobalPrecRule() {
 
 class Parser {
  public:
-  Parser() {}
-  ~Parser();
-
   Parser(const string& source, Chunk* chunk);
+  virtual ~Parser();
 
   void advance();
   void consume(TokenType type, const string& msg);
 
-  void number();
+  // Add a Value `val` into chunk and return its index.
   int make_constant(Value val);
+  // Emit a {OP_CONSTANT idx} inst.
+  // Note: idx specifies where the constant stored inside chunk's value area.
   void emit_constant(Value val);
 
   void emit_byte(uint8 byte);
   void emit_byte(uint8 byte1, uint8 byte2);
   void emit_return();
 
-  void parse_with_prec_order(PrecOrder prec_order);
-
+  void number();
   void grouping();
   void unary();
   void binary();
   void expression();
   void literal();
+  void parse_with_prec_order(PrecOrder prec_order);
 
   Chunk* GetChunk() { return chunk_; }
 
@@ -80,6 +82,7 @@ class Parser {
 
  private:
   PrecRule* get_rule(TokenType type) {
+    CHECK(GlobalPrecRule());
     return GlobalPrecRule()->Get(type);
   }
 
@@ -110,6 +113,7 @@ struct PrecRuleDefWrapper {
   PrecRuleDefWrapper(::qian::TokenType type) {
     rule = new ::qian::PrecRule();
     rule->token_type = type;
+    LOG(INFO) << "register prec rule..."  << type;
     ::qian::GlobalPrecRule()->Write(rule);
   }
   PrecRuleDefWrapper& Prefix_Rule(::qian::ParseFunc f) {

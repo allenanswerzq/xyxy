@@ -15,6 +15,7 @@ typedef struct  {
     bool boolean;
     double number;
   } as;
+
 } Value;
 
 // Converts a qian value into a c++ value.
@@ -45,6 +46,9 @@ inline bool is_equal(Value a, Value b) {
   else if (a.type == VAL_NUMBER) {
     return AS_CXX_NUMBER(a) == AS_CXX_NUMBER(b);
   }
+  else {
+    return false;
+  }
 }
 
 inline bool is_falsey(Value value) {
@@ -52,6 +56,13 @@ inline bool is_falsey(Value value) {
          (IS_QIAN_BOOL(value) && !AS_CXX_BOOL(value));
 }
 
-}   // namespace qian
+inline bool operator==(const Value& a, const Value& b) {
+  return is_equal(a, b);
+}
 
+inline bool operator!=(const Value& a, const Value& b) {
+  return !(a == b);
+}
+
+}   // namespace qian
 #endif  //QIAN_TYPE_H_

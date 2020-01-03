@@ -62,7 +62,7 @@ REGISTER_FUNC()
     double b = AS_CXX_NUMBER(rhs);                               \
     stk->Push(qian_type(a op b));                                \
     return Status();                                             \
-  } while (0)
+  } while (false)
 
 REGISTER_FUNC()
   .Name("OP_ADD")
@@ -123,7 +123,7 @@ REGISTER_FUNC()
     auto stk = vm->GetStack();
     Value a = stk->Pop();
     Value b = stk->Pop();
-    stk->Push(QIAN_BOOL(is_equal(a, b)));
+    stk->Push(QIAN_BOOL(a == b));
     return Status();
   });
 

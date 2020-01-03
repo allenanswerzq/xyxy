@@ -35,8 +35,8 @@ class Inst {
   void Name(const string& name) { name_ = name; }
   string Name() { return name_; }
 
-  void Length(uint8 length) { length = length; }
-  uint8 Length() { return length; }
+  void Length(uint8 length) { length_ = length; }
+  uint8 Length() { return length_; }
 
   void DebugInfo(const FuncDebugInfo& f) { debug_info_ = f; }
   void DebugInfo() { debug_info_(this); }
@@ -50,7 +50,7 @@ class Inst {
  private:
   string name_;
   uint8 opcode_;
-  uint8 length;
+  uint8 length_;
   Vector<Value> operands_;
   FuncDebugInfo debug_info_;
 };

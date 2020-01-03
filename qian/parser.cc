@@ -97,11 +97,13 @@ REGISTER_PREC_RULE(TOKEN_VAR        );
 REGISTER_PREC_RULE(TOKEN_WHILE      );
 REGISTER_PREC_RULE(TOKEN_ERROR      );
 REGISTER_PREC_RULE(TOKEN_EOF        );
+REGISTER_PREC_RULE(TOKEN_NONE       );
 
 void Parser::advance() {
   prev_ = curr_;
   while (true) {
     curr_ = scanner_->ScanToken();
+    LOG(INFO) << "Scanned: " << get_lexeme(curr_);
     if (curr_.type != TOKEN_ERROR) {
       break;
     }
@@ -133,7 +135,7 @@ void Parser::emit_byte(uint8 byte1, uint8 byte2) {
 int Parser::make_constant(Value val) {
   // Get the index after adding this val into chunk.
   int idx = GetChunk()->AddValue(val);
-  CHECK(idx > UINT8_MAX) << "Not expect to many consts in one chunk.";
+  CHECK(idx <= UINT8_MAX) << "Not expect to many consts in one chunk.";
   return idx;
 }
 
@@ -151,11 +153,13 @@ void Parser::expression() {
 }
 
 void Parser::grouping() {
+  LOG(INFO) << get_lexeme(prev_);
   expression();
   consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
 }
 
 void Parser::unary() {
+  LOG(INFO) << get_lexeme(prev_);
   TokenType op_type = prev_.type;
   parse_with_prec_order(PREC_UNARY);
   if (op_type == TOKEN_MINUS) {
@@ -165,14 +169,17 @@ void Parser::unary() {
     emit_byte(OP_NOT);
   }
   else {
-    CHECK(false) << "Unreachable.";
+    CHECK(false) << "Unrecognized type: " << op_type;
   }
 }
 
 void Parser::binary() {
+  LOG(INFO) << get_lexeme(prev_);
   TokenType op_type = prev_.type;
+
   PrecRule* rule = get_rule(op_type);
   parse_with_prec_order(PrecOrder(rule->prec_order + 1));
+
   if (op_type == TOKEN_BANG_EQUAL) {
     emit_byte(OP_EQUAL, OP_NOT);
   }
@@ -197,6 +204,7 @@ void Parser::binary() {
 }
 
 void Parser::literal() {
+  LOG(INFO) << get_lexeme(prev_);
   if (prev_.type == TOKEN_FALSE) {
     emit_byte(OP_FALSE);
   }
@@ -213,11 +221,13 @@ void Parser::literal() {
 
 void Parser::parse_with_prec_order(PrecOrder prec_order) {
   advance();
+  LOG(INFO) << get_lexeme(prev_);
+  CHECK(get_rule(prev_.type)) << "No rule for type: " << prev_.type;
   ParseFunc prefix_rule = get_rule(prev_.type)->prefix_rule;
   // TODO(zq7): Dies if not true, make a future check on this one.
   CHECK(prefix_rule) << "Expect expression.";
   prefix_rule(this);
-  while (prec_order <= get_rule(prev_.type)->prec_order) {
+  while (get_rule(prev_.type)->prec_order >= prec_order) {
     advance();
     ParseFunc infix_rule = get_rule(prev_.type)->infix_rule;
     CHECK(infix_rule) << "Expect expression.";
