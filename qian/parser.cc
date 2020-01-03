@@ -103,7 +103,7 @@ void Parser::advance() {
   prev_ = curr_;
   while (true) {
     curr_ = scanner_->ScanToken();
-    LOG(INFO) << "Scanned: " << get_lexeme(curr_);
+    LOG(INFO) << "ScanToken: " << get_lexeme(curr_);
     if (curr_.type != TOKEN_ERROR) {
       break;
     }
@@ -180,26 +180,48 @@ void Parser::binary() {
   PrecRule* rule = get_rule(op_type);
   parse_with_prec_order(PrecOrder(rule->prec_order + 1));
 
-  if (op_type == TOKEN_BANG_EQUAL) {
+  if (op_type == TOKEN_AND) {
+    // +
+    emit_byte(OP_ADD);
+  }
+  else if (op_type == TOKEN_MINUS) {
+    // -
+    emit_byte(OP_SUB);
+  }
+  else if (op_type == TOKEN_STAR) {
+    // *
+    emit_byte(OP_MUL);
+  }
+  else if (op_type == TOKEN_SLASH) {
+    // /
+    emit_byte(OP_DIV);
+  }
+  else if (op_type == TOKEN_BANG_EQUAL) {
+    // !=
     emit_byte(OP_EQUAL, OP_NOT);
   }
   else if (op_type == TOKEN_EQUAL_EQUAL) {
+    // ==
     emit_byte(OP_EQUAL);
   }
   else if (op_type == TOKEN_GREATER) {
+    // >
     emit_byte(OP_GREATER);
   }
   else if (op_type == TOKEN_GREATER_EQUAL) {
+    // >=
     emit_byte(OP_LESS, OP_NOT);
   }
   else if (op_type == TOKEN_LESS) {
+    // <
     emit_byte(OP_LESS);
   }
   else if (op_type == TOKEN_LESS_EQUAL) {
+    // <=
     emit_byte(OP_GREATER, OP_NOT);
   }
   else {
-    CHECK(false) << "Unreachable.";
+    CHECK(false) << "Unknown type: " << op_type;
   }
 }
 
@@ -221,16 +243,27 @@ void Parser::literal() {
 
 void Parser::parse_with_prec_order(PrecOrder prec_order) {
   advance();
-  LOG(INFO) << get_lexeme(prev_);
-  CHECK(get_rule(prev_.type)) << "No rule for type: " << prev_.type;
-  ParseFunc prefix_rule = get_rule(prev_.type)->prefix_rule;
+
+  auto prev_rule = get_rule(prev_.type);
+  LOG(INFO) << get_lexeme(prev_) << " "
+            << prev_rule->prec_order << " "
+            << prev_.type << " "
+            << prec_order;
+
+  ParseFunc prefix_rule = prev_rule->prefix_rule;
   // TODO(zq7): Dies if not true, make a future check on this one.
   CHECK(prefix_rule) << "Expect expression.";
   prefix_rule(this);
-  while (get_rule(prev_.type)->prec_order >= prec_order) {
+
+  auto curr_rule = get_rule(curr_.type);
+  LOG(INFO) << get_lexeme(curr_) << " "
+            << curr_rule->prec_order << " "
+            << curr_.type << " "
+            << prec_order;
+
+  while (curr_rule->prec_order >= prec_order) {
     advance();
-    ParseFunc infix_rule = get_rule(prev_.type)->infix_rule;
-    CHECK(infix_rule) << "Expect expression.";
+    ParseFunc infix_rule = curr_rule->infix_rule;
     infix_rule(this);
   }
 }

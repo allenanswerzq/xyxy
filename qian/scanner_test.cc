@@ -70,4 +70,17 @@ TEST(Number, TestScanner) {
   EXPECT_TRUE(sc.at_end());
 }
 
+TEST(Nil, TestScanner) {
+  string source = Strip(R"(
+    var x = nil;
+  )");
+  Scanner sc(source);
+  EXPECT_TRUE(CompareToken(sc, "var",      Token{TOKEN_VAR, 0, 3, 1}));
+  EXPECT_TRUE(CompareToken(sc, "x",        Token{TOKEN_IDENTIFIER, 4, 1, 1}));
+  EXPECT_TRUE(CompareToken(sc, "=",        Token{TOKEN_EQUAL, 6, 1, 1}));
+  EXPECT_TRUE(CompareToken(sc, "nil",      Token{TOKEN_NIL, 8, 3, 1}));
+  EXPECT_TRUE(CompareToken(sc, ";",        Token{TOKEN_SEMICOLON, 11, 1, 1}));
+  EXPECT_TRUE(sc.at_end());
+}
+
 }  // namespace qian

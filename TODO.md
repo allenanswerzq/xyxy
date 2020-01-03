@@ -10,3 +10,5 @@ TODO:
 - Add benchmark feature to test the speed of code.
 
 - Use abseil::string instead std::string.
+
+- Add a better way to debug token tokentype and prec order

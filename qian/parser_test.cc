@@ -77,7 +77,6 @@ TEST_F(TestParser, Emit) {
 }
 
 TEST_F(TestParser, Parse) {
-  // TODO(zq7): remove prev_ or curr_.
   parser_->advance();
   parser_->expression();
   VM vm(&chunk_);
