@@ -4,7 +4,6 @@
 #include "base.h"
 #include "logging.h"
 #include "stack.h"
-#include "scanner.h"
 #include "type.h"
 
 namespace qian {

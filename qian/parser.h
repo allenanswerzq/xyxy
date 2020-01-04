@@ -63,22 +63,22 @@ class Parser {
   void emit_byte(uint8 byte1, uint8 byte2);
   void emit_return();
 
-  void number();
-  void grouping();
-  void unary();
-  void binary();
-  void expression();
-  void literal();
+  void parse_number();
+  void parse_grouping();
+  void parse_unary();
+  void parse_binary();
+  void parse_expression();
+  void parse_literal();
   void parse_with_prec_order(PrecOrder prec_order);
+
+  string to_string(Token tk) {
+    return scanner_->get_lexeme(tk);
+  };
 
   Chunk* GetChunk() { return chunk_; }
 
   Token prev_token() { return prev_; }
   Token curr_token() { return curr_; }
-
-  string get_lexeme(Token tk) {
-    return scanner_->get_lexeme(tk);
-  }
 
  private:
   PrecRule* get_rule(TokenType type) {
@@ -97,8 +97,8 @@ class Parser {
 inline Parser::Parser(const string& source, Chunk* chunk) {
   scanner_ = new Scanner(source);
   chunk_ = chunk;
-  curr_ = CreateToken(TOKEN_NONE, -1, -1, -1);
-  prev_ = CreateToken(TOKEN_NONE, -1, -1, -1);
+  curr_ = Token{TOKEN_NONE, -1, -1, -1};
+  prev_ = Token{TOKEN_NONE, -1, -1, -1};
 }
 
 inline Parser::~Parser() {

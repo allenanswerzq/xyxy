@@ -2,6 +2,7 @@
 #define QIAN_SCANNER_H_
 
 #include "base.h"
+#include "debug.h"
 
 namespace qian {
 
@@ -68,22 +69,22 @@ struct Token {
   int line;
 };
 
-inline Token CreateToken(TokenType type, int start, int leng, int line) {
-  return Token{type, start, leng, line};
+inline bool operator==(const Token& a, const Token& b) {
+  bool r = a.type == b.type;
+  r &= a.start == b.start;
+  r &= a.length == b.length;
+  r &= a.line == b.line;
+  return r;
 }
 
-struct ErrorToken : public Token {
-  TokenType type;
-  int line;
-  string msg;
-  ErrorToken(TokenType type, int line, string msg)
-    : type(type), line(line), msg(msg) {}
-};
+inline bool operator!=(const Token& a, const Token& b) {
+  return !(a == b);
+}
 
 class Scanner {
  public:
   Scanner(const string& source) {
-    source_ = source;
+    source_ = Strip(source);
     start_ = 0;
     current_ = 0;
     line_ = 1;
@@ -96,11 +97,11 @@ class Scanner {
   }
 
   Token make_token(TokenType type) {
-    return CreateToken(type, start_, current_ - start_, line_);
+    return Token{type, start_, current_ - start_, line_};
   }
 
   Token make_error_token(const string& msg) {
-    return ErrorToken(TOKEN_ERROR, line_, msg);
+    return Token{TOKEN_ERROR, -1, -1, -1};
   }
 
   char advance() {

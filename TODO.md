@@ -11,4 +11,6 @@ TODO:
 
 - Use abseil::string instead std::string.
 
-- Add a better way to debug token tokentype and prec order
+- ~Add a better way to debug token tokentype and prec order~.
+
+- Find a better way to detet cycle include.

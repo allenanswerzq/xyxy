@@ -7,20 +7,16 @@
 
 namespace qian {
 
-static bool compare(const Token& a, const Token& b) {
-  bool r = a.type == b.type;
-  r &= a.start == b.start;
-  r &= a.length == b.length;
-  r &= a.line == b.line;
-  return r;
+static Token create_token(TokenType type, int start, int leng, int line) {
+  return Token{type, start, leng, line};
 }
 
 class TestParser : public ::testing::Test {
  protected:
   void SetUp() override {
-    source_ = Strip(R"(
+    source_ = R"(
       ! (5 - 4 > 3 * 2 == ! nil)
-    )");
+    )";
     parser_ = std::make_shared<Parser>(source_, &chunk_);
   }
 
@@ -30,30 +26,23 @@ class TestParser : public ::testing::Test {
 };
 
 TEST_F(TestParser, Basic) {
-  EXPECT_EQ(source_, "! (5 - 4 > 3 * 2 == ! nil)");
-  EXPECT_TRUE(compare(parser_->prev_token(),
-                      CreateToken(TOKEN_NONE, -1, -1, -1)));
-  EXPECT_TRUE(compare(parser_->curr_token(),
-                      CreateToken(TOKEN_NONE, -1, -1, -1)));
+  EXPECT_EQ(parser_->prev_token(), create_token(TOKEN_NONE, -1, -1, -1));
+  EXPECT_EQ(parser_->curr_token(), create_token(TOKEN_NONE, -1, -1, -1));
 
   // Advance one token.
   parser_->advance();
-  EXPECT_TRUE(compare(parser_->prev_token(),
-                      CreateToken(TOKEN_NONE, -1, -1, -1)));
-  EXPECT_TRUE(compare(parser_->curr_token(),
-                      CreateToken(TOKEN_BANG, 0, 1, 1)));
+  EXPECT_EQ(parser_->prev_token(), create_token(TOKEN_NONE, -1, -1, -1));
+  EXPECT_EQ(parser_->curr_token(), create_token(TOKEN_BANG, 0, 1, 1));
 
   // Advance one token.
   parser_->advance();
-  EXPECT_TRUE(compare(parser_->prev_token(),
-                      CreateToken(TOKEN_BANG, 0, 1, 1)));
-  EXPECT_TRUE(compare(parser_->curr_token(),
-                      CreateToken(TOKEN_LEFT_PAREN, 2, 1, 1)));
+  EXPECT_EQ(parser_->prev_token(), create_token(TOKEN_BANG, 0, 1, 1));
+  EXPECT_EQ(parser_->curr_token(), create_token(TOKEN_LEFT_PAREN, 2, 1, 1));
 
   // Test lexeme.
-  EXPECT_EQ(parser_->get_lexeme(parser_->curr_token()), "(");
+  EXPECT_EQ(parser_->to_string(parser_->curr_token()), "(");
 
-  // TODO(zq7): addd cosume test with error handling.
+  // TODO(zq7): add consume test with error handling.
 }
 
 TEST_F(TestParser, Emit) {
@@ -78,7 +67,7 @@ TEST_F(TestParser, Emit) {
 
 TEST_F(TestParser, Parse) {
   parser_->advance();
-  parser_->expression();
+  parser_->parse_expression();
   VM vm(&chunk_);
   vm.Run();
 }

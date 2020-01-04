@@ -68,27 +68,27 @@ TokenType Scanner::check_keyword(const string& key, TokenType type) {
 
 TokenType Scanner::identifier_type() {
   char c = source_[start_];
-  if (c == 'a') return check_keyword("and", TOKEN_AND);
-  if (c == 'c') return check_keyword("class", TOKEN_CLASS);
-  if (c == 'e') return check_keyword("else", TOKEN_ELSE);
-  if (c == 'i') return check_keyword("if", TOKEN_IF);
-  if (c == 'n') return check_keyword("nil", TOKEN_NIL);
-  if (c == 'o') return check_keyword("or", TOKEN_OR);
-  if (c == 'p') return check_keyword("print", TOKEN_PRINT);
-  if (c == 'r') return check_keyword("return", TOKEN_RETURN);
-  if (c == 's') return check_keyword("super", TOKEN_SUPER);
-  if (c == 'v') return check_keyword("var", TOKEN_VAR);
-  if (c == 'w') return check_keyword("while", TOKEN_WHILE);
+  if (c == 'a') return check_keyword("and",     TOKEN_AND);
+  if (c == 'c') return check_keyword("class",   TOKEN_CLASS);
+  if (c == 'e') return check_keyword("else",    TOKEN_ELSE);
+  if (c == 'i') return check_keyword("if",      TOKEN_IF);
+  if (c == 'n') return check_keyword("nil",     TOKEN_NIL);
+  if (c == 'o') return check_keyword("or",      TOKEN_OR);
+  if (c == 'p') return check_keyword("print",   TOKEN_PRINT);
+  if (c == 'r') return check_keyword("return",  TOKEN_RETURN);
+  if (c == 's') return check_keyword("super",   TOKEN_SUPER);
+  if (c == 'v') return check_keyword("var",     TOKEN_VAR);
+  if (c == 'w') return check_keyword("while",   TOKEN_WHILE);
   if (c == 'f') {
     char n = source_[start_ + 1];
     if (n == 'a') return check_keyword("false", TOKEN_FALSE);
-    if (n == 'o') return check_keyword("for", TOKEN_FOR);
-    if (n == 'u') return check_keyword("fun", TOKEN_FUN);
+    if (n == 'o') return check_keyword("for",   TOKEN_FOR);
+    if (n == 'u') return check_keyword("fun",   TOKEN_FUN);
   }
   if (c == 't') {
     char n = source_[start_ + 1];
-    if (n == 'h') return check_keyword("this", TOKEN_THIS);
-    if (n == 'r') return check_keyword("true", TOKEN_TRUE);
+    if (n == 'h') return check_keyword("this",  TOKEN_THIS);
+    if (n == 'r') return check_keyword("true",  TOKEN_TRUE);
   }
   return TOKEN_IDENTIFIER;
 }
