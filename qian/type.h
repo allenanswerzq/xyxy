@@ -15,7 +15,6 @@ typedef struct  {
     bool boolean;
     double number;
   } as;
-
 } Value;
 
 // Converts a qian value into a c++ value.

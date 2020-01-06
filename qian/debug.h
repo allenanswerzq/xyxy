@@ -12,6 +12,7 @@ string Strip(const string& str);
 
 void DumpStack(Stack<Value, STACK_SIZE>* stk);
 
+
 } // namespace qian
 
 #endif  // QIAN_DEBUG_H_

@@ -66,10 +66,15 @@ TEST_F(TestParser, Emit) {
 }
 
 TEST_F(TestParser, Parse) {
+  EXPECT_TRUE(parser_->get_rule(TOKEN_FALSE)->prefix_rule);
+  EXPECT_TRUE(parser_->get_rule(TOKEN_TRUE)->prefix_rule);
+  auto rule = parser_->get_rule(TOKEN_NIL);
+  EXPECT_TRUE(rule);
+  EXPECT_TRUE(rule->prefix_rule);
   parser_->advance();
   parser_->parse_expression();
-  VM vm(&chunk_);
-  vm.Run();
+  // VM vm(&chunk_);
+  // vm.Run();
 }
 
 } // namespace qian

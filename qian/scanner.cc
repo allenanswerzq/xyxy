@@ -2,6 +2,59 @@
 
 namespace qian {
 
+string ToString(TokenType tt) {
+  if (tt == TOKEN_LEFT_PAREN   ) return "(";
+  if (tt == TOKEN_RIGHT_PAREN  ) return ")";
+  if (tt == TOKEN_LEFT_BRACE   ) return "{";
+  if (tt == TOKEN_RIGHT_BRACE  ) return "}";
+  if (tt == TOKEN_COMMA        ) return ",";
+  if (tt == TOKEN_DOT          ) return ".";
+  if (tt == TOKEN_MINUS        ) return "-";
+  if (tt == TOKEN_PLUS         ) return "+";
+  if (tt == TOKEN_SEMICOLON    ) return ";";
+  if (tt == TOKEN_SLASH        ) return "/";
+  if (tt == TOKEN_STAR         ) return "*";
+
+  if (tt == TOKEN_BANG         ) return "!";
+  if (tt == TOKEN_BANG_EQUAL   ) return "!=";
+  if (tt == TOKEN_EQUAL        ) return "=";
+  if (tt == TOKEN_EQUAL_EQUAL  ) return "==";
+  if (tt == TOKEN_GREATER      ) return ">";
+  if (tt == TOKEN_GREATER_EQUAL) return ">=";
+  if (tt == TOKEN_LESS         ) return "<";
+  if (tt == TOKEN_LESS_EQUAL   ) return "<=";
+
+  if (tt == TOKEN_IDENTIFIER   ) return "identifier";
+  if (tt == TOKEN_STRING       ) return "string";
+  if (tt == TOKEN_NUMBER       ) return "number";
+
+  if (tt == TOKEN_IF           ) return "if";
+  if (tt == TOKEN_AND          ) return "and";
+  if (tt == TOKEN_ELSE         ) return "else";
+  if (tt == TOKEN_FALSE        ) return "false";
+  if (tt == TOKEN_FUN          ) return "fun";
+  if (tt == TOKEN_FOR          ) return "for";
+  if (tt == TOKEN_NIL          ) return "nil";
+  if (tt == TOKEN_OR           ) return "or";
+  if (tt == TOKEN_CLASS        ) return "class";
+  if (tt == TOKEN_PRINT        ) return "print";
+  if (tt == TOKEN_RETURN       ) return "return";
+  if (tt == TOKEN_SUPER        ) return "super";
+  if (tt == TOKEN_THIS         ) return "this";
+  if (tt == TOKEN_TRUE         ) return "true";
+  if (tt == TOKEN_VAR          ) return "var";
+  if (tt == TOKEN_WHILE        ) return "while";
+
+  if (tt == TOKEN_NEWLINE      ) return "\n";
+  if (tt == TOKEN_WHITESPACE   ) return "white";
+
+  if (tt == TOKEN_ERROR        ) return "error";
+  if (tt == TOKEN_EOF          ) return "eof";
+
+  if (tt == TOKEN_NONE         ) return "None";
+  CHECK(false) << "Not recognized token: " << tt;
+}
+
 void Scanner::skip_whitespace() {
   for (;;) {
     char c = peek();
@@ -127,6 +180,16 @@ Token Scanner::ScanToken() {
   if (is_digit(c)) return process_number();
   if (is_alpha(c)) return process_identifier_keyword();
   return make_error_token("Unexpected characters met.");
+}
+
+string Scanner::interval_source(int start, int end) {
+  string ret;
+  ret.append(std::to_string(start));
+  ret.append("-");
+  ret.append(std::to_string(end));
+  ret.append(": ");
+  ret.append(source_.substr(start, end - start + 1));
+  return ret;
 }
 
 } // namespace qian

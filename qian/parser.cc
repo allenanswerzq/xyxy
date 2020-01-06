@@ -4,6 +4,7 @@
 
 namespace qian {
 
+// TODO(zq7): the order must be the same as token definition
 REGISTER_PREC_RULE(TOKEN_LEFT_PAREN)
   .Prefix_Rule(&Parser::parse_grouping)
   .Infix_Rule(nullptr)
@@ -72,19 +73,19 @@ REGISTER_PREC_RULE(TOKEN_NUMBER     )
   .Prefix_Rule(&Parser::parse_number);
 
 REGISTER_PREC_RULE(TOKEN_AND        );
-REGISTER_PREC_RULE(TOKEN_CLASS      );
+REGISTER_PREC_RULE(TOKEN_IF         );
 REGISTER_PREC_RULE(TOKEN_ELSE       );
 REGISTER_PREC_RULE(TOKEN_FALSE      )
   .Prefix_Rule(&Parser::parse_literal);
 
-REGISTER_PREC_RULE(TOKEN_FOR        );
 REGISTER_PREC_RULE(TOKEN_FUN        );
-REGISTER_PREC_RULE(TOKEN_IF         );
+REGISTER_PREC_RULE(TOKEN_FOR        );
 
 REGISTER_PREC_RULE(TOKEN_NIL        )
   .Prefix_Rule(&Parser::parse_literal);
 
 REGISTER_PREC_RULE(TOKEN_OR         );
+REGISTER_PREC_RULE(TOKEN_CLASS      );
 REGISTER_PREC_RULE(TOKEN_PRINT      );
 REGISTER_PREC_RULE(TOKEN_RETURN     );
 REGISTER_PREC_RULE(TOKEN_SUPER      );
@@ -95,8 +96,12 @@ REGISTER_PREC_RULE(TOKEN_TRUE       )
 
 REGISTER_PREC_RULE(TOKEN_VAR        );
 REGISTER_PREC_RULE(TOKEN_WHILE      );
+REGISTER_PREC_RULE(TOKEN_NEWLINE    );
+REGISTER_PREC_RULE(TOKEN_WHITESPACE );
+
 REGISTER_PREC_RULE(TOKEN_ERROR      );
 REGISTER_PREC_RULE(TOKEN_EOF        );
+
 REGISTER_PREC_RULE(TOKEN_NONE       );
 
 void Parser::advance() {
@@ -144,65 +149,80 @@ void Parser::emit_constant(Value val) {
 }
 
 void Parser::parse_number() {
+  int enter = scanner_->current_pos();
   double val = strtod(to_string(prev_).c_str(), nullptr);
   emit_constant(QIAN_NUMBER(val));
+  debug_parse("number", enter, scanner_->current_pos());
 }
 
 void Parser::parse_expression() {
+  int enter = scanner_->current_pos();
   parse_with_prec_order(PREC_ASSIGNMENT);
+  debug_parse("expression", enter, scanner_->current_pos());
 }
 
 void Parser::parse_grouping() {
+  int enter = scanner_->current_pos();
   parse_expression();
   consume(TOKEN_RIGHT_PAREN, "Expect ')' after parse_expression.");
+  debug_parse("grouping", enter, scanner_->current_pos());
 }
 
 void Parser::parse_unary() {
+  int enter = scanner_->current_pos();
+
   TokenType op_type = prev_.type;
   parse_with_prec_order(PREC_UNARY);
-  if (op_type == TOKEN_MINUS) {
-    emit_byte(OP_NEGATE);
-  }
-  else if (op_type == TOKEN_BANG) {
-    emit_byte(OP_NOT);
-  }
-  else {
-    CHECK(false) << "Unrecognized type: " << op_type;
-  }
+  if (op_type == TOKEN_MINUS)     emit_byte(OP_NEGATE);
+  else if (op_type == TOKEN_BANG) emit_byte(OP_NOT);
+  else CHECK(false) << "Unrecognized type: " << ToString(op_type);
+
+  debug_parse("unary", enter, scanner_->current_pos());
+}
+
+void Parser::debug_parse(const string& msg, int start, int end) {
+  LOG(INFO) << msg << " " << scanner_->interval_source(start, end);
 }
 
 void Parser::parse_binary() {
-  TokenType op_type = prev_.type;
+  int enter = scanner_->current_pos();
 
+  TokenType op_type = prev_.type;
   PrecRule* rule = get_rule(op_type);
   parse_with_prec_order(PrecOrder(rule->prec_order + 1));
 
-  if (op_type == TOKEN_AND)           emit_byte(OP_ADD);
-  if (op_type == TOKEN_MINUS)         emit_byte(OP_SUB);
-  if (op_type == TOKEN_STAR)          emit_byte(OP_MUL);
-  if (op_type == TOKEN_SLASH)         emit_byte(OP_DIV);
-  if (op_type == TOKEN_BANG_EQUAL)    emit_byte(OP_EQUAL, OP_NOT);
-  if (op_type == TOKEN_EQUAL_EQUAL)   emit_byte(OP_EQUAL);
-  if (op_type == TOKEN_GREATER)       emit_byte(OP_GREATER);
-  if (op_type == TOKEN_GREATER_EQUAL) emit_byte(OP_LESS, OP_NOT);
-  if (op_type == TOKEN_LESS)          emit_byte(OP_LESS);
-  if (op_type == TOKEN_LESS_EQUAL)    emit_byte(OP_GREATER, OP_NOT);
-  CHECK(false) << "Unknown type: " << op_type;
+  if (op_type == TOKEN_AND)                emit_byte(OP_ADD);
+  else if (op_type == TOKEN_MINUS)         emit_byte(OP_SUB);
+  else if (op_type == TOKEN_STAR)          emit_byte(OP_MUL);
+  else if (op_type == TOKEN_SLASH)         emit_byte(OP_DIV);
+  else if (op_type == TOKEN_BANG_EQUAL)    emit_byte(OP_EQUAL, OP_NOT);
+  else if (op_type == TOKEN_EQUAL_EQUAL)   emit_byte(OP_EQUAL);
+  else if (op_type == TOKEN_GREATER)       emit_byte(OP_GREATER);
+  else if (op_type == TOKEN_GREATER_EQUAL) emit_byte(OP_LESS, OP_NOT);
+  else if (op_type == TOKEN_LESS)          emit_byte(OP_LESS);
+  else if (op_type == TOKEN_LESS_EQUAL)    emit_byte(OP_GREATER, OP_NOT);
+  else CHECK(false) << "Unknown type: " << ToString(op_type);
+
+  debug_parse("binary", enter, scanner_->current_pos());
 }
 
 void Parser::parse_literal() {
-  if (prev_.type == TOKEN_FALSE)  emit_byte(OP_FALSE);
-  if (prev_.type == TOKEN_TRUE)   emit_byte(OP_TRUE);
-  if (prev_.type == TOKEN_NIL)    emit_byte(OP_NIL);
-  CHECK(false) << "Unreachable.";
+  int enter = scanner_->current_pos();
+  if (prev_.type == TOKEN_FALSE)      emit_byte(OP_FALSE);
+  else if (prev_.type == TOKEN_TRUE)  emit_byte(OP_TRUE);
+  else if (prev_.type == TOKEN_NIL)   emit_byte(OP_NIL);
+  else CHECK(false) << "Unreachable.";
+  debug_parse("literal", enter, scanner_->current_pos());
 }
 
 void Parser::parse_with_prec_order(PrecOrder prec_order) {
+  int enter = scanner_->current_pos();
   advance();
 
   auto prev_rule = get_rule(prev_.type);
+  CHECK(prev_rule);
   ParseFunc prefix_rule = prev_rule->prefix_rule;
-  CHECK(prefix_rule) << "Expect parse_expression.";
+  CHECK(prefix_rule) << "Expect prefix rule for: " << ToString(prev_.type);
   prefix_rule(this);
 
   auto curr_rule = get_rule(curr_.type);
@@ -211,6 +231,7 @@ void Parser::parse_with_prec_order(PrecOrder prec_order) {
     ParseFunc infix_rule = curr_rule->infix_rule;
     infix_rule(this);
   }
+  debug_parse("prec_order", enter, scanner_->current_pos());
 }
 
 }  // namespace qian

@@ -81,6 +81,8 @@ inline bool operator!=(const Token& a, const Token& b) {
   return !(a == b);
 }
 
+string ToString(TokenType tt);
+
 class Scanner {
  public:
   Scanner(const string& source) {
@@ -97,6 +99,10 @@ class Scanner {
   }
 
   Token make_token(TokenType type) {
+    if (type == TOKEN_EOF) {
+      start_++;
+      return Token{type, -1, -1, -1};
+    }
     return Token{type, start_, current_ - start_, line_};
   }
 
@@ -117,10 +123,13 @@ class Scanner {
   }
 
   string get_lexeme() {
+    if (start_ == current_) return "";
+    CHECK(start_ < source_.size() && start_ < current_);
     return source_.substr(start_, current_ - start_);
   }
 
   string get_lexeme(Token tk) {
+    if (tk.type == TOKEN_EOF) return "EOF";
     return source_.substr(tk.start, tk.length);
   }
 
@@ -129,6 +138,10 @@ class Scanner {
     if (ok) current_++;
     return ok;
   }
+
+  int current_pos() { return current_; }
+
+  string interval_source(int start, int end);
 
   void skip_whitespace();
   Token process_string();
