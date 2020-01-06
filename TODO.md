@@ -14,3 +14,5 @@ TODO:
 - ~Add a better way to debug token tokentype and prec order~.
 
 - Find a better way to detet cycle include.
+
+- Debug parser process, write a stack like code to track call depth and draw info
