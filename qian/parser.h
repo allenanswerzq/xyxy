@@ -71,6 +71,8 @@ class Parser {
   void parse_literal();
   void parse_with_prec_order(PrecOrder prec_order);
 
+  void debug_parse(const string& msg, int start, int end);
+
   string to_string(Token tk) {
     return scanner_->get_lexeme(tk);
   };
@@ -80,12 +82,12 @@ class Parser {
   Token prev_token() { return prev_; }
   Token curr_token() { return curr_; }
 
- private:
   PrecRule* get_rule(TokenType type) {
     CHECK(GlobalPrecRule());
     return GlobalPrecRule()->Get(type);
   }
 
+ private:
   Token curr_;
   Token prev_;
   Chunk* chunk_;  // not owned.
@@ -113,18 +115,21 @@ struct PrecRuleDefWrapper {
   PrecRuleDefWrapper(::qian::TokenType type) {
     rule = new ::qian::PrecRule();
     rule->token_type = type;
-    LOG(INFO) << "register prec rule..."  << type;
+    LOG(INFO) << "register prec rule..."  << ToString(type);
     ::qian::GlobalPrecRule()->Write(rule);
   }
   PrecRuleDefWrapper& Prefix_Rule(::qian::ParseFunc f) {
+    LOG(INFO) << " | prefix..."  << ToString(rule->token_type);
     rule->prefix_rule = f;
     return *this;
   }
   PrecRuleDefWrapper& Infix_Rule(::qian::ParseFunc f) {
+    LOG(INFO) << " | infix..."  << ToString(rule->token_type);
     rule->infix_rule = f;
     return *this;
   }
   PrecRuleDefWrapper& Prec_Order(::qian::PrecOrder order) {
+    LOG(INFO) << " | order..."  << ToString(rule->token_type);
     rule->prec_order = order;
     return *this;
   }
