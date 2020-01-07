@@ -183,12 +183,18 @@ Token Scanner::ScanToken() {
 }
 
 string Scanner::interval_source(int start, int end) {
+  // CHECK(start <= end) << start << " " << end;
   string ret;
   ret.append(std::to_string(start));
   ret.append("-");
   ret.append(std::to_string(end));
-  ret.append(": ");
-  ret.append(source_.substr(start, end - start + 1));
+  ret.append("///");
+  // if (start < source_.size()) {
+  //   ret.append(source_.substr(start, end - start + 1));
+  // }
+  // else {
+  //   ret.append("eof");
+  // }
   return ret;
 }
 

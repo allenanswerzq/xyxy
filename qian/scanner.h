@@ -126,7 +126,7 @@ class Scanner {
     if (start_ == current_) return "";
     CHECK(start_ < source_.size() && start_ < current_);
     return source_.substr(start_, current_ - start_);
-  }
+    }
 
   string get_lexeme(Token tk) {
     if (tk.type == TOKEN_EOF) return "EOF";
@@ -139,6 +139,7 @@ class Scanner {
     return ok;
   }
 
+  int start_pos() { return start_; }
   int current_pos() { return current_; }
 
   string interval_source(int start, int end);
