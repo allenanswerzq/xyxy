@@ -31,11 +31,15 @@ class Parser;
 typedef std::function<void(Parser*)> ParseFunc;
 
 typedef struct {
-  TokenType token_type = TOKEN_NONE;
-  ParseFunc prefix_rule = nullptr;
-  ParseFunc infix_rule = nullptr;
-  PrecOrder prec_order = PREC_NONE;
+  TokenType token_type;
+  ParseFunc prefix_rule;
+  ParseFunc infix_rule;
+  PrecOrder prec_order;
 } PrecRule;
+
+// inline void CreatPrecRule() {
+//   return PrecRule();
+// }
 
 inline Vector<PrecRule*>* GlobalPrecRule() {
   static Vector<PrecRule*>* registry;
@@ -71,7 +75,6 @@ class Parser {
   void parse_literal();
   void parse_with_prec_order(PrecOrder prec_order);
 
-  void debug_parse(const string& msg, int start, int end);
 
   string to_string(Token tk) {
     return scanner_->get_lexeme(tk);
@@ -87,6 +90,15 @@ class Parser {
     return GlobalPrecRule()->Get(type);
   }
 
+  typedef struct {
+    int parse_depth = 0;
+    int enter_pos;
+    int exit_pos;
+    string msg;
+  } DebugParser;
+
+  void debug_parser(DebugParser debug);
+
  private:
   Token curr_;
   Token prev_;
@@ -94,13 +106,15 @@ class Parser {
   bool has_error_ = false;
   bool panic_mode_ = false;
   Scanner* scanner_;
+
+  int parse_depth_ = 0;
 };
 
 inline Parser::Parser(const string& source, Chunk* chunk) {
   scanner_ = new Scanner(source);
   chunk_ = chunk;
-  curr_ = Token{TOKEN_NONE, -1, -1, -1};
-  prev_ = Token{TOKEN_NONE, -1, -1, -1};
+  curr_ = Token{TOKEN_NONE, 0, 0, 0};
+  prev_ = Token{TOKEN_NONE, 0, 0, 0};
 }
 
 inline Parser::~Parser() {

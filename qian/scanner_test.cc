@@ -46,11 +46,6 @@ TEST(Basic, TestScanner) {
 static bool compare(Scanner* sc, const string& lexeme, Token b) {
   Token a = sc->ScanToken();
   bool r = a == b;
-  // LOG(INFO) << sc->get_lexeme() <<  " "
-  //           << a.type    << " "
-  //           << a.start   << " "
-  //           << a.length  << " "
-  //           << a.line;
   r &= sc->get_lexeme() == lexeme;
   return r;
 }

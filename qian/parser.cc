@@ -102,13 +102,14 @@ REGISTER_PREC_RULE(TOKEN_WHITESPACE );
 REGISTER_PREC_RULE(TOKEN_ERROR      );
 REGISTER_PREC_RULE(TOKEN_EOF        );
 
-REGISTER_PREC_RULE(TOKEN_NONE       );
+REGISTER_PREC_RULE(TOKEN_NONE       )
+  .Prefix_Rule(&Parser::parse_grouping);
 
 void Parser::advance() {
   prev_ = curr_;
   while (true) {
     curr_ = scanner_->ScanToken();
-    LOG(INFO) << "ScanToken: " << to_string(curr_);
+    // LOG(INFO) << "ScanToken: " << to_string(curr_);
     if (curr_.type != TOKEN_ERROR) {
       break;
     }
@@ -148,28 +149,60 @@ void Parser::emit_constant(Value val) {
   emit_byte(OP_CONSTANT, make_constant(val));
 }
 
+
+#define DEBUG_PARSER_ENTER(type)                 \
+    DebugParser debug;                           \
+    debug.enter_pos = prev_.start;               \
+    debug.parse_depth = parse_depth_++;          \
+    debug.msg = type
+
+
+#define DEBUG_PARSER_EXIT()                       \
+    debug.exit_pos = curr_.start + curr_.length;                 \
+    parse_depth_--;                               \
+    debug_parser(debug)
+
+
+void Parser::debug_parser(DebugParser debug) {
+  string prefix(debug.parse_depth * 2, '-');
+  prefix.append(debug.msg);
+  prefix.append(string(debug.parse_depth * 2, '-'));
+  string source = scanner_->interval_source(debug.enter_pos, debug.exit_pos);
+  LOG(INFO) << prefix << ": " << source;
+}
+
+
+//        --binary--  (1 + 2)
+//      --unary--  !(1 + 2)
+// --express--   !(1 + 2)
 void Parser::parse_number() {
-  int enter = scanner_->current_pos();
+  DEBUG_PARSER_ENTER("number");
+
   double val = strtod(to_string(prev_).c_str(), nullptr);
   emit_constant(QIAN_NUMBER(val));
-  debug_parse("number", enter, scanner_->current_pos());
+
+  DEBUG_PARSER_EXIT();
 }
 
 void Parser::parse_expression() {
-  int enter = scanner_->current_pos();
+  DEBUG_PARSER_ENTER("express");
+
   parse_with_prec_order(PREC_ASSIGNMENT);
-  debug_parse("expression", enter, scanner_->current_pos());
+
+  DEBUG_PARSER_EXIT();
 }
 
 void Parser::parse_grouping() {
-  int enter = scanner_->current_pos();
+  DEBUG_PARSER_ENTER("group");
+
   parse_expression();
   consume(TOKEN_RIGHT_PAREN, "Expect ')' after parse_expression.");
-  debug_parse("grouping", enter, scanner_->current_pos());
+
+  DEBUG_PARSER_EXIT();
 }
 
 void Parser::parse_unary() {
-  int enter = scanner_->current_pos();
+  DEBUG_PARSER_ENTER("unary");
 
   TokenType op_type = prev_.type;
   parse_with_prec_order(PREC_UNARY);
@@ -177,21 +210,16 @@ void Parser::parse_unary() {
   else if (op_type == TOKEN_BANG) emit_byte(OP_NOT);
   else CHECK(false) << "Unrecognized type: " << ToString(op_type);
 
-  debug_parse("unary", enter, scanner_->current_pos());
-}
-
-void Parser::debug_parse(const string& msg, int start, int end) {
-  LOG(INFO) << msg << " " << scanner_->interval_source(start, end);
+  DEBUG_PARSER_EXIT();
 }
 
 void Parser::parse_binary() {
-  int enter = scanner_->current_pos();
+  DEBUG_PARSER_ENTER("binary");
 
   TokenType op_type = prev_.type;
   PrecRule* rule = get_rule(op_type);
   parse_with_prec_order(PrecOrder(rule->prec_order + 1));
-
-  if (op_type == TOKEN_AND)                emit_byte(OP_ADD);
+  if (op_type == TOKEN_PLUS)               emit_byte(OP_ADD);
   else if (op_type == TOKEN_MINUS)         emit_byte(OP_SUB);
   else if (op_type == TOKEN_STAR)          emit_byte(OP_MUL);
   else if (op_type == TOKEN_SLASH)         emit_byte(OP_DIV);
@@ -203,35 +231,39 @@ void Parser::parse_binary() {
   else if (op_type == TOKEN_LESS_EQUAL)    emit_byte(OP_GREATER, OP_NOT);
   else CHECK(false) << "Unknown type: " << ToString(op_type);
 
-  debug_parse("binary", enter, scanner_->current_pos());
+  DEBUG_PARSER_EXIT();
 }
 
 void Parser::parse_literal() {
-  int enter = scanner_->current_pos();
+  DEBUG_PARSER_ENTER("literal");
+
   if (prev_.type == TOKEN_FALSE)      emit_byte(OP_FALSE);
   else if (prev_.type == TOKEN_TRUE)  emit_byte(OP_TRUE);
   else if (prev_.type == TOKEN_NIL)   emit_byte(OP_NIL);
   else CHECK(false) << "Unreachable.";
-  debug_parse("literal", enter, scanner_->current_pos());
+
+  DEBUG_PARSER_EXIT();
 }
 
 void Parser::parse_with_prec_order(PrecOrder prec_order) {
-  int enter = scanner_->current_pos();
+  DEBUG_PARSER_ENTER("prec_order");
+
   advance();
 
   auto prev_rule = get_rule(prev_.type);
   CHECK(prev_rule);
   ParseFunc prefix_rule = prev_rule->prefix_rule;
-  CHECK(prefix_rule) << "Expect prefix rule for: " << ToString(prev_.type);
+  CHECK(prefix_rule);
+
   prefix_rule(this);
 
-  auto curr_rule = get_rule(curr_.type);
-  while (curr_rule->prec_order >= prec_order) {
+  while (get_rule(curr_.type)->prec_order >= prec_order) {
     advance();
-    ParseFunc infix_rule = curr_rule->infix_rule;
+    ParseFunc infix_rule = get_rule(prev_.type)->infix_rule;
     infix_rule(this);
   }
-  debug_parse("prec_order", enter, scanner_->current_pos());
+
+  DEBUG_PARSER_EXIT();
 }
 
 }  // namespace qian
