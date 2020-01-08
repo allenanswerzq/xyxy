@@ -146,16 +146,16 @@ void Parser::emit_constant(Value val) {
   debug.msg = type
 
 #define DEBUG_PARSER_EXIT()                    \
-  debug.exit_pos = curr_.start + curr_.length; \
+  debug.exit_pos = prev_.start + prev_.length; \
   parse_depth_--;                              \
   debug_parser(debug)
 
 void Parser::debug_parser(DebugParser debug) {
-  string prefix(debug.parse_depth, '-');
-  // prefix.append(debug.msg);
-  // prefix.append(string(debug.parse_depth * 2, '-'));
+  // TODO(zq7): Make debug drawing looks more beautiful.
+  string prefix(debug.parse_depth * 3, '-');
+  CHECK(debug.enter_pos < debug.exit_pos);
   string source = scanner_->interval_source(debug.enter_pos, debug.exit_pos);
-  LOG(INFO) << prefix << ": " << source;
+  LOG(INFO) << prefix << std::to_string(debug.parse_depth) << "|   " << source;
 }
 
 void Parser::parse_number() {
