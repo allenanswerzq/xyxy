@@ -104,7 +104,7 @@ class Parser {
   bool panic_mode_ = false;
   Scanner* scanner_;
 
-  int parse_depth_ = 0;
+  int parse_depth_ = 1;
 };
 
 inline Parser::Parser(const string& source, Chunk* chunk) {

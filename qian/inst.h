@@ -25,10 +25,34 @@ typedef enum {
   OP_LESS,
 } OpCode;
 
+class Inst;
+
+static Vector<Inst*>* GlobalInst() {
+  static Vector<Inst*>* registry_;
+  if (registry_ == nullptr) {
+    registry_ = new Vector<Inst*>;
+  }
+  return registry_;
+}
+
 class Inst {
  public:
   Inst() {}
   virtual ~Inst() {}
+
+  Inst(Inst* inst) {
+    this->name_ = inst->Name();
+    this->opcode_ = inst->Opcode();
+    this->length_ = inst->Length();
+    this->operands_ = *inst->Operands();
+    this->debug_info_ = inst->DebugInfo();
+  }
+
+  static Inst* Create(OpCode byte) {
+    Inst* template_inst = GlobalInst()->Get(byte);
+    Inst* new_inst = new Inst(template_inst);
+    return new_inst;
+  };
 
   typedef std::function<void(Inst*)> FuncDebugInfo;
 
@@ -39,7 +63,9 @@ class Inst {
   uint8 Length() { return length_; }
 
   void DebugInfo(const FuncDebugInfo& f) { debug_info_ = f; }
-  void DebugInfo() { debug_info_(this); }
+  FuncDebugInfo DebugInfo() { return this->debug_info_; }
+
+  void RunDebugInfo() { debug_info_(this); }
 
   void Opcode(uint8 opcode) { opcode_ = opcode; }
   uint8 Opcode() { return opcode_; }
@@ -54,14 +80,6 @@ class Inst {
   Vector<Value> operands_;
   FuncDebugInfo debug_info_;
 };
-
-static Vector<Inst*>* GlobalInst() {
-  static Vector<Inst*>* registry_;
-  if (registry_ == nullptr) {
-    registry_ = new Vector<Inst*>;
-  }
-  return registry_;
-}
 
 Inst* DispathInst(Chunk* chunk, uint8 offset);
 
@@ -86,10 +104,6 @@ struct InstDefWrapper {
   }
   InstDefWrapper& Opcode(uint8 opcode) {
     inst->Opcode(opcode);
-    return *this;
-  }
-  InstDefWrapper& Operand(::qian::Value operand) {
-    inst->Operand(operand);
     return *this;
   }
   InstDefWrapper& DebugInfo(const std::function<void(::qian::Inst*)>& f) {

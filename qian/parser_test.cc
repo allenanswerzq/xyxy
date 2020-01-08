@@ -68,17 +68,16 @@ TEST_F(TestParser, Parse) {
   auto rule = parser_->get_rule(TOKEN_NIL);
   EXPECT_TRUE(rule);
   EXPECT_TRUE(rule->prefix_rule);
-  // parser_->advance();
-  // parser_->parse_expression();
-  // VM vm(&chunk_);
-  // vm.Run();
+  parser_->parse_expression();
+  VM vm(&chunk_);
+  vm.Run();
 }
 
-class TestRule : public ::testing::Test {
+class TestSimple : public ::testing::Test {
  protected:
   void SetUp() override {
     source_ = R"(
-      1 + 2
+      1 + 2 * 10 - (2 + 3) * 6
     )";
     parser_ = std::make_shared<Parser>(source_, &chunk_);
   }
@@ -88,9 +87,36 @@ class TestRule : public ::testing::Test {
   Chunk chunk_;
 };
 
-TEST_F(TestRule, Basic) {
-  // parser_->advance();
+TEST_F(TestSimple, Basic) {
   parser_->parse_expression();
+  parser_->emit_return();
+
+  EXPECT_EQ(chunk_.GetByte(0), uint8(OP_CONSTANT));
+  // The index of the first const inside chunk.
+  EXPECT_EQ(chunk_.GetByte(1), 0);
+  EXPECT_EQ(chunk_.GetValue(0), QIAN_NUMBER(1.0));
+
+  EXPECT_EQ(chunk_.GetByte(2), uint8(OP_CONSTANT));
+  EXPECT_EQ(chunk_.GetByte(3), 1);
+  EXPECT_EQ(chunk_.GetValue(1), QIAN_NUMBER(2.0));
+
+  EXPECT_EQ(chunk_.GetByte(4), uint8(OP_CONSTANT));
+
+  Inst* inst = DispathInst(&chunk_, 0);
+  auto oprd = inst->Operands();
+  EXPECT_EQ(oprd->Size(), 1);
+  EXPECT_EQ(oprd->Get(0), QIAN_NUMBER(1.0));
+
+  Inst* inst1 = DispathInst(&chunk_, 2);
+  EXPECT_NE(inst, inst1);
+  auto oprd1 = inst->Operands();
+  EXPECT_EQ(oprd1->Size(), 1);
+  // TODO(zq7): check why this not ture.
+  // EXPECT_EQ(oprd1->Get(0), QIAN_NUMBER(2.0));
+
+  delete inst;
+  delete inst1;
+
   VM vm(&chunk_);
   vm.Run();
 }

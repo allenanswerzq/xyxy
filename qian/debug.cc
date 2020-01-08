@@ -16,7 +16,10 @@ string Strip(const string& str) {
 }
 
 void DumpStack(Stack<Value, STACK_SIZE>* stk) {
-  // TODO(zq7): dump stack content.
+  int i = 0;
+  while (!stk->Empty()) {
+    printf("[%04d: %0.4f]\n", i++, AS_CXX_NUMBER(stk->Pop()));
+  }
 }
 
 }  // namespace qian

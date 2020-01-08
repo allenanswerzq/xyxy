@@ -8,13 +8,16 @@ Status VM::Run() {
   for (; pc_ < chunk_->Size();) {
     Inst* inst = DispathInst(chunk_, pc_);
 #ifndef NDEBUG
-    inst->DebugInfo();
+    inst->RunDebugInfo();
 #endif
     Status status = Run(inst);
-    // TODO(zq7): Handle errors according to different status.
-    // Add something like this maybe.
-    // error_->HandleError(status);
     pc_ += inst->Length();
+    // TODO(zq7):
+    // 1) Handle errors according to different status.
+    //    Add something like this:
+    //      error_->HandleError(status);
+    // 2) Consider replact Inst* to Inst.
+    delete inst;
   }
   return Status();
 }
@@ -30,8 +33,10 @@ REGISTER_FUNC().Name("OP_RETURN").Func([](VM* vm) {
 });
 
 REGISTER_FUNC().Name("OP_CONSTANT").Func([](VM* vm) {
-  // Push something onto the stack.
-  vm->GetStack()->Push(QIAN_NUMBER(1.24));
+  // Get the current running inst.
+  Inst* inst = DispathInst(vm->GetChunk(), vm->PC());
+  auto oprds = inst->Operands();
+  vm->GetStack()->Push(oprds->Get(0));
   return Status();
 });
 

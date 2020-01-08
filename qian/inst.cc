@@ -3,9 +3,8 @@
 namespace qian {
 
 Inst* DispathInst(Chunk* chunk, uint8 offset) {
-  uint8 byte = chunk->GetByte(offset);
-  assert(byte < GlobalInst()->Size());
-  Inst* inst = GlobalInst()->Get(byte);
+  OpCode byte = (OpCode)chunk->GetByte(offset);
+  Inst* inst = Inst::Create(byte);
   // TODO(zq7): better handle inst operands, for now assume
   // all insts will have one `Value` as operand, but it maybe not
   // applicable in the future.
@@ -28,8 +27,12 @@ REGISTER_INST("OP_CONSTANT")
     .Length(2)
     .DebugInfo([](Inst* inst) {
       auto oprd = inst->Operands();
-      Value val = oprd->Get(0);
-      printf("%-16s %4f\n", inst->Name().c_str(), AS_CXX_NUMBER(val));
+      printf("%-16s ", inst->Name().c_str());
+      for (int i = 0; i < oprd->Size(); i++) {
+        Value val = oprd->Get(i);
+        printf("%0.4f ", AS_CXX_NUMBER(val));
+      }
+      printf("\n");
     });
 
 REGISTER_INST("OP_NEGATE")
@@ -37,13 +40,21 @@ REGISTER_INST("OP_NEGATE")
     .Length(1)
     .DebugInfo([](Inst* inst) {});
 
-REGISTER_INST("OP_ADD").Opcode(OP_ADD).Length(1).DebugInfo([](Inst* inst) {});
+REGISTER_INST("OP_ADD").Opcode(OP_ADD).Length(1).DebugInfo([](Inst* inst) {
+  printf("%s\n", inst->Name().c_str());
+});
 
-REGISTER_INST("OP_SUB").Opcode(OP_SUB).Length(1).DebugInfo([](Inst* inst) {});
+REGISTER_INST("OP_SUB").Opcode(OP_SUB).Length(1).DebugInfo([](Inst* inst) {
+  printf("%s\n", inst->Name().c_str());
+});
 
-REGISTER_INST("OP_MUL").Opcode(OP_MUL).Length(1).DebugInfo([](Inst* inst) {});
+REGISTER_INST("OP_MUL").Opcode(OP_MUL).Length(1).DebugInfo([](Inst* inst) {
+  printf("%s\n", inst->Name().c_str());
+});
 
-REGISTER_INST("OP_DIV").Opcode(OP_DIV).Length(1).DebugInfo([](Inst* inst) {});
+REGISTER_INST("OP_DIV").Opcode(OP_DIV).Length(1).DebugInfo([](Inst* inst) {
+  printf("%s\n", inst->Name().c_str());
+});
 
 REGISTER_INST("OP_NIL").Opcode(OP_NIL).Length(1).DebugInfo([](Inst* inst) {
   printf("OP_NIL\n");
