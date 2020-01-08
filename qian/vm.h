@@ -4,8 +4,8 @@
 #include "chunk.h"
 #include "debug.h"
 #include "inst.h"
-#include "status.h"
 #include "stack.h"
+#include "status.h"
 
 namespace qian {
 
@@ -25,20 +25,22 @@ class VM {
   Chunk* GetChunk() { return chunk_; }
   Stack<Value, STACK_SIZE>* GetStack() { return stk_; }
 
+  uint32 PC() { return pc_; }
+
  private:
-  Chunk* chunk_; // not owned.
+  Chunk* chunk_;  // not owned.
   Stack<Value, STACK_SIZE>* stk_;
-  uint32_t pc_;
+  uint32 pc_;
 };
 
 inline VM::VM(Chunk* chunk) : chunk_(chunk) {
-  stk_ = new Stack<Value, STACK_SIZE> ();
+  stk_ = new Stack<Value, STACK_SIZE>();
   pc_ = 0;
 }
 
 inline VM::VM() {
   chunk_ = new Chunk();
-  stk_ = new Stack<Value, STACK_SIZE> ();
+  stk_ = new Stack<Value, STACK_SIZE>();
   pc_ = 0;
 }
 
@@ -64,17 +66,17 @@ struct InstRunDefWrapper {
     return *this;
   }
   InstRunDefWrapper& Name(const string& name) {
-    (void) name;
+    (void)name;
     return *this;
   }
 };
 
-} // namespace register_func
+}  // namespace register_func
 
 #define REGISTER_FUNC() REGISTER_FUNC_UNIQ_HELPER(__COUNTER__)
 #define REGISTER_FUNC_UNIQ_HELPER(ctr) REGISTER_FUNC_UNIQ(ctr)
-#define REGISTER_FUNC_UNIQ(ctr)                                 \
-  static ::register_func::InstRunDefWrapper register_func##ctr  \
-    QI_ATTRIBUTE_UNUSED = ::register_func::InstRunDefWrapper()
+#define REGISTER_FUNC_UNIQ(ctr)                                \
+  static ::register_func::InstRunDefWrapper register_func##ctr \
+      QI_ATTRIBUTE_UNUSED = ::register_func::InstRunDefWrapper()
 
 #endif  // QIAN_VM_H_

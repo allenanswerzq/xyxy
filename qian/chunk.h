@@ -33,6 +33,6 @@ class Chunk {
   Vector<int>* lines_;
 };
 
-} // namespace qian
+}  // namespace qian
 
 #endif  // QIAN_CHUNK_H_

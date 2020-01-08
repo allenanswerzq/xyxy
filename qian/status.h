@@ -1,8 +1,9 @@
 #ifndef QIAN_STATUS_H_
 #define QIAN_STATUS_H_
 
-#include "base.h"
 #include <functional>
+
+#include "base.h"
 
 namespace qian {
 
@@ -48,9 +49,7 @@ class Status {
   // Returns true iff the status indicates success.
   bool ok() const { return (state_ == NULL); }
 
-  ErrorCode code() const {
-    return ok() ? ErrorCode::OK : state_->code;
-  }
+  ErrorCode code() const { return ok() ? ErrorCode::OK : state_->code; }
 
   const string& error_message() const {
     return ok() ? empty_string() : state_->msg;
@@ -112,6 +111,6 @@ std::ostream& operator<<(std::ostream& os, const Status& x);
 
 typedef std::function<void(const Status&)> StatusCallback;
 
-} // namespace qian
+}  // namespace qian
 
-#endif // QIAN_STATUS_H
+#endif  // QIAN_STATUS_H

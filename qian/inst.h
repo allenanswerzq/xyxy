@@ -1,10 +1,10 @@
 #ifndef QIAN_INST_H_
 #define QIAN_INST_H_
 
-#include "vector.h"
 #include "chunk.h"
-#include "status.h"
 #include "logging.h"
+#include "status.h"
+#include "vector.h"
 
 namespace qian {
 
@@ -65,8 +65,7 @@ static Vector<Inst*>* GlobalInst() {
 
 Inst* DispathInst(Chunk* chunk, uint8 offset);
 
-} // namespace qian
-
+}  // namespace qian
 
 namespace register_inst {
 
@@ -97,16 +96,17 @@ struct InstDefWrapper {
     inst->DebugInfo(f);
     return *this;
   }
+
  private:
   ::qian::Inst* inst;
 };
 
-} // namespace register_inst
+}  // namespace register_inst
 
 #define REGISTER_INST(name) REGISTER_INST_UNIQ_HELPER(__COUNTER__, name)
 #define REGISTER_INST_UNIQ_HELPER(ctr, name) REGISTER_INST_UNIQ(ctr, name)
-#define REGISTER_INST_UNIQ(ctr, name)                                 \
-  static ::register_inst::InstDefWrapper register_inst##ctr           \
-    QI_ATTRIBUTE_UNUSED = ::register_inst::InstDefWrapper(name)
+#define REGISTER_INST_UNIQ(ctr, name)                       \
+  static ::register_inst::InstDefWrapper register_inst##ctr \
+      QI_ATTRIBUTE_UNUSED = ::register_inst::InstDefWrapper(name)
 
 #endif  // QIAN_INST_H_

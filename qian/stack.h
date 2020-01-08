@@ -1,6 +1,8 @@
 #ifndef QIAN_STACK_H_
 #define QIAN_STACK_H_
 
+#include "base.h"
+
 namespace qian {
 
 template <class T, int N>
@@ -19,13 +21,9 @@ class Stack {
     }
   }
 
-  bool Full() {
-    return top_ == stk_ + N;
-  }
+  bool Full() { return top_ == stk_ + N; }
 
-  bool Empty() {
-    return top_ == stk_;
-  }
+  bool Empty() { return top_ == stk_; }
 
   void Push(const T& value) {
     assert(!Full());
@@ -37,15 +35,13 @@ class Stack {
     return *(--top_);
   }
 
-  T Top() {
-    return *top_;
-  }
+  T Top() { return *top_; }
 
  private:
   T* stk_;
   T* top_;
 };
 
-} // namespace qian
+}  // namespace qian
 
 #endif  // QIAN_STACK_H_

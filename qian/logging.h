@@ -15,10 +15,10 @@ limitations under the License.
 #ifndef QIAN_LOGGING_H_
 #define QIAN_LOGGING_H_
 
-#include "base.h"
-
-#include <sstream>
 #include <limits>
+#include <sstream>
+
+#include "base.h"
 
 // GCC can be told that a certain branch is not likely to be taken (for
 // instance, a CHECK failure), and use that information in static analysis.
@@ -69,8 +69,7 @@ class LogMessageFatal : public LogMessage {
   ::qian::internal::LogMessage(__FILE__, __LINE__, qian::WARNING)
 #define _QI_LOG_ERROR \
   ::qian::internal::LogMessage(__FILE__, __LINE__, qian::ERROR)
-#define _QI_LOG_FATAL \
-  ::qian::internal::LogMessageFatal(__FILE__, __LINE__)
+#define _QI_LOG_FATAL ::qian::internal::LogMessageFatal(__FILE__, __LINE__)
 
 #define LOG(severity) _QI_LOG_##severity
 
@@ -144,8 +143,8 @@ struct CheckOpString {
 
 // Build the error message string. Specify no inlining for code size.
 template <typename T1, typename T2>
-string* MakeCheckOpString(const T1& v1, const T2& v2,
-                          const char* exprtext) __attribute__((noinline));
+string* MakeCheckOpString(const T1& v1, const T2& v2, const char* exprtext)
+    __attribute__((noinline));
 
 // A helper class for formatting "expr (V1 vs. V2)" in a CHECK_XX
 // statement.  See MakeCheckOpString for sample usage.  Other
@@ -184,31 +183,33 @@ string* MakeCheckOpString(const T1& v1, const T2& v2, const char* exprtext) {
 // unnamed enum type - see comment below.
 // The (size_t, int) and (int, size_t) specialization are to handle unsigned
 // comparison errors while still being thorough with the comparison.
-#define QI_DEFINE_CHECK_OP_IMPL(name, op)                                 \
-  template <typename T1, typename T2>                                     \
-  inline string* name##Impl(const T1& v1, const T2& v2,                   \
-                            const char* exprtext) {                       \
-    if (QI_PREDICT_TRUE(v1 op v2))                                        \
-      return NULL;                                                        \
-    else                                                                  \
+#define QI_DEFINE_CHECK_OP_IMPL(name, op)                           \
+  template <typename T1, typename T2>                               \
+  inline string* name##Impl(const T1& v1, const T2& v2,             \
+                            const char* exprtext) {                 \
+    if (QI_PREDICT_TRUE(v1 op v2))                                  \
+      return NULL;                                                  \
+    else                                                            \
       return ::qian::internal::MakeCheckOpString(v1, v2, exprtext); \
-  }                                                                       \
-  inline string* name##Impl(int v1, int v2, const char* exprtext) {       \
-    return name##Impl<int, int>(v1, v2, exprtext);                        \
-  }                                                                       \
-  inline string* name##Impl(const size_t v1, const int v2, const char* exprtext) {       \
-    if (QI_PREDICT_FALSE(v2 < 0)) {                                       \
-       return ::qian::internal::MakeCheckOpString(v1, v2, exprtext);\
-    }                                                                     \
-    const size_t uval = (size_t)((unsigned)v1);                           \
-    return name##Impl<size_t, size_t>(uval, v2, exprtext);                \
-  }                                                                       \
-  inline string* name##Impl(const int v1, const size_t v2, const char* exprtext) {       \
-    if (QI_PREDICT_FALSE(v2 >= std::numeric_limits<int>::max())) {      \
-       return ::qian::internal::MakeCheckOpString(v1, v2, exprtext);\
-    }                                                                     \
-    const size_t uval = (size_t)((unsigned)v2);                           \
-    return name##Impl<size_t, size_t>(v1, uval, exprtext);                \
+  }                                                                 \
+  inline string* name##Impl(int v1, int v2, const char* exprtext) { \
+    return name##Impl<int, int>(v1, v2, exprtext);                  \
+  }                                                                 \
+  inline string* name##Impl(const size_t v1, const int v2,          \
+                            const char* exprtext) {                 \
+    if (QI_PREDICT_FALSE(v2 < 0)) {                                 \
+      return ::qian::internal::MakeCheckOpString(v1, v2, exprtext); \
+    }                                                               \
+    const size_t uval = (size_t)((unsigned)v1);                     \
+    return name##Impl<size_t, size_t>(uval, v2, exprtext);          \
+  }                                                                 \
+  inline string* name##Impl(const int v1, const size_t v2,          \
+                            const char* exprtext) {                 \
+    if (QI_PREDICT_FALSE(v2 >= std::numeric_limits<int>::max())) {  \
+      return ::qian::internal::MakeCheckOpString(v1, v2, exprtext); \
+    }                                                               \
+    const size_t uval = (size_t)((unsigned)v2);                     \
+    return name##Impl<size_t, size_t>(v1, uval, exprtext);          \
   }
 
 // We use the full name Check_EQ, Check_NE, etc. in case the file including
@@ -216,22 +217,22 @@ string* MakeCheckOpString(const T1& v1, const T2& v2, const char* exprtext) {
 // This happens if, for example, those are used as token names in a
 // yacc grammar.
 QI_DEFINE_CHECK_OP_IMPL(Check_EQ,
-                        == )  // Compilation error with CHECK_EQ(NULL, x)?
-QI_DEFINE_CHECK_OP_IMPL(Check_NE, != )  // Use CHECK(x == NULL) instead.
-QI_DEFINE_CHECK_OP_IMPL(Check_LE, <= )
-QI_DEFINE_CHECK_OP_IMPL(Check_LT, < )
-QI_DEFINE_CHECK_OP_IMPL(Check_GE, >= )
-QI_DEFINE_CHECK_OP_IMPL(Check_GT, > )
+                        ==)  // Compilation error with CHECK_EQ(NULL, x)?
+QI_DEFINE_CHECK_OP_IMPL(Check_NE, !=)  // Use CHECK(x == NULL) instead.
+QI_DEFINE_CHECK_OP_IMPL(Check_LE, <=)
+QI_DEFINE_CHECK_OP_IMPL(Check_LT, <)
+QI_DEFINE_CHECK_OP_IMPL(Check_GE, >=)
+QI_DEFINE_CHECK_OP_IMPL(Check_GT, >)
 #undef QI_DEFINE_CHECK_OP_IMPL
 
 // In optimized mode, use CheckOpString to hint to compiler that
 // the while condition is unlikely.
-#define CHECK_OP_LOG(name, op, val1, val2)                            \
+#define CHECK_OP_LOG(name, op, val1, val2)                      \
   while (::qian::internal::CheckOpString _result =              \
              ::qian::internal::name##Impl(                      \
                  ::qian::internal::GetReferenceableValue(val1), \
                  ::qian::internal::GetReferenceableValue(val2), \
-                 #val1 " " #op " " #val2))                            \
+                 #val1 " " #op " " #val2))                      \
   ::qian::internal::LogMessageFatal(__FILE__, __LINE__) << *(_result.str_)
 
 #define CHECK_OP(name, op, val1, val2) CHECK_OP_LOG(name, op, val1, val2)
@@ -243,9 +244,9 @@ QI_DEFINE_CHECK_OP_IMPL(Check_GT, > )
 #define CHECK_LT(val1, val2) CHECK_OP(Check_LT, <, val1, val2)
 #define CHECK_GE(val1, val2) CHECK_OP(Check_GE, >=, val1, val2)
 #define CHECK_GT(val1, val2) CHECK_OP(Check_GT, >, val1, val2)
-#define CHECK_NOTNULL(val)                                 \
+#define CHECK_NOTNULL(val)                           \
   ::qian::internal::CheckNotNull(__FILE__, __LINE__, \
-                                       "'" #val "' Must be non NULL", (val))
+                                 "'" #val "' Must be non NULL", (val))
 
 #ifndef NDEBUG
 // DCHECK_EQ/NE/...
@@ -299,4 +300,4 @@ T&& CheckNotNull(const char* file, int line, const char* exprtext, T&& t) {
 }  // namespace internal
 }  // namespace qian
 
-#endif // QIAN_LOGGING_H_
+#endif  // QIAN_LOGGING_H_
