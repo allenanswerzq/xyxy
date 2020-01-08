@@ -1,7 +1,7 @@
 #include "chunk.h"
 
-#include "type.h"
 #include "gtest/gtest.h"
+#include "type.h"
 
 namespace qian {
 
@@ -46,4 +46,4 @@ TEST(AddValue, TestChunk) {
   }
 }
 
-} // namespace qian
+}  // namespace qian

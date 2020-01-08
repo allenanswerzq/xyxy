@@ -19,98 +19,59 @@ Inst* DispathInst(Chunk* chunk, uint8 offset) {
 }
 
 REGISTER_INST("OP_RETURN")
-  .Opcode(OP_RETURN)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-    printf("%s\n", inst->Name().c_str());
-  });
+    .Opcode(OP_RETURN)
+    .Length(1)
+    .DebugInfo([](Inst* inst) { printf("%s\n", inst->Name().c_str()); });
 
 REGISTER_INST("OP_CONSTANT")
-  .Opcode(OP_CONSTANT)
-  .Length(2)
-  .DebugInfo([](Inst* inst) {
-    auto oprd = inst->Operands();
-    Value val = oprd->Get(0);
-    printf("%-16s %4f\n", inst->Name().c_str(), AS_CXX_NUMBER(val));
-  });
+    .Opcode(OP_CONSTANT)
+    .Length(2)
+    .DebugInfo([](Inst* inst) {
+      auto oprd = inst->Operands();
+      Value val = oprd->Get(0);
+      printf("%-16s %4f\n", inst->Name().c_str(), AS_CXX_NUMBER(val));
+    });
 
 REGISTER_INST("OP_NEGATE")
-  .Opcode(OP_NEGATE)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-  });
+    .Opcode(OP_NEGATE)
+    .Length(1)
+    .DebugInfo([](Inst* inst) {});
 
-REGISTER_INST("OP_ADD")
-  .Opcode(OP_ADD)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-  });
+REGISTER_INST("OP_ADD").Opcode(OP_ADD).Length(1).DebugInfo([](Inst* inst) {});
 
-REGISTER_INST("OP_SUB")
-  .Opcode(OP_SUB)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-  });
+REGISTER_INST("OP_SUB").Opcode(OP_SUB).Length(1).DebugInfo([](Inst* inst) {});
 
-REGISTER_INST("OP_MUL")
-  .Opcode(OP_MUL)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-  });
+REGISTER_INST("OP_MUL").Opcode(OP_MUL).Length(1).DebugInfo([](Inst* inst) {});
 
-REGISTER_INST("OP_DIV")
-  .Opcode(OP_DIV)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-  });
+REGISTER_INST("OP_DIV").Opcode(OP_DIV).Length(1).DebugInfo([](Inst* inst) {});
 
-REGISTER_INST("OP_NIL")
-  .Opcode(OP_NIL)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-    printf("OP_NIL\n");
-  });
+REGISTER_INST("OP_NIL").Opcode(OP_NIL).Length(1).DebugInfo([](Inst* inst) {
+  printf("OP_NIL\n");
+});
 
-REGISTER_INST("OP_TRUE")
-  .Opcode(OP_TRUE)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-    printf("OP_TRUE\n");
-  });
+REGISTER_INST("OP_TRUE").Opcode(OP_TRUE).Length(1).DebugInfo([](Inst* inst) {
+  printf("OP_TRUE\n");
+});
 
-REGISTER_INST("OP_FALSE")
-  .Opcode(OP_FALSE)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-    printf("OP_FALSE\n");
-  });
+REGISTER_INST("OP_FALSE").Opcode(OP_FALSE).Length(1).DebugInfo([](Inst* inst) {
+  printf("OP_FALSE\n");
+});
 
-REGISTER_INST("OP_NOT")
-  .Opcode(OP_NOT)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-    printf("OP_NOT\n");
-  });
+REGISTER_INST("OP_NOT").Opcode(OP_NOT).Length(1).DebugInfo([](Inst* inst) {
+  printf("OP_NOT\n");
+});
 
-REGISTER_INST("OP_EQUAL")
-  .Opcode(OP_EQUAL)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-    printf("OP_EQUAL\n");
-  });
+REGISTER_INST("OP_EQUAL").Opcode(OP_EQUAL).Length(1).DebugInfo([](Inst* inst) {
+  printf("OP_EQUAL\n");
+});
 
 REGISTER_INST("OP_GREATER")
-  .Opcode(OP_GREATER)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-    printf("OP_GREATER\n");
-  });
+    .Opcode(OP_GREATER)
+    .Length(1)
+    .DebugInfo([](Inst* inst) { printf("OP_GREATER\n"); });
 
-REGISTER_INST("OP_LESS")
-  .Opcode(OP_LESS)
-  .Length(1)
-  .DebugInfo([](Inst* inst) {
-    printf("OP_LESS\n");
-  });
+REGISTER_INST("OP_LESS").Opcode(OP_LESS).Length(1).DebugInfo([](Inst* inst) {
+  printf("OP_LESS\n");
+});
 
 }  // namespace qian

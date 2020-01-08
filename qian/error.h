@@ -3,14 +3,10 @@
 
 namespace qian {
 
-class Error {
+class Error {};
 
-};
+void ShowError() {}
 
-void ShowError() {
-
-}
-
-}  // qian
+}  // namespace qian
 
 #endif

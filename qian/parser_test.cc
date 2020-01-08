@@ -1,9 +1,9 @@
 #include "parser.h"
 
 #include "debug.h"
+#include "gtest/gtest.h"
 #include "inst.h"
 #include "vm.h"
-#include "gtest/gtest.h"
 
 namespace qian {
 
@@ -26,12 +26,9 @@ class TestParser : public ::testing::Test {
 };
 
 TEST_F(TestParser, Basic) {
-  // EXPECT_EQ(parser_->prev_token(), create_token(TOKEN_NONE, -1, -1, -1));
-  // EXPECT_EQ(parser_->curr_token(), create_token(TOKEN_NONE, -1, -1, -1));
-
   // Advance one token.
   parser_->advance();
-  // EXPECT_EQ(parser_->prev_token(), create_token(TOKEN_NONE, -1, -1, -1));
+  EXPECT_EQ(parser_->prev_token(), create_token(TOKEN_NONE, 0, 0, 0));
   EXPECT_EQ(parser_->curr_token(), create_token(TOKEN_BANG, 0, 1, 1));
 
   // Advance one token.
@@ -92,8 +89,10 @@ class TestRule : public ::testing::Test {
 };
 
 TEST_F(TestRule, Basic) {
-  parser_->advance();
+  // parser_->advance();
   parser_->parse_expression();
+  VM vm(&chunk_);
+  vm.Run();
 }
 
-} // namespace qian
+}  // namespace qian

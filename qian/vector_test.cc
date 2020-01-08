@@ -1,5 +1,6 @@
-#include "gtest/gtest.h"
 #include "vector.h"
+
+#include "gtest/gtest.h"
 
 namespace qian {
 
@@ -26,4 +27,4 @@ TEST(Address, TestVector) {
   }
 }
 
-} // namespace qian
+}  // namespace qian

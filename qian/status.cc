@@ -101,4 +101,4 @@ std::ostream& operator<<(std::ostream& os, const Status& x) {
   os << x.ToString();
   return os;
 }
-} // namespace qian
+}  // namespace qian

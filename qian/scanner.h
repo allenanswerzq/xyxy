@@ -8,17 +8,17 @@ namespace qian {
 
 typedef enum {
   // Single character tokens.
-  TOKEN_LEFT_PAREN,     // "("
-  TOKEN_RIGHT_PAREN,    // ")"
-  TOKEN_LEFT_BRACE,     // "{"
-  TOKEN_RIGHT_BRACE,    // "}"
-  TOKEN_COMMA,          // ","
-  TOKEN_DOT,            // "."
-  TOKEN_MINUS,          // "-"
-  TOKEN_PLUS,           // "+"
-  TOKEN_SEMICOLON,      // ";"
-  TOKEN_SLASH,          // "/"
-  TOKEN_STAR,           // "*"
+  TOKEN_LEFT_PAREN,   // "("
+  TOKEN_RIGHT_PAREN,  // ")"
+  TOKEN_LEFT_BRACE,   // "{"
+  TOKEN_RIGHT_BRACE,  // "}"
+  TOKEN_COMMA,        // ","
+  TOKEN_DOT,          // "."
+  TOKEN_MINUS,        // "-"
+  TOKEN_PLUS,         // "+"
+  TOKEN_SEMICOLON,    // ";"
+  TOKEN_SLASH,        // "/"
+  TOKEN_STAR,         // "*"
 
   // Single or two character tokens.
   TOKEN_BANG,           // "!"
@@ -31,43 +31,43 @@ typedef enum {
   TOKEN_LESS_EQUAL,     // "<="
 
   // LiteralExprs
-  TOKEN_IDENTIFIER,     // "identifier"
-  TOKEN_STRING,         // "string"
-  TOKEN_NUMBER,         // "number"
+  TOKEN_IDENTIFIER,  // "identifier"
+  TOKEN_STRING,      // "string"
+  TOKEN_NUMBER,      // "number"
 
   // Keywords
-  TOKEN_AND,            // "and"
-  TOKEN_IF,             // "if"
-  TOKEN_ELSE,           // "else"
-  TOKEN_FALSE,          // "false"
-  TOKEN_FUN,            // "fun"
-  TOKEN_FOR,            // "for"
-  TOKEN_NIL,            // "nil"
-  TOKEN_OR,             // "or"
-  TOKEN_CLASS,          // "class"
-  TOKEN_PRINT,          // "print"
-  TOKEN_RETURN,         // "return"
-  TOKEN_SUPER,          // "super"
-  TOKEN_THIS,           // "this"
-  TOKEN_TRUE,           // "true"
-  TOKEN_VAR,            // "var"
-  TOKEN_WHILE,          // "while"
+  TOKEN_AND,     // "and"
+  TOKEN_IF,      // "if"
+  TOKEN_ELSE,    // "else"
+  TOKEN_FALSE,   // "false"
+  TOKEN_FUN,     // "fun"
+  TOKEN_FOR,     // "for"
+  TOKEN_NIL,     // "nil"
+  TOKEN_OR,      // "or"
+  TOKEN_CLASS,   // "class"
+  TOKEN_PRINT,   // "print"
+  TOKEN_RETURN,  // "return"
+  TOKEN_SUPER,   // "super"
+  TOKEN_THIS,    // "this"
+  TOKEN_TRUE,    // "true"
+  TOKEN_VAR,     // "var"
+  TOKEN_WHILE,   // "while"
 
-  TOKEN_NEWLINE,        // "\n"
-  TOKEN_WHITESPACE,     // "white"
+  TOKEN_NEWLINE,     // "\n"
+  TOKEN_WHITESPACE,  // "white"
 
-  TOKEN_ERROR,          // "error"
-  TOKEN_EOF,            // "eof"
+  TOKEN_ERROR,  // "error"
+  TOKEN_EOF,    // "eof"
 
-  TOKEN_NONE,           // None token
+  TOKEN_NONE,  // None token
 } TokenType;
 
-struct Token {
+typedef struct {
   TokenType type;
   int start;
   int length;
   int line;
-};
+} Token;
 
 inline bool operator==(const Token& a, const Token& b) {
   bool r = a.type == b.type;
@@ -77,9 +77,7 @@ inline bool operator==(const Token& a, const Token& b) {
   return r;
 }
 
-inline bool operator!=(const Token& a, const Token& b) {
-  return !(a == b);
-}
+inline bool operator!=(const Token& a, const Token& b) { return !(a == b); }
 
 string ToString(TokenType tt);
 
@@ -94,9 +92,7 @@ class Scanner {
 
   Token ScanToken();
 
-  bool at_end() {
-    return current_ == source_.size();
-  }
+  bool at_end() { return current_ == source_.size(); }
 
   Token make_token(TokenType type) {
     if (type == TOKEN_EOF) {
@@ -107,26 +103,24 @@ class Scanner {
   }
 
   Token make_error_token(const string& msg) {
+    (void)msg;
     return Token{TOKEN_ERROR, -1, -1, -1};
   }
 
   char advance() {
+    CHECK(!at_end());
     return source_[current_++];
   }
 
-  char peek() {
-    return source_[current_];
-  }
+  char peek() { return source_[current_]; }
 
-  char peek_next() {
-    return source_[current_ + 1];
-  }
+  char peek_next() { return source_[current_ + 1]; }
 
   string get_lexeme() {
     if (start_ == current_) return "";
     CHECK(start_ < source_.size() && start_ < current_);
     return source_.substr(start_, current_ - start_);
-    }
+  }
 
   string get_lexeme(Token tk) {
     if (tk.type == TOKEN_EOF) return "EOF";
@@ -161,4 +155,4 @@ class Scanner {
 
 }  // namespace qian
 
-#endif // QIAN_SCANNER_H_
+#endif  // QIAN_SCANNER_H_

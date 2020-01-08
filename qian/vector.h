@@ -62,4 +62,4 @@ T Vector<T>::Get(int index) {
 }
 }  // namespace qian
 
-#endif // QIAN_VECTOR_H_
+#endif  // QIAN_VECTOR_H_

@@ -4,7 +4,7 @@ namespace qian {
 
 Chunk::Chunk() {
   code_ = new Vector<uint8>();
-  value_array_  = new Vector<Value>();
+  value_array_ = new Vector<Value>();
   lines_ = new Vector<int>();
 }
 
@@ -59,4 +59,4 @@ Value Chunk::GetValue(int index) {
   return value_array_->Get(index);
 }
 
-} // namespace qian
+}  // namespace qian

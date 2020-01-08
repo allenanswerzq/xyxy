@@ -6,9 +6,9 @@
 #include "chunk.h"
 #include "debug.h"
 #include "logging.h"
-#include "vector.h"
 #include "scanner.h"
 #include "type.h"
+#include "vector.h"
 
 namespace qian {
 
@@ -75,10 +75,7 @@ class Parser {
   void parse_literal();
   void parse_with_prec_order(PrecOrder prec_order);
 
-
-  string to_string(Token tk) {
-    return scanner_->get_lexeme(tk);
-  };
+  string to_string(Token tk) { return scanner_->get_lexeme(tk); };
 
   Chunk* GetChunk() { return chunk_; }
 
@@ -129,34 +126,35 @@ struct PrecRuleDefWrapper {
   PrecRuleDefWrapper(::qian::TokenType type) {
     rule = new ::qian::PrecRule();
     rule->token_type = type;
-    LOG(INFO) << "register prec rule..."  << ToString(type);
+    LOG(INFO) << "register prec rule..." << ToString(type);
     ::qian::GlobalPrecRule()->Write(rule);
   }
   PrecRuleDefWrapper& Prefix_Rule(::qian::ParseFunc f) {
-    LOG(INFO) << " | prefix..."  << ToString(rule->token_type);
+    LOG(INFO) << " | prefix..." << ToString(rule->token_type);
     rule->prefix_rule = f;
     return *this;
   }
   PrecRuleDefWrapper& Infix_Rule(::qian::ParseFunc f) {
-    LOG(INFO) << " | infix..."  << ToString(rule->token_type);
+    LOG(INFO) << " | infix..." << ToString(rule->token_type);
     rule->infix_rule = f;
     return *this;
   }
   PrecRuleDefWrapper& Prec_Order(::qian::PrecOrder order) {
-    LOG(INFO) << " | order..."  << ToString(rule->token_type);
+    LOG(INFO) << " | order..." << ToString(rule->token_type);
     rule->prec_order = order;
     return *this;
   }
+
  private:
   ::qian::PrecRule* rule;
 };
 
-}  // namespace regsiter_prec_rule
+}  // namespace register_prec_rule
 
 #define REGISTER_PREC_RULE(name) REGISTER_PREC_RULE_HELPER(__COUNTER__, name)
 #define REGISTER_PREC_RULE_HELPER(ctr, name) REGISTER_PREC_RULE_UNIQ(ctr, name)
-#define REGISTER_PREC_RULE_UNIQ(ctr, name)                                 \
-  static ::register_prec_rule::PrecRuleDefWrapper register_inst##ctr       \
-    QI_ATTRIBUTE_UNUSED = ::register_prec_rule::PrecRuleDefWrapper(name)
+#define REGISTER_PREC_RULE_UNIQ(ctr, name)                           \
+  static ::register_prec_rule::PrecRuleDefWrapper register_inst##ctr \
+      QI_ATTRIBUTE_UNUSED = ::register_prec_rule::PrecRuleDefWrapper(name)
 
 #endif  // QIAN_COMPILER_H_
