@@ -1,6 +1,8 @@
 #ifndef QIAN_VM_H_
 #define QIAN_VM_H_
 
+#include <memory>
+
 #include "chunk.h"
 #include "debug.h"
 #include "inst.h"
@@ -20,7 +22,7 @@ class VM {
   }
 
   Status Run();
-  Status Run(Inst* inst);
+  Status Run(std::unique_ptr<Inst>& inst);
 
   Chunk* GetChunk() { return chunk_; }
   Stack<Value, STACK_SIZE>* GetStack() { return stk_; }

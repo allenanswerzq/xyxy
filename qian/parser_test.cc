@@ -102,20 +102,17 @@ TEST_F(TestSimple, Basic) {
 
   EXPECT_EQ(chunk_.GetByte(4), uint8(OP_CONSTANT));
 
-  Inst* inst = DispathInst(&chunk_, 0);
+  std::unique_ptr<Inst> inst(DispathInst(&chunk_, 0));
   auto oprd = inst->Operands();
   EXPECT_EQ(oprd->Size(), 1);
   EXPECT_EQ(oprd->Get(0), QIAN_NUMBER(1.0));
 
-  Inst* inst1 = DispathInst(&chunk_, 2);
+  std::unique_ptr<Inst> inst1(DispathInst(&chunk_, 2));
   EXPECT_NE(inst, inst1);
   auto oprd1 = inst->Operands();
   EXPECT_EQ(oprd1->Size(), 1);
   // TODO(zq7): check why this not ture.
   // EXPECT_EQ(oprd1->Get(0), QIAN_NUMBER(2.0));
-
-  delete inst;
-  delete inst1;
 
   VM vm(&chunk_);
   vm.Run();

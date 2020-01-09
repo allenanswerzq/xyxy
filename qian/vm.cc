@@ -6,23 +6,20 @@ namespace qian {
 
 Status VM::Run() {
   for (; pc_ < chunk_->Size();) {
-    Inst* inst = DispathInst(chunk_, pc_);
+    std::unique_ptr<Inst> inst(DispathInst(chunk_, pc_));
 #ifndef NDEBUG
     inst->RunDebugInfo();
 #endif
     Status status = Run(inst);
     pc_ += inst->Length();
-    // TODO(zq7):
-    // 1) Handle errors according to different status.
+    // TODO(zq7): Handle errors according to different status.
     //    Add something like this:
     //      error_->HandleError(status);
-    // 2) Consider replact Inst* to Inst.
-    delete inst;
   }
   return Status();
 }
 
-Status VM::Run(Inst* inst) {
+Status VM::Run(std::unique_ptr<Inst>& inst) {
   auto f = GlobalFunc()->Get(inst->Opcode());
   return f(this);
 }
