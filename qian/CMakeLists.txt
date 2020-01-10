@@ -79,19 +79,6 @@ qian_cc_test(
 
 qian_cc_test(
   NAME
-    vm_test
-  SRCS
-    "vm_test.cc"
-  COPTS
-    ${QIAN_TEST_COPTS}
-  DEPS
-    qian::base
-    qian::qian
-    gmock_main
-)
-
-qian_cc_test(
-  NAME
     scanner_test
   SRCS
     "scanner_test.cc"
