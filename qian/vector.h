@@ -13,14 +13,14 @@ class Vector {
 
   void Write(T value);
   T Get(int index);
-  uint32_t Size() { return count_; }
+  uint32 Size() { return count_; }
   T* Address() { return container_; }
 
  private:
   void grow_vector();
 
-  uint32_t count_;
-  uint32_t capacity_;
+  uint32 count_;
+  uint32 capacity_;
   T* container_;
 };
 
