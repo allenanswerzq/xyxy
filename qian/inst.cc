@@ -40,9 +40,8 @@ Inst* CreateInst(OpCode byte) {
   return nullptr;
 }
 
-// TODO(zq7): better handle inst operands, for now assume
-// all insts will have one `Value` as operand, but it maybe not
-// applicable in the future.
+// TODO(zq7): better handle inst operands, for now assume all insts
+// will have one `Value` as operand, but it maybe not applicable in the future.
 Inst* DispathInst(Chunk* chunk, uint8 offset) {
   OpCode byte = (OpCode)chunk->GetByte(offset);
   Inst* inst = CreateInst(byte);

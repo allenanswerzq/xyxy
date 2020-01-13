@@ -37,9 +37,6 @@ typedef struct {
   PrecOrder prec_order;
 } PrecRule;
 
-// inline void CreatPrecRule() {
-//   return PrecRule();
-// }
 
 inline Vector<PrecRule*>* GlobalPrecRule() {
   static Vector<PrecRule*>* registry;
