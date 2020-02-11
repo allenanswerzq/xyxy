@@ -5,7 +5,6 @@
 #include "inst.h"
 #include "logging.h"
 #include "status.h"
-
 namespace qian {
 
 #define DEFINE_INST(opcode, len, debug_info, run_func) \
@@ -118,7 +117,7 @@ DEFINE_INST(
     OP_NOT, 1, [](Inst* inst) -> void { printf("%s\n", inst->Name().c_str()); },
     [](VM* vm) -> Status {
       auto stk = vm->GetStack();
-      stk->Push(QIAN_BOOL(is_falsey(stk->Pop())));
+      stk->Push(QIAN_BOOL(IsFalsey(stk->Pop())));
       return Status();
     });
 

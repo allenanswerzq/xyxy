@@ -1,4 +1,4 @@
-#include "scanner.h"
+#include "qian/scanner.h"
 
 namespace qian {
 
@@ -282,7 +282,7 @@ Token Scanner::ScanToken() {
   return make_error_token("Unexpected characters met.");
 }
 
-string Scanner::interval_source(int start, int end) {
+string Scanner::IntervalSource(int start, int end) {
   string ret;
   ret.append(std::to_string(start));
   ret.append("-");

@@ -1,10 +1,11 @@
 #include "parser.h"
 
-#include "inst.h"
+#include "qian/inst.h"
 
 namespace qian {
 
-// NOTE: the order must be the same as token definition
+// NOTE: the order must be the same as token definition.
+// TODO(zq7): this whole piece code looks very ugly.
 REGISTER_PREC_RULE(TOKEN_LEFT_PAREN)
     .Prefix_Rule(&Parser::parse_grouping)
     .Infix_Rule(nullptr)
@@ -66,7 +67,9 @@ REGISTER_PREC_RULE(TOKEN_LESS_EQUAL)
     .Prec_Order(PREC_COMPARISON);
 
 REGISTER_PREC_RULE(TOKEN_IDENTIFIER);
-REGISTER_PREC_RULE(TOKEN_STRING);
+
+REGISTER_PREC_RULE(TOKEN_STRING)
+    .Prefix_Rule(&Parser::parse_string);
 
 REGISTER_PREC_RULE(TOKEN_NUMBER).Prefix_Rule(&Parser::parse_number);
 
@@ -150,12 +153,21 @@ void Parser::emit_constant(Value val) {
   parse_depth_--;                              \
   debug_parser(debug)
 
-void Parser::debug_parser(DebugParser debug) {
-  // TODO(zq7): Make debug drawing looks more beautiful.
+// TODO(zq7): Make debug drawing looks more beautiful.
+void Parser::debug_parser(const DebugParser& debug) {
   string prefix(debug.parse_depth * 3, '-');
   CHECK(debug.enter_pos < debug.exit_pos);
-  string source = scanner_->interval_source(debug.enter_pos, debug.exit_pos);
+  string source = scanner_->IntervalSource(debug.enter_pos, debug.exit_pos);
   LOG(INFO) << prefix << std::to_string(debug.parse_depth) << "|   " << source;
+}
+
+void Parser::parse_string() {
+  DEBUG_PARSER_ENTER("string");
+
+  string str = scanner_->IntervalSource(prev_.start, prev_.start + prev_.length);
+  emit_constant(QIAN_OBJ(StringObj::Create(str)));
+
+  DEBUG_PARSER_EXIT();
 }
 
 void Parser::parse_number() {

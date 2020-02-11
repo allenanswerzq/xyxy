@@ -3,12 +3,12 @@
 
 #include <functional>
 
-#include "chunk.h"
-#include "debug.h"
-#include "logging.h"
-#include "scanner.h"
-#include "type.h"
-#include "vector.h"
+#include "qian/chunk.h"
+#include "qian/debug.h"
+#include "qian/logging.h"
+#include "qian/scanner.h"
+#include "qian/type.h"
+#include "qian/vector.h"
 
 namespace qian {
 
@@ -37,7 +37,6 @@ typedef struct {
   PrecOrder prec_order;
 } PrecRule;
 
-
 inline Vector<PrecRule*>* GlobalPrecRule() {
   static Vector<PrecRule*>* registry;
   if (!registry) {
@@ -56,6 +55,7 @@ class Parser {
 
   // Add a Value `val` into chunk and return its index.
   int make_constant(Value val);
+
   // Emit a {OP_CONSTANT idx} inst.
   // Note: idx specifies where the constant stored inside chunk's value area.
   void emit_constant(Value val);
@@ -70,6 +70,7 @@ class Parser {
   void parse_binary();
   void parse_expression();
   void parse_literal();
+  void parse_string();
   void parse_with_prec_order(PrecOrder prec_order);
 
   string to_string(Token tk) { return scanner_->get_lexeme(tk); };
@@ -91,7 +92,7 @@ class Parser {
     string msg;
   } DebugParser;
 
-  void debug_parser(DebugParser debug);
+  void debug_parser(const DebugParser& debug);
 
  private:
   Token curr_;
@@ -123,21 +124,17 @@ struct PrecRuleDefWrapper {
   PrecRuleDefWrapper(::qian::TokenType type) {
     rule = new ::qian::PrecRule();
     rule->token_type = type;
-    LOG(INFO) << "register prec rule..." << ToString(type);
     ::qian::GlobalPrecRule()->Write(rule);
   }
   PrecRuleDefWrapper& Prefix_Rule(::qian::ParseFunc f) {
-    LOG(INFO) << " | prefix..." << ToString(rule->token_type);
     rule->prefix_rule = f;
     return *this;
   }
   PrecRuleDefWrapper& Infix_Rule(::qian::ParseFunc f) {
-    LOG(INFO) << " | infix..." << ToString(rule->token_type);
     rule->infix_rule = f;
     return *this;
   }
   PrecRuleDefWrapper& Prec_Order(::qian::PrecOrder order) {
-    LOG(INFO) << " | order..." << ToString(rule->token_type);
     rule->prec_order = order;
     return *this;
   }

@@ -15,3 +15,5 @@ TODO:
 - Find a better way to detet cycle include.
 
 - ~Debug parser process, write a stack like code to track call depth and draw info~
+
+- Review all the places where pointer been used, use unique_ptr instead.
