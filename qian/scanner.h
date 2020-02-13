@@ -1,8 +1,8 @@
 #ifndef QIAN_SCANNER_H_
 #define QIAN_SCANNER_H_
 
-#include "base.h"
-#include "debug.h"
+#include "qian/base.h"
+#include "qian/debug.h"
 
 namespace qian {
 
@@ -136,7 +136,7 @@ class Scanner {
   int start_pos() { return start_; }
   int current_pos() { return current_; }
 
-  string interval_source(int start, int end);
+  string IntervalSource(int start, int end);
 
   void skip_whitespace();
   Token process_string();

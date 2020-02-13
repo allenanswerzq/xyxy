@@ -24,17 +24,20 @@ qian_cc_library(
     "vm.h"
     "type.h"
     "inst.h"
+    "inst_impl.h"
     "debug.h"
     "scanner.h"
     "parser.h"
   SRCS
     "vm.cc"
-    "inst.cc"
     "debug.cc"
+    "inst.cc"
     "scanner.cc"
     "parser.cc"
   COPTS
     ${QIAN_DEFAULT_COPTS}
+  DEPS
+    qian::base
   PUBLIC
 )
 
@@ -71,32 +74,6 @@ qian_cc_test(
     ${QIAN_TEST_COPTS}
   DEPS
     qian::base
-    gmock_main
-)
-
-qian_cc_test(
-  NAME
-    debug_test
-  SRCS
-    "debug_test.cc"
-  COPTS
-    ${QIAN_TEST_COPTS}
-  DEPS
-    qian::base
-    qian::qian
-    gmock_main
-)
-
-qian_cc_test(
-  NAME
-    vm_test
-  SRCS
-    "vm_test.cc"
-  COPTS
-    ${QIAN_TEST_COPTS}
-  DEPS
-    qian::base
-    qian::qian
     gmock_main
 )
 
