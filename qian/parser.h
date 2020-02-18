@@ -26,9 +26,9 @@ typedef enum {
   PREC_PRIMARY
 } PrecOrder;
 
-class Parser;
+class Compiler;
 
-typedef std::function<void(Parser*)> ParseFunc;
+typedef std::function<void(Compiler*)> ParseFunc;
 
 typedef struct {
   TokenType token_type;
@@ -37,7 +37,7 @@ typedef struct {
   PrecOrder prec_order;
 } PrecRule;
 
-inline Vector<PrecRule*>* GlobalPrecRule() {
+Vector<PrecRule*>* GlobalPrecRule() {
   static Vector<PrecRule*>* registry;
   if (!registry) {
     registry = new Vector<PrecRule*>;
@@ -45,10 +45,10 @@ inline Vector<PrecRule*>* GlobalPrecRule() {
   return registry;
 }
 
-class Parser {
+class Compiler {
  public:
-  Parser(const string& source, Chunk* chunk);
-  virtual ~Parser();
+  Compiler(const string& source, Chunk* chunk);
+  virtual ~Compiler();
 
   void advance();
   void consume(TokenType type, const string& msg);
@@ -105,14 +105,14 @@ class Parser {
   int parse_depth_ = 1;
 };
 
-inline Parser::Parser(const string& source, Chunk* chunk) {
+inline Compiler::Compiler(const string& source, Chunk* chunk) {
   scanner_ = new Scanner(source);
   chunk_ = chunk;
   curr_ = Token{TOKEN_NONE, 0, 0, 0};
   prev_ = Token{TOKEN_NONE, 0, 0, 0};
 }
 
-inline Parser::~Parser() {
+inline Compiler::~Compiler() {
   if (scanner_) delete scanner_;
 }
 
@@ -126,14 +126,17 @@ struct PrecRuleDefWrapper {
     rule->token_type = type;
     ::qian::GlobalPrecRule()->Write(rule);
   }
+
   PrecRuleDefWrapper& Prefix_Rule(::qian::ParseFunc f) {
     rule->prefix_rule = f;
     return *this;
   }
+
   PrecRuleDefWrapper& Infix_Rule(::qian::ParseFunc f) {
     rule->infix_rule = f;
     return *this;
   }
+
   PrecRuleDefWrapper& Prec_Order(::qian::PrecOrder order) {
     rule->prec_order = order;
     return *this;

@@ -17,3 +17,5 @@ TODO:
 - ~Debug parser process, write a stack like code to track call depth and draw info~
 
 - Review all the places where pointer been used, use unique_ptr instead.
+
+- Use bazel to replace cmake, use glog lib.

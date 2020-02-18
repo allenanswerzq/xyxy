@@ -13,9 +13,7 @@ typedef enum {
 
 class Object;
 
-static Vector<Object*>* Collecter() {
-  return new Vector<Object*>();
-}
+static Vector<Object*>* Collecter() { return new Vector<Object*>(); }
 
 class Object {
  public:
@@ -39,7 +37,6 @@ class StringObj : Object {
   StringObj() : Object(OBJ_STRING) {}
   string str_;
 };
-
 
 }  // namespace qian
 

@@ -1,9 +1,9 @@
 #ifndef QIAN_STACK_H_
 #define QIAN_STACK_H_
 
-#include "base.h"
+#include "stl/common.h"
 
-namespace qian {
+namespace stl {
 
 template <class T, int N>
 class Stack {
@@ -42,6 +42,6 @@ class Stack {
   T* top_;
 };
 
-}  // namespace qian
+}  // namespace stl
 
 #endif  // QIAN_STACK_H_

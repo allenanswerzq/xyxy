@@ -5,8 +5,12 @@
 
 namespace qian {
 
-typedef enum { VAL_BOOL, VAL_NIL, VAL_NUMBER, VAL_OBJ, }
-ValueType;
+typedef enum {
+  VAL_BOOL,
+  VAL_NIL,
+  VAL_NUMBER,
+  VAL_OBJ,
+} ValueType;
 
 typedef struct {
   ValueType type;
