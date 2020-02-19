@@ -21,16 +21,12 @@ load(
 )
 
 QIAN_DEFAULT_COPTS = select({
-    # "//QIAN:windows": QIAN_MSVC_FLAGS,
-    # "//QIAN:llvm_compiler": QIAN_LLVM_FLAGS,
     "//conditions:default": QIAN_GCC_FLAGS,
 })
 
 # in absence of modules (--compiler=gcc or -c opt), cc_tests leak their copts
 # to their (included header) dependencies and fail to build outside QIAN
 QIAN_TEST_COPTS = QIAN_DEFAULT_COPTS + select({
-    "//QIAN:windows": QIAN_MSVC_TEST_FLAGS,
-    "//QIAN:llvm_compiler": QIAN_LLVM_TEST_FLAGS,
     "//conditions:default": QIAN_GCC_TEST_FLAGS,
 })
 

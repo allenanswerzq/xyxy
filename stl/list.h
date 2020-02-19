@@ -4,7 +4,6 @@
 #include "stl/common.h"
 
 namespace stl {
-
 template <class T>
 struct ListNode {
   T value;
@@ -27,37 +26,44 @@ class List {
   }
 
   List(const List&) = delete;
-  List& operator==(const List&) = delete;
+  List& operator=(const List&) = delete;
 
-  T GetNext() {
-    // assert(cur_);
-    T ret = cur_->value;
-    cur_ = cur_->next;
-    return ret;
+  // Move assignment.
+  List& operator=(List&& li) {
+    this->head_ = li->head_;
+    this->cur_ = li->cur_;
+    li->head_ = nullptr;
+    li->cur_ = nullptr;
   }
 
-  // ListNode<T>* GetNext() {
-  //   assert(cur_);
-  //   ListNode<T>* ret = cur_;
-  //   cur_ = cur_->next;
-  //   return ret;
-  // }
+  ListNode<T>* GetHead() const { return head_; }
 
-  void AppendTail(T val) {
-    AppendTail(new ListNode<T>{val, nullptr, nullptr});
-  }
+  void AppendTail(T val) { AppendTail(new ListNode<T>{val, nullptr, nullptr}); }
 
   void AppendTail(ListNode<T>* val) {
-    // assert(cur_);
-    cur_->next = val;
-    cur_ = cur_->next;
+    if (head_ == nullptr) {
+      cur_ = head_ = val;
+    } else {
+      cur_->next = val;
+      cur_ = cur_->next;
+    }
+  }
+
+  bool Find(const T& val) {
+    auto node = GetHead();
+    while (node) {
+      if (node->val == val) {
+        return node->val;
+      }
+      node = node->next;
+    }
+    return false;
   }
 
  private:
   ListNode<T>* cur_;
   ListNode<T>* head_;
 };
-
 }  // namespace stl
 
 #endif  // QIAN_LIST_H_

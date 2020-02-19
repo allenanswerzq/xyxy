@@ -3,39 +3,88 @@
 
 #include "stl/common.h"
 
-namespace stl {
-
+// TODO(zq7): initializer_list and iterator support.
 template <class T>
 class Vector {
  public:
   Vector();
   virtual ~Vector();
 
+  Vector(int n) {
+    begin_ = 0;
+    end_ = n;
+    capacity_ = n;
+    data_ = new T[n];
+  }
+
+  // Delete copy constructs.
+  Vector(const Vector& v) = delete;
+  Vector<T>& operator=(const Vector& v) = delete;
+
   void Write(T value);
-  T Get(int index);
-  uint32 Size() { return count_; }
-  T* Address() { return container_; }
+
+  void Clean() {
+    begin_ = 0;
+    end_ = 0;
+    capacity_ = 0;
+    if (data_) {
+      delete data_;
+    }
+  }
+
+  T& Get(int index);
+  const T& Get(int index) const;
+
+  uint32 Size() const { return end_ - begin_; }
+
+  T& operator[](int n) { return Get(n); }
+  const T& operator[](int n) const { return Get(n); }
+
+  // Move assignment.
+  Vector<T>& operator=(Vector&& v) {
+    this->begin_ = v->begin_;
+    this->end_ = v->end_;
+    this->capacity_ = v->capacity_;
+    this->data_ = v->data_;
+    // Reset v.
+    v->begin_ = 0;
+    v->end_ = 0;
+    v->capacity_ = 0;
+    v->data_ = nullptr;
+  }
+
+  void Reverse(int n) {
+    capacity_ = n;
+    begin_ = 0;
+    end_ = n;
+    if (data_) {
+      delete data_;
+    }
+    data_ = new T[n];
+  }
 
  private:
   void grow_vector();
 
-  uint32 count_;
+  uint32 begin_;
+  uint32 end_;
   uint32 capacity_;
-  T* container_;
+  T* data_;
 };
 
 template <class T>
 Vector<T>::Vector() {
   capacity_ = 0;
-  count_ = 0;
-  container_ = nullptr;
+  begin_ = 0;
+  end_ = 0;
+  data_ = nullptr;
 }
 
 template <class T>
 Vector<T>::~Vector() {
-  if (container_) {
-    delete[] container_;
-    container_ = nullptr;
+  if (data_) {
+    delete[] data_;
+    data_ = nullptr;
   }
 }
 
@@ -45,28 +94,33 @@ void Vector<T>::grow_vector() {
   T* ptr = new T[new_size];
   assert(ptr);
   for (int i = 0; i < capacity_; i++) {
-    ptr[i] = Get(i);
+    ptr[i] = std::move(Get(i));
   }
-  if (container_) {
-    delete container_;
+  if (data_) {
+    delete data_;
   }
-  container_ = ptr;
+  data_ = ptr;
   capacity_ = new_size;
 }
 
 template <class T>
-void Vector<T>::Write(T value) {
-  if (count_ + 1 > capacity_) {
+void Vector<T>::Write(T val) {
+  if (Size() + 1 > capacity_) {
     grow_vector();
   }
-  container_[count_++] = value;
+  data_[end_++] = std::move(val);
 }
 
 template <class T>
-T Vector<T>::Get(int index) {
-  assert(container_ && index < Size());
-  return container_[index];
+T& Vector<T>::Get(int index) {
+  assert(data_ && index < Size());
+  return data_[index];
 }
+
+template <class T>
+const T& Vector<T>::Get(int index) const {
+  assert(data_ && index < Size());
+  return data_[index];
 }
 
 #endif  // QIAN_VECTOR_H_

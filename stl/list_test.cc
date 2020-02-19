@@ -1,36 +1,30 @@
 #include "stl/list.h"
 
 #include "gtest/gtest.h"
+#include "stl/vector.h"
 
 namespace stl {
-
-struct DummyClass {
-  DummyClass() { count_++; }
-
-  ~DummyClass() { count_--; }
-
-  static int count_;
-};
-
-int DummyClass::count_ = 0;
-
-TEST(Pointers, TestList) {
-  {
-    List<DummyClass*> v;
-    EXPECT_EQ(DummyClass::count_, 0);
-    v.AppendTail(new DummyClass());
-    v.AppendTail(new DummyClass());
-    v.AppendTail(new DummyClass());
-    EXPECT_EQ(DummyClass::count_, 3);
-  }
-  EXPECT_EQ(DummyClass::count_, 0);
-}
 
 TEST(Next, TestList) {
   List<int> v;
   v.AppendTail(1);
   v.AppendTail(2);
-  v.AppendTail(4);
+  v.AppendTail(3);
+  auto node = v.GetHead();
+  for (int i = 0; i < 3; i++) {
+    EXPECT_EQ(node->value, i + 1);
+    node = node->next;
+  }
 }
 
-}  // namespace qian
+TEST(Vector, TestList) {
+  Vector<List<int>> v(2);
+  for (int i = 0; i < 3; i++) {
+    v[0].AppendTail(i);
+  }
+  for (int i = 0; i < 3; i++) {
+    v[1].AppendTail(i + 3);
+  }
+}
+
+}  // namespace stl

@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <memory>
+#include <string>
 
 typedef signed char int8;
 typedef short int16;
@@ -14,7 +15,8 @@ typedef unsigned short uint16;
 typedef unsigned int uint32;
 typedef unsigned long long uint64;
 
-namespace stl {
+#define ASSERTM(exp, msg) assert(((void)msg, exp))
+#define ABORT(msg) ASSERTM(false, msg)
 
 template <typename T>
 struct is_pointer {
@@ -31,6 +33,4 @@ std::unique_ptr<T> WrapUnique(T* ptr) {
   return std::unique_ptr<T>(ptr);
 }
 
-} //
-
-#endif // QIAN_TYPE_TRAITS_H
+#endif  // QIAN_TYPE_TRAITS_H

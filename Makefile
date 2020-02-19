@@ -8,3 +8,4 @@ grind:
 
 style:
 	find qian -name "*.cc" -o -name "*.h" | xargs -t -I{} clang-format -i {}
+	find stl -name "*.cc" -o -name "*.h" | xargs -t -I{} clang-format -i {}

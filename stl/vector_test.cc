@@ -1,7 +1,5 @@
 #include "stl/vector.h"
 
-#include <vector>
-
 #include "gtest/gtest.h"
 
 namespace stl {
@@ -17,15 +15,26 @@ TEST(WriteGet, TestVector) {
   }
 }
 
-TEST(Address, TestVector) {
-  Vector<int> v;
-  EXPECT_EQ(v.Size(), 0);
+TEST(Operator, TestVector) {
+  Vector<int> v(1024);
+  EXPECT_EQ(v.Size(), 1024);
   for (int i = 0; i < 1024; i++) {
-    v.Write(i);
+    v[i] = i;
   }
-  const int *addr = v.Address();
   for (int i = 0; i < 1024; i++) {
-    EXPECT_EQ(addr[i], i);
+    EXPECT_EQ(v[i], i);
+  }
+}
+
+TEST(Reverse, TestVector) {
+  Vector<int> v;
+  v.Reverse(1024);
+  EXPECT_EQ(v.Size(), 1024);
+  for (int i = 0; i < 1024; i++) {
+    v[i] = i;
+  }
+  for (int i = 0; i < 1024; i++) {
+    EXPECT_EQ(v[i], i);
   }
 }
 
@@ -39,25 +48,13 @@ struct DummyClass {
 
 int DummyClass::count_ = 0;
 
-// TEST(Pointers, TestVector) {
-//   {
-//     Vector<std::unique_ptr<DummyClass>> v;
-//     EXPECT_EQ(DummyClass::count_, 0);
-//     v.Write(WrapUnique(new DummyClass()));
-//     v.Write(WrapUnique(new DummyClass()));
-//     v.Write(WrapUnique(new DummyClass()));
-//     EXPECT_EQ(DummyClass::count_, 3);
-//   }
-//   EXPECT_EQ(DummyClass::count_, 0);
-// }
-
-TEST(StdVector, TestVector) {
+TEST(Pointers, TestVector) {
   {
-    std::vector<std::unique_ptr<DummyClass>> v;
+    Vector<std::unique_ptr<DummyClass>> v;
     EXPECT_EQ(DummyClass::count_, 0);
-    v.push_back(WrapUnique(new DummyClass()));
-    v.push_back(WrapUnique(new DummyClass()));
-    v.push_back(WrapUnique(new DummyClass()));
+    v.Write(WrapUnique(new DummyClass()));
+    v.Write(WrapUnique(new DummyClass()));
+    v.Write(WrapUnique(new DummyClass()));
     EXPECT_EQ(DummyClass::count_, 3);
   }
   EXPECT_EQ(DummyClass::count_, 0);
