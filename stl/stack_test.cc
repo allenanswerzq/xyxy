@@ -1,16 +1,14 @@
-#include "stack.h"
+#include "stl/stack.h"
 
 #include "gtest/gtest.h"
 
-namespace qian {
+namespace stl {
 
 TEST(Push, TestStack) {
   const int N = 256;
   Stack<int, N> stk;
   EXPECT_TRUE(stk.Empty());
-  ;
   EXPECT_FALSE(stk.Full());
-  ;
   for (int i = 0; i < N; i++) {
     stk.Push(i);
   }
@@ -23,9 +21,7 @@ TEST(PushDeath, TestStack) {
   const int N = 256;
   Stack<int, N> stk;
   EXPECT_TRUE(stk.Empty());
-  ;
   EXPECT_FALSE(stk.Full());
-  ;
   for (int i = 0; i < 300; i++) {
     if (i >= N) {
       EXPECT_DEATH({ stk.Push(i); }, "Assertion failed");
@@ -35,4 +31,4 @@ TEST(PushDeath, TestStack) {
   }
 }
 
-}  // namespace qian
+}  // namespace stl

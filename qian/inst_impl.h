@@ -5,6 +5,7 @@
 #include "inst.h"
 #include "logging.h"
 #include "status.h"
+
 namespace qian {
 
 #define DEFINE_INST(opcode, len, debug_info, run_func) \
