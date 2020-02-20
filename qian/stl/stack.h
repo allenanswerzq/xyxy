@@ -3,7 +3,7 @@
 
 #include "qian/stl/common.h"
 
-template <class T, int N>
+template <class T, int N = 256>
 class Stack {
  public:
   Stack() {

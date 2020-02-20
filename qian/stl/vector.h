@@ -34,11 +34,10 @@ class Vector {
 
   T& Get(int index);
   const T& Get(int index) const;
-
-  uint32 Size() const { return end_ - begin_; }
-
   T& operator[](int n) { return Get(n); }
   const T& operator[](int n) const { return Get(n); }
+
+  uint32 Size() const { return end_ - begin_; }
 
   // Move assignment.
   Vector<T>& operator=(Vector&& v) {

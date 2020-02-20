@@ -28,9 +28,4 @@ struct is_pointer<T*> {
   enum { value = true };
 };
 
-template <typename T>
-std::unique_ptr<T> WrapUnique(T* ptr) {
-  return std::unique_ptr<T>(ptr);
-}
-
 #endif  // QIAN_TYPE_TRAITS_H

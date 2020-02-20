@@ -1,6 +1,7 @@
 #include "qian/stl/vector.h"
 
 #include "gtest/gtest.h"
+#include "qian/stl/memory.h"
 
 namespace stl {
 
@@ -50,7 +51,7 @@ int DummyClass::count_ = 0;
 
 TEST(Pointers, TestVector) {
   {
-    Vector<std::unique_ptr<DummyClass>> v;
+    Vector<Unique_Ptr<DummyClass>> v;
     EXPECT_EQ(DummyClass::count_, 0);
     v.Write(WrapUnique(new DummyClass()));
     v.Write(WrapUnique(new DummyClass()));
