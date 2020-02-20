@@ -1,7 +1,7 @@
 #ifndef QIAN_LIST_H_
 #define QIAN_LIST_H_
 
-#include "stl/common.h"
+#include "qian/stl/common.h"
 
 namespace stl {
 template <class T>
@@ -25,6 +25,7 @@ class List {
     }
   }
 
+  // Disable copy constructors.
   List(const List&) = delete;
   List& operator=(const List&) = delete;
 

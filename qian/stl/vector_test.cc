@@ -1,4 +1,4 @@
-#include "stl/vector.h"
+#include "qian/stl/vector.h"
 
 #include "gtest/gtest.h"
 
@@ -28,7 +28,7 @@ TEST(Operator, TestVector) {
 
 TEST(Reverse, TestVector) {
   Vector<int> v;
-  v.Reverse(1024);
+  v.Reserve(1024);
   EXPECT_EQ(v.Size(), 1024);
   for (int i = 0; i < 1024; i++) {
     v[i] = i;

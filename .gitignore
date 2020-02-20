@@ -3,3 +3,4 @@ build
 .vscode
 .ccls*
 bazel-*
+compile_commands.json

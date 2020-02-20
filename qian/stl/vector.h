@@ -1,7 +1,7 @@
 #ifndef QIAN_VECTOR_H_
 #define QIAN_VECTOR_H_
 
-#include "stl/common.h"
+#include "qian/stl/common.h"
 
 // TODO(zq7): initializer_list and iterator support.
 template <class T>
@@ -42,10 +42,10 @@ class Vector {
 
   // Move assignment.
   Vector<T>& operator=(Vector&& v) {
-    this->begin_ = v->begin_;
-    this->end_ = v->end_;
-    this->capacity_ = v->capacity_;
-    this->data_ = v->data_;
+    begin_ = v->begin_;
+    end_ = v->end_;
+    capacity_ = v->capacity_;
+    data_ = v->data_;
     // Reset v.
     v->begin_ = 0;
     v->end_ = 0;
@@ -53,7 +53,7 @@ class Vector {
     v->data_ = nullptr;
   }
 
-  void Reverse(int n) {
+  void Reserve(int n) {
     capacity_ = n;
     begin_ = 0;
     end_ = n;

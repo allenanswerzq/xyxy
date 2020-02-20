@@ -1,16 +1,16 @@
 #ifndef QIAN_HASH_TABLE_H_
 #define QIAN_HASH_TABLE_H_
 
-#include "stl/common.h"
-#include "stl/list.h"
-#include "stl/vector.h"
+#include "qian/stl/common.h"
+#include "qian/stl/list.h"
+#include "qian/stl/vector.h"
 
 namespace stl {
 
 template <class T>
 struct DefaultHasher {
   uint32 Hash(const T& val) const {
-    ABORT("Hash not implemented, Please custom it.");
+    ABORT("Hash not implemented, Please define it.");
     (void)val;
     return -1;
   }
@@ -34,7 +34,7 @@ class HashTable {
  public:
   const int kMaxSlot = 1e6 + 7;
 
-  HashTable() { table_.Reverse(kMaxSlot); }
+  HashTable() { table_.Reserve(kMaxSlot); }
 
   using KeyType = std::pair<K, V>;
 
