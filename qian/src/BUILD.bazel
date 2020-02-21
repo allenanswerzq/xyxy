@@ -1,0 +1,20 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load("//copts:configure_copts.bzl", "QIAN_DEFAULT_COPTS", "QIAN_DEFAULT_LINKOPTS")
+
+cc_library(
+    name = "qian",
+    hdrs = glob([ "type.h" ]),
+)
+
+cc_test(
+    name = "type_test",
+    srcs = ["type_test.cc"],
+    copts = QIAN_DEFAULT_COPTS,
+    deps = [
+        ":qian",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
