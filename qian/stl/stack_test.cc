@@ -25,7 +25,8 @@ TEST(PushDeath, TestStack) {
   for (int i = 0; i < 300; i++) {
     if (i >= N) {
       EXPECT_DEATH({ stk.Push(i); }, "Assertion failed");
-    } else {
+    }
+    else {
       stk.Push(i);
     }
   }

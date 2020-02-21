@@ -44,7 +44,8 @@ class List {
   void AppendTail(ListNode<T>* val) {
     if (head_ == nullptr) {
       cur_ = head_ = val;
-    } else {
+    }
+    else {
       cur_->next = val;
       cur_ = cur_->next;
     }
