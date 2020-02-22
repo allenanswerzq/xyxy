@@ -5,7 +5,7 @@
 #include "qian/stl/list.h"
 #include "qian/stl/vector.h"
 
-namespace stl {
+namespace qian {
 
 template <class T>
 struct DefaultHasher {
@@ -101,6 +101,6 @@ class HashTable {
 // Define HashSet.
 template <class T>
 using HashSet = HashTable<T, bool>;
-}  // namespace stl
+}  // namespace qian
 
 #endif  // QIAN_HASH_TABLE_H_

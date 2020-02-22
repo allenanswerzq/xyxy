@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 #include "qian/stl/memory.h"
 
-namespace stl {
+namespace qian {
 
 TEST(WriteGet, TestVector) {
   Vector<int> v;
@@ -61,4 +61,4 @@ TEST(Pointers, TestVector) {
   EXPECT_EQ(DummyClass::count_, 0);
 }
 
-}  // namespace stl
+}  // namespace qian

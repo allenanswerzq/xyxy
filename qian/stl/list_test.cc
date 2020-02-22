@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 #include "qian/stl/vector.h"
 
-namespace stl {
+namespace qian {
 
 TEST(Next, TestList) {
   List<int> v;
@@ -27,4 +27,4 @@ TEST(Vector, TestList) {
   }
 }
 
-}  // namespace stl
+}  // namespace qian

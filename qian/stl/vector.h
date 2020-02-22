@@ -3,6 +3,7 @@
 
 #include "qian/stl/common.h"
 
+namespace qian {
 // TODO(zq7): initializer_list and iterator support.
 template <class T>
 class Vector {
@@ -121,5 +122,5 @@ const T& Vector<T>::Get(int index) const {
   assert(data_ && index < Size());
   return data_[index];
 }
-
+}  // namespace qian
 #endif  // QIAN_VECTOR_H_

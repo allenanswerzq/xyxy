@@ -3,6 +3,7 @@
 
 #include "qian/stl/common.h"
 
+namespace qian {
 template <class T, int N = 256>
 class Stack {
  public:
@@ -39,5 +40,6 @@ class Stack {
   T* stk_;
   T* top_;
 };
+}  // namespace qian
 
 #endif  // QIAN_STACK_H_

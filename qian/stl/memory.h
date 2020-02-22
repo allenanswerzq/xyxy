@@ -3,6 +3,7 @@
 
 #include "qian/stl/common.h"
 
+namespace qian {
 template <class T>
 struct DefaultDeleter {
   void Delete(T* ptr) const { delete ptr; }
@@ -82,5 +83,5 @@ template <typename T, typename... Args>
 Unique_Ptr<T> MakeUnique(Args&&... args) {
   return Unique_Ptr<T>(new T(std::forward<Args>(args)...));
 }
-
+}  // namespace qian
 #endif  // QIAN_UNIQUE_PTR_H_

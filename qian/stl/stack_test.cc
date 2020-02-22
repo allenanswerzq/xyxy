@@ -2,7 +2,7 @@
 
 #include "gtest/gtest.h"
 
-namespace stl {
+namespace qian {
 
 TEST(Push, TestStack) {
   const int N = 256;
@@ -32,4 +32,4 @@ TEST(PushDeath, TestStack) {
   }
 }
 
-}  // namespace stl
+}  // namespace qian

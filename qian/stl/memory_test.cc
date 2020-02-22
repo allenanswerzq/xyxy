@@ -3,7 +3,7 @@
 #include "gtest/gtest.h"
 #include "qian/stl/vector.h"
 
-namespace stl {
+namespace qian {
 
 struct Dummy {
   Dummy() { count_++; }
@@ -35,4 +35,4 @@ TEST(Vector, TestUniquePtr) {
   EXPECT_EQ(Dummy::count_, 0);
 }
 
-}  // namespace stl
+}  // namespace qian

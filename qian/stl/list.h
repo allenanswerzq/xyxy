@@ -3,7 +3,7 @@
 
 #include "qian/stl/common.h"
 
-namespace stl {
+namespace qian {
 template <class T>
 struct ListNode {
   T value;
@@ -66,6 +66,6 @@ class List {
   ListNode<T>* cur_;
   ListNode<T>* head_;
 };
-}  // namespace stl
+}  // namespace qian
 
 #endif  // QIAN_LIST_H_

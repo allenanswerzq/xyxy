@@ -4,7 +4,7 @@
 
 #include "gtest/gtest.h"
 
-namespace stl {
+namespace qian {
 
 TEST(String, HashTableTest) {
   HashTable<std::string, int> ht;
@@ -38,4 +38,4 @@ TEST(NoDefineHash, HashSetTest) {
   EXPECT_DEATH({ hs.Insert(Simple()); }, "Hash not implemented");
 }
 
-}  // namespace stl
+}  // namespace qian
