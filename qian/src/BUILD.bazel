@@ -5,7 +5,10 @@ load("//copts:configure_copts.bzl", "QIAN_DEFAULT_COPTS", "QIAN_DEFAULT_LINKOPTS
 
 cc_library(
     name = "qian",
-    hdrs = glob([ "type.h" ]),
+    hdrs = glob([
+      "type.h",
+      "object.h"
+     ]),
 )
 
 cc_test(
@@ -14,6 +17,7 @@ cc_test(
     copts = QIAN_DEFAULT_COPTS,
     deps = [
         ":qian",
+        "//qian/stl:stl",
         "@com_google_googletest//:gtest_main",
     ],
 )

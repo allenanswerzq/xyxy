@@ -1,6 +1,7 @@
 #include "qian/src/type.h"
 
 #include "gtest/gtest.h"
+#include "qian/src/object.h"
 
 namespace qian {
 
@@ -54,6 +55,18 @@ TEST(QNil, TypeTest) {
   EXPECT_EQ(nil.AsCxx(), false);
   EXPECT_TRUE(IsQNil(nil));
   EXPECT_TRUE(IsFalsey(nil));
+}
+
+TEST(Misc, TypeTest) {
+  QNil nil;
+  QFloat f;
+  EXPECT_FALSE(nil == f);
+}
+
+TEST(QString, TypeTest) {
+  QString s("hello world!");
+  EXPECT_TRUE(IsQString(s));
+  EXPECT_TRUE(s.AsCxx());
 }
 
 }  // namespace qian

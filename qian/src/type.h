@@ -1,10 +1,9 @@
 #ifndef QIAN_TYPE_H_
 #define QIAN_TYPE_H_
 
-// #include "qian/src/object.h"
-
 namespace qian {
 
+// Define QValue types
 typedef enum {
   QVAL_BOOL,
   QVAL_NIL,
@@ -12,18 +11,27 @@ typedef enum {
   QVAL_OBJ,
 } QValueType;
 
+// Define QObject types
+typedef enum {
+  QOBJ_OBJ,
+  QOBJ_STRING,
+} QObjType;
+
+template <class T>
 class QValue {
  public:
   QValue(QValueType type) : type_(type) {}
+
+  virtual T AsCxx() = 0;
 
   QValueType Type() const { return type_; }
 
   QValueType type_;
 };
 
-class QBoolean : public QValue {
+class QBoolean : public QValue<bool> {
  public:
-  bool AsCxx() const { return val_; }
+  bool AsCxx() override { return val_; }
 
   QBoolean() : QValue(QVAL_BOOL) {}
 
@@ -33,9 +41,9 @@ class QBoolean : public QValue {
   bool val_ = false;
 };
 
-class QFloat : public QValue {
+class QFloat : public QValue<double> {
  public:
-  double AsCxx() const { return val_; }
+  double AsCxx() override { return val_; }
 
   QFloat() : QValue(QVAL_FLOAT) {}
 
@@ -45,13 +53,13 @@ class QFloat : public QValue {
   double val_ = 0;
 };
 
-class QNil : public QValue {
+class QNil : public QValue<bool> {
  public:
-  bool AsCxx() const { return val_; }
+  bool AsCxx() override { return val_; }
 
   QNil() : QValue(QVAL_NIL) {}
 
-  QNil(double val) : QValue(QVAL_NIL), val_(val) {}
+  QNil(bool val) : QValue(QVAL_NIL), val_(val) {}
 
  private:
   bool val_ = false;
@@ -63,9 +71,22 @@ class QNil : public QValue {
     return val.Type() == type_val;             \
   }
 
+#define DEFINE_OBJECT_CHECK(type_name, type_val) \
+  template <class T>                             \
+  bool Is##type_name(T* val) {                   \
+    return val->ObjType() == type_val;           \
+  }                                              \
+  template <class T>                             \
+  bool Is##type_name(T val) {                    \
+    return val.ObjType() == type_val;            \
+  }
+
 DEFINE_TYPE_CHECK(QBoolean, QVAL_BOOL)
 DEFINE_TYPE_CHECK(QFloat, QVAL_FLOAT)
 DEFINE_TYPE_CHECK(QNil, QVAL_NIL)
+
+DEFINE_OBJECT_CHECK(QObject, QOBJ_OBJ)
+DEFINE_OBJECT_CHECK(QString, QOBJ_STRING)
 
 template <class T, class U>
 inline bool IsQValueEqual(T a, U b) {
