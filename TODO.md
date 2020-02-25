@@ -8,7 +8,7 @@ TODO:
 
 - Add benchmark feature to test the speed of code.
 
-- Use abseil::string instead std::string.
+- ~Use abseil::string instead std::string~.
 
 - ~Add a better way to debug token tokentype and prec order~.
 
@@ -19,3 +19,5 @@ TODO:
 - Review all the places where pointer been used, use unique_ptr instead.
 
 - Use bazel to replace cmake, use glog lib.
+
+- Use clang-tidy to do code checks.
