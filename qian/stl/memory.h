@@ -24,7 +24,7 @@ class Unique_Ptr {
 
   Unique_Ptr() : ptr_(nullptr) {}
 
-  ~Unique_Ptr() { Reset(); }
+  virtual ~Unique_Ptr() { Reset(); }
 
   explicit Unique_Ptr(PointerType p) : ptr_(p) {}
 
@@ -44,6 +44,7 @@ class Unique_Ptr {
 
   T& operator*() const { return *ptr_; }
 
+  PointerType Get() { return ptr_; }
   PointerType operator->() const { return ptr_; }
 
   explicit operator bool() const { return ptr_ != nullptr; }
@@ -83,5 +84,6 @@ template <typename T, typename... Args>
 Unique_Ptr<T> MakeUnique(Args&&... args) {
   return Unique_Ptr<T>(new T(std::forward<Args>(args)...));
 }
+
 }  // namespace qian
 #endif  // QIAN_UNIQUE_PTR_H_

@@ -2,6 +2,7 @@
 
 #include "gtest/gtest.h"
 #include "qian/src/object.h"
+#include "qian/stl/memory.h"
 
 namespace qian {
 
@@ -60,13 +61,20 @@ TEST(QNil, TypeTest) {
 TEST(Misc, TypeTest) {
   QNil nil;
   QFloat f;
-  EXPECT_FALSE(nil == f);
+  // Expect compile error occurs.
+  // EXPECT_FALSE(nil == f);
 }
 
 TEST(QString, TypeTest) {
   QString s("hello world!");
   EXPECT_TRUE(IsQString(s));
   EXPECT_TRUE(s.AsCxx());
+}
+
+TEST(Pointer, TypeTest) {
+  Unique_Ptr<QFloat> a = MakeUnique<QFloat>(1.23);
+  Unique_Ptr<QFloat> b = MakeUnique<QFloat>(1.23);
+  EXPECT_TRUE(IsQValueEqual(a, b));
 }
 
 }  // namespace qian

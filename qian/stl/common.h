@@ -20,6 +20,7 @@ typedef unsigned long long uint64;
 #define ASSERTM(exp, msg) assert(((void)msg, exp))
 #define ABORT(msg) ASSERTM(false, msg)
 
+namespace qian {
 template <typename T>
 struct is_pointer {
   enum { value = false };
@@ -30,4 +31,5 @@ struct is_pointer<T*> {
   enum { value = true };
 };
 
+}  // namespace qian
 #endif  // QIAN_TYPE_TRAITS_H
