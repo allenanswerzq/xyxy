@@ -7,8 +7,17 @@ cc_library(
     name = "qian",
     hdrs = glob([
       "type.h",
-      "object.h"
+      "object.h",
+      "scanner.h"
      ]),
+    srcs = glob([
+      "scanner.cc"
+    ]),
+    copts = QIAN_DEFAULT_COPTS,
+    deps = [
+      "//qian/stl:stl",
+      "@com_github_google_glog//:glog"
+    ]
 )
 
 cc_test(
@@ -22,3 +31,14 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "scanner_test",
+    srcs = ["scanner_test.cc"],
+    copts = QIAN_DEFAULT_COPTS,
+    deps = [
+        ":qian",
+        "//qian/stl:stl",
+        "@com_google_googletest//:gtest_main",
+        "@com_github_google_glog//:glog"
+    ],
+)

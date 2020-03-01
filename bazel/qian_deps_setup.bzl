@@ -95,8 +95,8 @@ def qian_deps_setup():
     commit = "925858d9969d8ee22aabc3635af00a37891f4e25",
     remote = "https://github.com/google/glog",
     sha256 = "dbe787f2a7cf1146f748a191c99ae85d6b931dd3ebdcc76aa7ccae3699149c67",
-    patches = [
-      "//thirdparty/patches:glog-stack-trace.patch",
-    ],
+    # patches = [
+    #   "//thirdparty/patches:glog-stack-trace.patch",
+    # ],
   )
 
