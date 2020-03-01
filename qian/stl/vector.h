@@ -6,12 +6,12 @@
 namespace qian {
 // TODO(zq7): initializer_list and iterator support.
 template <class T>
-class Vector {
+class vector {
  public:
-  Vector();
-  virtual ~Vector();
+  vector();
+  virtual ~vector();
 
-  Vector(int n) {
+  vector(int n) {
     begin_ = 0;
     end_ = n;
     capacity_ = n;
@@ -19,8 +19,8 @@ class Vector {
   }
 
   // Delete copy constructs.
-  Vector(const Vector& v) = delete;
-  Vector<T>& operator=(const Vector& v) = delete;
+  vector(const vector& v) = delete;
+  vector<T>& operator=(const vector& v) = delete;
 
   void Write(T value);
 
@@ -41,7 +41,7 @@ class Vector {
   uint32 Size() const { return end_ - begin_; }
 
   // Move assignment.
-  Vector<T>& operator=(Vector&& v) {
+  vector<T>& operator=(vector&& v) {
     begin_ = v->begin_;
     end_ = v->end_;
     capacity_ = v->capacity_;
@@ -73,7 +73,7 @@ class Vector {
 };
 
 template <class T>
-Vector<T>::Vector() {
+vector<T>::vector() {
   capacity_ = 0;
   begin_ = 0;
   end_ = 0;
@@ -81,7 +81,7 @@ Vector<T>::Vector() {
 }
 
 template <class T>
-Vector<T>::~Vector() {
+vector<T>::~vector() {
   if (data_) {
     delete[] data_;
     data_ = nullptr;
@@ -89,7 +89,7 @@ Vector<T>::~Vector() {
 }
 
 template <class T>
-void Vector<T>::grow_vector() {
+void vector<T>::grow_vector() {
   int new_size = (capacity_ < 8 ? 8 : 2 * capacity_);
   T* ptr = new T[new_size];
   assert(ptr);
@@ -104,7 +104,7 @@ void Vector<T>::grow_vector() {
 }
 
 template <class T>
-void Vector<T>::Write(T val) {
+void vector<T>::Write(T val) {
   if (Size() + 1 > capacity_) {
     grow_vector();
   }
@@ -112,13 +112,13 @@ void Vector<T>::Write(T val) {
 }
 
 template <class T>
-T& Vector<T>::Get(int index) {
+T& vector<T>::Get(int index) {
   assert(data_ && index < Size());
   return data_[index];
 }
 
 template <class T>
-const T& Vector<T>::Get(int index) const {
+const T& vector<T>::Get(int index) const {
   assert(data_ && index < Size());
   return data_[index];
 }

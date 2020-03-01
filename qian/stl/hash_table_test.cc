@@ -6,8 +6,8 @@
 
 namespace qian {
 
-TEST(String, HashTableTest) {
-  HashTable<std::string, int> ht;
+TEST(String, hash_tableTest) {
+  hash_table<std::string, int> ht;
   ht.Insert("foo", 1);
   ht.Insert("bar", 2);
   EXPECT_TRUE(ht.Find("foo"));
@@ -20,8 +20,8 @@ TEST(String, HashTableTest) {
   EXPECT_FALSE(ht.Find("tar"));
 }
 
-TEST(String, HashSetTest) {
-  HashSet<std::string> hs;
+TEST(String, hash_setTest) {
+  hash_set<std::string> hs;
   hs.Insert("foo");
   hs.Insert("bar");
   EXPECT_TRUE(hs.Find("foo"));
@@ -29,12 +29,12 @@ TEST(String, HashSetTest) {
   EXPECT_FALSE(hs.Find("tar"));
 }
 
-TEST(NoDefineHash, HashSetTest) {
+TEST(NoDefineHash, hash_setTest) {
   struct Simple {
     int x;
     bool operator==(const Simple& b) { return x == b.x; }
   };
-  HashSet<Simple> hs;
+  hash_set<Simple> hs;
   EXPECT_DEATH({ hs.Insert(Simple()); }, "Hash not implemented");
 }
 

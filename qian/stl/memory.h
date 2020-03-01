@@ -18,26 +18,26 @@ struct DefaultDeleter<T[]> {
 };
 
 template <class T, class Deleter = DefaultDeleter<T>>
-class Unique_Ptr {
+class unique_ptr {
  public:
   using PointerType = T*;
 
-  Unique_Ptr() : ptr_(nullptr) {}
+  unique_ptr() : ptr_(nullptr) {}
 
-  virtual ~Unique_Ptr() { Reset(); }
+  virtual ~unique_ptr() { Reset(); }
 
-  explicit Unique_Ptr(PointerType p) : ptr_(p) {}
+  explicit unique_ptr(PointerType p) : ptr_(p) {}
 
-  Unique_Ptr(Unique_Ptr const&) = default;
-  Unique_Ptr& operator=(Unique_Ptr const&) = default;
+  unique_ptr(unique_ptr const&) = default;
+  unique_ptr& operator=(unique_ptr const&) = default;
 
   // Move assignment.
-  Unique_Ptr& operator=(Unique_Ptr&& p) {
+  unique_ptr& operator=(unique_ptr&& p) {
     Reset(p.Release());
     return *this;
   }
 
-  Unique_Ptr& operator=(std::nullptr_t) {
+  unique_ptr& operator=(std::nullptr_t) {
     Reset();
     return *this;
   }
@@ -63,7 +63,7 @@ class Unique_Ptr {
     }
   }
 
-  void swap(Unique_Ptr& u) {
+  void swap(unique_ptr& u) {
     PointerType tmp = ptr_;
     ptr_ = u->ptr_;
     u->ptr_ = tmp;
@@ -75,14 +75,14 @@ class Unique_Ptr {
 };
 
 template <typename T>
-Unique_Ptr<T> WrapUnique(T* ptr) {
-  return Unique_Ptr<T>(ptr);
+unique_ptr<T> WrapUnique(T* ptr) {
+  return unique_ptr<T>(ptr);
 }
 
 // Do not support array.
 template <typename T, typename... Args>
-Unique_Ptr<T> MakeUnique(Args&&... args) {
-  return Unique_Ptr<T>(new T(std::forward<Args>(args)...));
+unique_ptr<T> MakeUnique(Args&&... args) {
+  return unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
 }  // namespace qian

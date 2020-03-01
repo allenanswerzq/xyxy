@@ -122,7 +122,7 @@ inline bool IsQValueEqual(T& a, T& b) {
 }
 
 template <class T>
-inline bool IsQValueEqual(Unique_Ptr<T>& a, Unique_Ptr<T>& b) {
+inline bool IsQValueEqual(unique_ptr<T>& a, unique_ptr<T>& b) {
   return is_qvalue_equal<T>(a.Get(), b.Get());
 }
 
@@ -156,7 +156,7 @@ inline bool IsFalsey(T* val) {
 }
 
 template <class T>
-inline bool IsFalsey(Unique_Ptr<T>& val) {
+inline bool IsFalsey(unique_ptr<T>& val) {
   return is_falsey<T>(val.Get());
 }
 

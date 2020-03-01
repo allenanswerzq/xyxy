@@ -24,9 +24,9 @@ TEST(Simple, TestUniquePtr) {
   EXPECT_EQ(Dummy::count_, 0);
 }
 
-TEST(Vector, TestUniquePtr) {
+TEST(vector, TestUniquePtr) {
   {
-    Vector<Unique_Ptr<Dummy>> v(10);
+    vector<unique_ptr<Dummy>> v(10);
     for (int i = 0; i < 10; i++) {
       EXPECT_EQ(Dummy::count_, i);
       v[i] = MakeUnique<Dummy>();

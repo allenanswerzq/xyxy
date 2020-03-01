@@ -5,8 +5,8 @@
 
 namespace qian {
 
-TEST(WriteGet, TestVector) {
-  Vector<int> v;
+TEST(WriteGet, Testvector) {
+  vector<int> v;
   EXPECT_EQ(v.Size(), 0);
   for (int i = 0; i < 1024; i++) {
     v.Write(i);
@@ -16,8 +16,8 @@ TEST(WriteGet, TestVector) {
   }
 }
 
-TEST(Operator, TestVector) {
-  Vector<int> v(1024);
+TEST(Operator, Testvector) {
+  vector<int> v(1024);
   EXPECT_EQ(v.Size(), 1024);
   for (int i = 0; i < 1024; i++) {
     v[i] = i;
@@ -27,8 +27,8 @@ TEST(Operator, TestVector) {
   }
 }
 
-TEST(Reverse, TestVector) {
-  Vector<int> v;
+TEST(Reverse, Testvector) {
+  vector<int> v;
   v.Reserve(1024);
   EXPECT_EQ(v.Size(), 1024);
   for (int i = 0; i < 1024; i++) {
@@ -49,9 +49,9 @@ struct DummyClass {
 
 int DummyClass::count_ = 0;
 
-TEST(Pointers, TestVector) {
+TEST(Pointers, Testvector) {
   {
-    Vector<Unique_Ptr<DummyClass>> v;
+    vector<unique_ptr<DummyClass>> v;
     EXPECT_EQ(DummyClass::count_, 0);
     v.Write(WrapUnique(new DummyClass()));
     v.Write(WrapUnique(new DummyClass()));

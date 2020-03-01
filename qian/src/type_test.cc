@@ -72,8 +72,8 @@ TEST(QString, TypeTest) {
 }
 
 TEST(Pointer, TypeTest) {
-  Unique_Ptr<QFloat> a = MakeUnique<QFloat>(1.23);
-  Unique_Ptr<QFloat> b = MakeUnique<QFloat>(1.23);
+  unique_ptr<QFloat> a = MakeUnique<QFloat>(1.23);
+  unique_ptr<QFloat> b = MakeUnique<QFloat>(1.23);
   EXPECT_TRUE(IsQValueEqual(a, b));
 }
 

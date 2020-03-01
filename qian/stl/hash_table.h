@@ -30,11 +30,11 @@ struct DefaultHasher<std::string> {
 };
 
 template <class K, class V, class Hasher = DefaultHasher<K>>
-class HashTable {
+class hash_table {
  public:
   const int kMaxSlot = 1e6 + 7;
 
-  HashTable() { table_.Reserve(kMaxSlot); }
+  hash_table() { table_.Reserve(kMaxSlot); }
 
   using KeyType = std::pair<K, V>;
 
@@ -94,13 +94,13 @@ class HashTable {
   }
 
  private:
-  Vector<List<KeyType>> table_;
+  vector<List<KeyType>> table_;
   Hasher hash_;
 };
 
-// Define HashSet.
+// Define hash_set.
 template <class T>
-using HashSet = HashTable<T, bool>;
+using hash_set = hash_table<T, bool>;
 }  // namespace qian
 
 #endif  // QIAN_HASH_TABLE_H_

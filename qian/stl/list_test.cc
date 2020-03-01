@@ -17,8 +17,8 @@ TEST(Next, TestList) {
   }
 }
 
-TEST(Vector, TestList) {
-  Vector<List<int>> v(2);
+TEST(vector, TestList) {
+  vector<List<int>> v(2);
   for (int i = 0; i < 3; i++) {
     v[0].AppendTail(i);
   }
