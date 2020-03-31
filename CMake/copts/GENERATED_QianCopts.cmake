@@ -75,6 +75,7 @@ list(APPEND QIAN_CLANG_CL_TEST_FLAGS
 )
 
 list(APPEND QIAN_GCC_FLAGS
+    "-std=c++17"
     "-Wall"
     "-Wextra"
     "-Wcast-qual"
@@ -92,6 +93,7 @@ list(APPEND QIAN_GCC_FLAGS
 )
 
 list(APPEND QIAN_GCC_TEST_FLAGS
+    "-std=c++17"
     "-Wno-conversion-null"
     "-Wno-deprecated-declarations"
     "-Wno-missing-declarations"

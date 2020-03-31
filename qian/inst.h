@@ -1,10 +1,12 @@
 #ifndef QIAN_INST_H_
 #define QIAN_INST_H_
 
-#include "chunk.h"
-#include "logging.h"
-#include "status.h"
-#include "vm.h"
+#include <vector>
+
+#include "qian/chunk.h"
+#include "qian/logging.h"
+#include "qian/status.h"
+#include "qian/vm.h"
 
 namespace qian {
 
@@ -43,10 +45,11 @@ class Inst {
 
   uint8 Opcode() { return opcode_; }
 
-  void Operand(Value val) { operands_.Write(val); }
-  Vector<Value>* Operands() { return &operands_; }
+  void AddOperand(Value val) { operands_.Write(val); }
+  const std::vector<Value>& Operands() { return operands_; }
 
  protected:
+  // Do not want to be called unless from its subclass.
   Inst() {}
 
   string name_;
@@ -54,12 +57,11 @@ class Inst {
   uint8 length_;
   FuncRun run_func_;
   FuncDebugInfo debug_info_;
-  Vector<Value> operands_;
+  std::vector<Value> operands_;
 };
 
-Inst* CreateInst(OpCode byte);
-
-Inst* DispathInst(Chunk* chunk, uint8 offset);
+// Give a chunk and a offset index, return the Inst the bytecode representing.
+std::unique_ptr<Inst> DispathInst(std::unique_ptr<Chunk> chunk, uint8 offset);
 
 }  // namespace qian
 

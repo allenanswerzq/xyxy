@@ -5,69 +5,125 @@
 
 namespace qian {
 
-typedef enum { VAL_BOOL, VAL_NIL, VAL_NUMBER, VAL_OBJ, }
-ValueType;
+enum class ValueType {
+  VAL_BOOL,
+  VAL_NIL,
+  VAL_FLOAT,
+  VAL_OBJ,
+};
 
-typedef struct {
-  ValueType type;
+class Value {
+ private:
+  // Denotes the value type.
+  ValueType type_;
+
+  // A union stores real value for each kind.
   union {
     bool boolean;
     double number;
-    Object* obj;
-  } as;
-} Value;
+    // NOTE: this class only sort of serving as a `Object` container.
+    Object* obj;  // not owned
+  } as_;
 
-// clang-format off
+ public:
+  // By default, constructs a Nil value.
+  Value() : type_(ValueType::VAL_NIL) {}
 
-// Converts a qian value into a c++ value.
-#define AS_CXX_BOOL(value)    ((value).as.boolean)
-#define AS_CXX_NUMBER(value)  ((value).as.number)
-#define AS_CXX_OBJ(value)     ((value).as.obj)
+  Value(bool b) : type_(ValueType::VAL_BOOL) { as_.boolean = b; }
 
-// Converts a cxx value into a equalivent qian represtation.
-#define QIAN_BOOL(value)      ((Value) {VAL_BOOL,   {.boolean = value}})
-#define QIAN_NIL              ((Value) {VAL_NIL,    {.number = 0}})
-#define QIAN_NUMBER(value)    ((Value) {VAL_NUMBER, {.number = value}})
-#define QIAN_OBJ(value)       ((Value) {VAL_OBJ,    {.obj = (Object*) value}})
-#define QIAN_OBJ_TYPE(value)  (AS_CXX_OBJ(value)->Type())
+  Value(double n) : type_(ValueType::VAL_FLOAT) { as_.number = n; }
 
-// Check qian value's type
-#define IS_QIAN_BOOL(value)   ((value).type == VAL_BOOL)
-#define IS_QIAN_NIL(value)    ((value).type == VAL_NIL)
-#define IS_QIAN_NUMBER(value) ((value).type == VAL_NUMBER)
-#define IS_QIAN_BOJ(value)    ((value).type == VAL_OBJ)
+  Value(int n) : type_(ValueType::VAL_FLOAT) { as_.number = n; }
 
-// Check object's type
-static inline bool is_obj_type(Value val, ObjType type) {
-  return IS_QIAN_BOJ(val) && QIAN_OBJ_TYPE(val) == type;
-}
+  Value(Object* o) : type_(ValueType::VAL_OBJ) { as_.obj = o; }
 
-#define IS_STRING(value) is_obj_type(value, OBJ_STRING)
-#define AS_STRING(value)   ((StringObj*) AS_OBJ(value))
-#define AS_CSTRING(value)  (((StringObj*) AS_OBJ(value))->raw)
+  ValueType Type() const { return type_; }
 
-// clang-format on
+  ObjType ObjectType() {
+    assert(IsObject());
+    return as_.obj->Type();
+  }
 
-inline bool IsEqual(Value a, Value b) {
-  if (a.type != b.type) {
+  bool IsBool() { return type_ == ValueType::VAL_BOOL; }
+  bool IsFloat() { return type_ == ValueType::VAL_FLOAT; }
+  bool IsObject() { return type_ == ValueType::VAL_OBJ; }
+  bool IsNil() { return type_ == ValueType::VAL_NIL; }
+  bool IsFalsey() { return IsNil() || (IsBool() && !AsBool()); }
+
+  bool AsBool() {
+    assert(IsBool());
+    return as_.boolean;
+  }
+
+  bool AsNil() {
+    assert(IsNil());
     return false;
   }
-  if (a.type == VAL_BOOL) {
-    return AS_CXX_BOOL(a) == AS_CXX_BOOL(b);
-  } else if (a.type == VAL_NIL) {
+
+  double AsFloat() {
+    assert(IsFloat());
+    return as_.number;
+  }
+
+  Object* AsRawObject() {
+    assert(IsObject());
+    return as_.obj;
+  }
+
+  Value(ObjString* p) : type_(ValueType::VAL_OBJ) {
+    as_.obj = reinterpret_cast<Object*>(p);
+  }
+
+  bool IsString() {
+    assert(IsObject());
+    return AsRawObject()->IsString();
+  }
+
+  ObjString* AsString() {
+    assert(IsString());
+    return reinterpret_cast<ObjString*>(AsRawObject());
+  }
+
+  std::string ToString() {
+    if (IsBool()) {
+      return std::to_string(AsBool());
+    } else if (IsFloat()) {
+      return std::to_string(AsFloat());
+    } else if (IsNil()) {
+      return "Nill";
+    } else if (IsObject()) {
+      return AsRawObject()->ToString();
+    } else {
+      // Expect never reach here.
+      assert(false);
+      return "";
+    }
+  }
+};
+
+static bool is_equal(Value a, Value b) {
+  if (a.Type() != b.Type()) {
+    return false;
+  }
+  if (a.Type() == ValueType::VAL_BOOL) {
+    return a.AsBool() == b.AsBool();
+  } else if (a.Type() == ValueType::VAL_NIL) {
     return true;
-  } else if (a.type == VAL_NUMBER) {
-    return AS_CXX_NUMBER(a) == AS_CXX_NUMBER(b);
+  } else if (a.Type() == ValueType::VAL_FLOAT) {
+    return a.AsFloat() == b.AsFloat();
   } else {
     return false;
   }
 }
 
-inline bool IsFalsey(Value value) {
-  return IS_QIAN_NIL(value) || (IS_QIAN_BOOL(value) && !AS_CXX_BOOL(value));
-}
+// Define NILL.
+#define NILL Value()
 
-inline bool operator==(const Value& a, const Value& b) { return IsEqual(a, b); }
+// NOTE: Use inline here otherwise need to put function implementation into a
+// .cc file.
+inline bool operator==(const Value& a, const Value& b) {
+  return is_equal(a, b);
+}
 
 inline bool operator!=(const Value& a, const Value& b) { return !(a == b); }
 

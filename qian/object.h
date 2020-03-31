@@ -1,45 +1,51 @@
 #ifndef QIAN_OBJECT_H_
 #define QIAN_OBJECT_H_
 
-#include "qian/type.h"
-#include "qian/vector.h"
+#include <string>
+#include <vector>
 
 namespace qian {
 
-typedef enum {
+enum class ObjType {
   OBJ_STRING,
 
-} ObjType;
-
-class Object;
-
-static Vector<Object*>* Collecter() {
-  return new Vector<Object*>();
-}
+};
 
 class Object {
  public:
   Object(ObjType type) : type_(type) {}
-  ObjType Type() { return type_; }
+
+  virtual ~Object() = default;
+
+  ObjType Type() const { return type_; }
+
+  bool IsString() { return type_ == ObjType::OBJ_STRING; }
+
+  // Must inherted by all subclasses.
+  virtual std::string ToString() = 0;
 
  private:
   ObjType type_;
 };
 
-class StringObj : Object {
+class ObjString : Object {
  public:
-  static StringObj* Create(const string& str) {
-    auto obj = new StringObj();
-    obj->str_ = str;
-    Collecter()->Write(obj);
-    return obj;
-  }
+  ObjString(const std::string& str) : Object(ObjType::OBJ_STRING), str_(str) {}
+
+  std::string ToString() override { return str_; }
 
  private:
-  StringObj() : Object(OBJ_STRING) {}
-  string str_;
+  std::string str_;
 };
 
+// NOTE: Use inline here otherwise need to put function implementation into a
+// .cc file.
+// Temporary garbage collector to free all objects, later when we
+// add a real garbage collector, this will be removed.
+inline std::vector<Object*>* Collector() {
+  static std::vector<Object*>* collector = new std::vector<Object*>;
+  return collector;
+}
 
 }  // namespace qian
 

@@ -28,13 +28,9 @@ TEST(Address, TestVector) {
 }
 
 struct DummyClass {
-  DummyClass() {
-    count_++;
-  }
+  DummyClass() { count_++; }
 
-  ~DummyClass() {
-    count_--;
-  }
+  ~DummyClass() { count_--; }
 
   static int count_;
 };
@@ -43,7 +39,7 @@ int DummyClass::count_ = 0;
 
 TEST(Pointers, TestVector) {
   {
-    Vector<DummyClass*> v;
+    Vector<DummyClass *> v;
     EXPECT_EQ(DummyClass::count_, 0);
     v.Write(new DummyClass());
     v.Write(new DummyClass());

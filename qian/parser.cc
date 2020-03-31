@@ -68,8 +68,7 @@ REGISTER_PREC_RULE(TOKEN_LESS_EQUAL)
 
 REGISTER_PREC_RULE(TOKEN_IDENTIFIER);
 
-REGISTER_PREC_RULE(TOKEN_STRING)
-    .Prefix_Rule(&Parser::parse_string);
+REGISTER_PREC_RULE(TOKEN_STRING).Prefix_Rule(&Parser::parse_string);
 
 REGISTER_PREC_RULE(TOKEN_NUMBER).Prefix_Rule(&Parser::parse_number);
 
@@ -164,8 +163,9 @@ void Parser::debug_parser(const DebugParser& debug) {
 void Parser::parse_string() {
   DEBUG_PARSER_ENTER("string");
 
-  string str = scanner_->IntervalSource(prev_.start, prev_.start + prev_.length);
-  emit_constant(QIAN_OBJ(StringObj::Create(str)));
+  string str =
+      scanner_->IntervalSource(prev_.start, prev_.start + prev_.length);
+  emit_constant(QIAN_OBJ(StringObj(str)));
 
   DEBUG_PARSER_EXIT();
 }
