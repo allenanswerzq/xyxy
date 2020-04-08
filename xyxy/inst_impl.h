@@ -3,7 +3,6 @@
 
 #include "xyxy/chunk.h"
 #include "xyxy/inst.h"
-#include "xyxy/logging.h"
 #include "xyxy/status.h"
 
 namespace xyxy {
@@ -24,10 +23,10 @@ namespace xyxy {
   };
 
 #define DEFAULT_DEBUG_INFO \
-  [](Inst* inst) -> void { printf("%s\n", inst->Name().c_str()) }
+  [](Inst* inst) -> void { printf("%s\n", inst->Name().c_str()); }
 
 DEFINE_INST(OP_RETURN, 1, DEFAULT_DEBUG_INFO, [](VM* vm) -> Status {
-  DumpStack(vm->GetStack());
+  // DumpStack(vm->GetStack());
   return Status();
 });
 
@@ -47,7 +46,7 @@ DEFINE_INST(
     [](VM* vm) -> Status {
       auto inst = DispathInst(vm->GetChunk(), vm->PC());
       auto oprds = inst->Operands();
-      vm->GetStack()->Push(oprds->Get(0));
+      vm->GetStack()->Push(oprds[0]);
       return Status();
     });
 

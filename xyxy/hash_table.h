@@ -104,6 +104,6 @@ class hash_table {
 // Define hash_set.
 template <class T>
 using hash_set = hash_table<T, bool>;
-}  // namespace qian
+}  // namespace xyxy
 
 #endif  // QIAN_HASH_TABLE_H_

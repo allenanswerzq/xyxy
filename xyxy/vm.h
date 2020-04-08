@@ -3,10 +3,9 @@
 
 #include <memory>
 
-#include "chunk.h"
-#include "debug.h"
-#include "stack.h"
-#include "status.h"
+#include "xyxy/chunk.h"
+#include "xyxy/stack.h"
+#include "xyxy/status.h"
 
 namespace xyxy {
 
@@ -14,35 +13,22 @@ namespace xyxy {
 class VM {
  public:
   VM();
-  VM(Chunk* chunk);
+  VM(std::shared_ptr<Chunk> chunk);
 
-  ~VM() {
-    if (stk_) delete stk_;
-  }
+  ~VM() = default;
 
   Status Run();
 
-  Chunk* GetChunk() { return chunk_; }
-  Stack<Value, STACK_SIZE>* GetStack() { return stk_; }
+  std::shared_ptr<Chunk> GetChunk() { return chunk_; }
+  std::shared_ptr<Stack<Value, STACK_SIZE>> GetStack() { return stk_; }
 
   uint32 PC() { return pc_; }
 
  private:
-  Chunk* chunk_;  // not owned.
-  Stack<Value, STACK_SIZE>* stk_;
+  std::shared_ptr<Chunk> chunk_;
+  std::shared_ptr<Stack<Value, STACK_SIZE>> stk_;
   uint32 pc_;
 };
-
-inline VM::VM(Chunk* chunk) : chunk_(chunk) {
-  stk_ = new Stack<Value, STACK_SIZE>();
-  pc_ = 0;
-}
-
-inline VM::VM() {
-  chunk_ = new Chunk();
-  stk_ = new Stack<Value, STACK_SIZE>();
-  pc_ = 0;
-}
 
 }  // namespace xyxy
 

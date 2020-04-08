@@ -38,4 +38,4 @@ TEST(NoDefineHash, hash_setTest) {
   EXPECT_DEATH({ hs.Insert(Simple()); }, "Hash not implemented");
 }
 
-}  // namespace qian
+}  // namespace xyxy

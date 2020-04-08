@@ -43,9 +43,7 @@ class List {
   //   return ret;
   // }
 
-  void AppendTail(T val) {
-    AppendTail(new ListNode<T>{val, nullptr, nullptr});
-  }
+  void AppendTail(T val) { AppendTail(new ListNode<T>{val, nullptr, nullptr}); }
 
   void AppendTail(ListNode<T>* val) {
     // assert(cur_);
@@ -58,6 +56,6 @@ class List {
   ListNode<T>* head_;
 };
 
-}  // namespace stl
+}  // namespace xyxy
 
 #endif  // QIAN_LIST_H_

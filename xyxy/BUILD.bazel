@@ -9,20 +9,13 @@ XYXY_DEFAULT_COPTS = [
 
 cc_library(
     name = "xyxy",
-    # hdrs = glob([ "*.h" ]),
-    hdrs = [
-        "list.h",
-        "hash_table.h",
-        "chunk.h",
-        "scanner.h",
-        "stack.h",
-        "type.h",
-        "base.h",
-        "object.h",
-    ],
+    hdrs = glob([ "*.h" ]),
     srcs = [
         "chunk.cc",
+        "inst.cc",
+        "vm.cc",
         "scanner.cc",
+        "compiler.cc"
     ],
     copts = XYXY_DEFAULT_COPTS,
     deps = [
@@ -63,6 +56,26 @@ cc_test(
 cc_test(
     name = "scanner_test",
     srcs = ["scanner_test.cc"],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        ":xyxy",
+        "@com_google_googletest//:gtest_main",
+    ],
+ )
+
+cc_test(
+    name = "inst_test",
+    srcs = ["inst_test.cc"],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        ":xyxy",
+        "@com_google_googletest//:gtest_main",
+    ],
+ )
+
+cc_test(
+    name = "compiler_test",
+    srcs = ["compiler_test.cc"],
     copts = XYXY_DEFAULT_COPTS,
     deps = [
         ":xyxy",

@@ -118,6 +118,7 @@ inline bool is_equal(Value a, Value b) {
 
 // Define NILL.
 #define NILL Value()
+#define XYXY_NIL Value()
 
 // NOTE: Use inline here otherwise need to put function implementation into a
 // .cc file.

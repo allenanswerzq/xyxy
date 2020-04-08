@@ -1,6 +1,7 @@
+#include "xyxy/inst.h"
+
 #include <memory>
 
-#include "xyxy/inst.h"
 #include "xyxy/inst_impl.h"
 
 namespace xyxy {
@@ -32,7 +33,7 @@ static std::unique_ptr<Inst> create_inst(OpCode byte) {
     case OP_EQUAL:
       return std::make_unique<Inst_OP_EQUAL>();
     case OP_GREATER:
-      return std::make_unique<Inst_OP_GERATER>();
+      return std::make_unique<Inst_OP_GREATER>();
     case OP_LESS:
       return std::make_unique<Inst_OP_LESS>();
     default:
@@ -41,8 +42,8 @@ static std::unique_ptr<Inst> create_inst(OpCode byte) {
   return nullptr;
 }
 
-std::unique_ptr<Inst> DispathInst(std::unique_ptr<Chunk> chunk, uint8 offset) {
-  OpCode byte = (OpCode) chunk->GetByte(offset);
+std::unique_ptr<Inst> DispathInst(std::shared_ptr<Chunk> chunk, uint8 offset) {
+  OpCode byte = (OpCode)chunk->GetByte(offset);
   auto inst = create_inst(byte);
   for (int i = 1; i <= inst->Length() - 1; i++) {
     // Get the index of the constants assoicated with this inst.

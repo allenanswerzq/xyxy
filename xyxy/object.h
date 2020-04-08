@@ -6,6 +6,15 @@
 
 namespace xyxy {
 
+class Object;
+
+// Temporary garbage collector to free all objects, later when we
+// add a real garbage collector, this will be removed.
+static std::vector<Object*>* Collector() {
+  static std::vector<Object*>* collector = new std::vector<Object*>;
+  return collector;
+}
+
 enum class ObjType {
   OBJ_STRING,
 
@@ -30,22 +39,15 @@ class Object {
 
 class ObjString : Object {
  public:
-  ObjString(const std::string& str) : Object(ObjType::OBJ_STRING), str_(str) {}
+  ObjString(const std::string& str) : Object(ObjType::OBJ_STRING), str_(str) {
+    Collector()->push_back(this);
+  }
 
   std::string ToString() override { return str_; }
 
  private:
   std::string str_;
 };
-
-// NOTE: Use inline here otherwise need to put function implementation into a
-// .cc file.
-// Temporary garbage collector to free all objects, later when we
-// add a real garbage collector, this will be removed.
-inline std::vector<Object*>* Collector() {
-  static std::vector<Object*>* collector = new std::vector<Object*>;
-  return collector;
-}
 
 }  // namespace xyxy
 

@@ -1,8 +1,8 @@
 #ifndef XYXY_CHUNK_H_
 #define XYXY_CHUNK_H_
 
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "xyxy/base.h"
 #include "xyxy/type.h"

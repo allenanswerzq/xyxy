@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "xyxy/chunk.h"
-#include "xyxy/logging.h"
 #include "xyxy/status.h"
 #include "xyxy/vm.h"
 
@@ -45,7 +44,7 @@ class Inst {
 
   uint8 Opcode() { return opcode_; }
 
-  void AddOperand(Value val) { operands_.Write(val); }
+  void AddOperand(Value val) { operands_.push_back(val); }
   const std::vector<Value>& Operands() { return operands_; }
 
  protected:
@@ -60,8 +59,9 @@ class Inst {
   std::vector<Value> operands_;
 };
 
-// Give a chunk and a offset index, return the Inst this bytecode is representing.
-std::unique_ptr<Inst> DispathInst(std::unique_ptr<Chunk> chunk, uint8 offset);
+// Give a chunk and a offset index, return the Inst this bytecode is
+// representing.
+std::unique_ptr<Inst> DispathInst(std::shared_ptr<Chunk> chunk, uint8 offset);
 
 }  // namespace xyxy
 

@@ -1,9 +1,9 @@
 #ifndef XYXY_SCANNER_H_
 #define XYXY_SCANNER_H_
 
-#include "xyxy/base.h"
-
 #include <glog/logging.h>
+
+#include "xyxy/base.h"
 
 namespace xyxy {
 
@@ -68,10 +68,11 @@ struct Token {
   int start;
   int length;
   int line;
-  string ToString();
   friend bool operator==(const Token& a, const Token& b);
   friend bool operator!=(const Token& a, const Token& b);
 };
+
+string TokeTypeName();
 
 class Scanner {
  public:

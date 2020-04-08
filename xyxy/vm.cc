@@ -5,9 +5,20 @@
 
 namespace xyxy {
 
+VM::VM(std::shared_ptr<Chunk> chunk) : chunk_(chunk) {
+  stk_ = std::make_shared<Stack<Value, STACK_SIZE>>();
+  pc_ = 0;
+}
+
+VM::VM() {
+  chunk_ = std::make_shared<Chunk>();
+  stk_ = std::make_shared<Stack<Value, STACK_SIZE>>();
+  pc_ = 0;
+}
+
 Status VM::Run() {
   for (; pc_ < chunk_->Size();) {
-    std::unique_ptr<Inst> inst(DispathInst(chunk_, pc_));
+    auto inst = DispathInst(chunk_, pc_);
 #ifndef NDEBUG
     inst->DebugInfo();
 #endif

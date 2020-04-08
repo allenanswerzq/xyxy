@@ -12,7 +12,7 @@ bool operator==(const Token& a, const Token& b) {
 
 bool operator!=(const Token& a, const Token& b) { return !(a == b); }
 
-string Token::ToString() {
+string TokenTypeName(TokenType type) {
   switch (type) {
     case TOKEN_LEFT_PAREN:
       return "(";
