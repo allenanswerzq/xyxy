@@ -2,6 +2,7 @@
 #define XYXY_SCANNER_H_
 
 #include "xyxy/base.h"
+
 #include <glog/logging.h>
 
 namespace xyxy {
@@ -62,24 +63,15 @@ typedef enum {
   TOKEN_NONE,  // None token
 } TokenType;
 
-typedef struct {
+struct Token {
   TokenType type;
   int start;
   int length;
   int line;
-} Token;
-
-inline bool operator==(const Token& a, const Token& b) {
-  bool r = a.type == b.type;
-  r &= a.start == b.start;
-  r &= a.length == b.length;
-  r &= a.line == b.line;
-  return r;
-}
-
-inline bool operator!=(const Token& a, const Token& b) { return !(a == b); }
-
-string ToString(TokenType tt);
+  string ToString();
+  friend bool operator==(const Token& a, const Token& b);
+  friend bool operator!=(const Token& a, const Token& b);
+};
 
 class Scanner {
  public:
@@ -139,7 +131,6 @@ class Scanner {
 
   int start_pos() { return start_; }
   int current_pos() { return current_; }
-
 
   void skip_whitespace();
   Token process_string();

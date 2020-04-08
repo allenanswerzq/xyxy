@@ -149,6 +149,6 @@ struct PrecRuleDefWrapper {
 #define REGISTER_PREC_RULE_HELPER(ctr, name) REGISTER_PREC_RULE_UNIQ(ctr, name)
 #define REGISTER_PREC_RULE_UNIQ(ctr, name)                           \
   static ::register_prec_rule::PrecRuleDefWrapper register_inst##ctr \
-      QI_ATTRIBUTE_UNUSED = ::register_prec_rule::PrecRuleDefWrapper(name)
+      XY_ATTRIBUTE_UNUSED = ::register_prec_rule::PrecRuleDefWrapper(name)
 
 #endif  // XYXY_COMPILER_H_

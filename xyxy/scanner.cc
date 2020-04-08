@@ -2,8 +2,18 @@
 
 namespace xyxy {
 
-string ToString(TokenType tt) {
-  switch (tt) {
+bool operator==(const Token& a, const Token& b) {
+  bool r = a.type == b.type;
+  r &= a.start == b.start;
+  r &= a.length == b.length;
+  r &= a.line == b.line;
+  return r;
+}
+
+bool operator!=(const Token& a, const Token& b) { return !(a == b); }
+
+string Token::ToString() {
+  switch (type) {
     case TOKEN_LEFT_PAREN:
       return "(";
     case TOKEN_RIGHT_PAREN:
@@ -99,7 +109,7 @@ string ToString(TokenType tt) {
     default:
       break;
   }
-  CHECK(false) << "Not recognized token: " << tt;
+  CHECK(false) << "Not recognized token: " << type;
 }
 
 void Scanner::skip_whitespace() {
