@@ -77,7 +77,7 @@ string TokeTypeName();
 class Scanner {
  public:
   Scanner(const string& source) {
-    source_ = strip_source(source);
+    source_ = StripSource(source);
     start_ = 0;
     current_ = 0;
     line_ = 1;
@@ -87,11 +87,11 @@ class Scanner {
 
   string GetSource(int start, int end);
 
-  string strip_source(const string& str);
+  string StripSource(const string& str);
 
-  bool at_end() { return current_ == source_.size(); }
+  bool AtEnd() { return current_ == source_.size(); }
 
-  Token make_token(TokenType type) {
+  Token MakeToken(TokenType type) {
     if (type == TOKEN_EOF) {
       start_++;
       return Token{type, -1, -1, -1};
@@ -99,47 +99,47 @@ class Scanner {
     return Token{type, start_, current_ - start_, line_};
   }
 
-  Token make_error_token(const string& msg) {
+  Token MakeErrorToken(const string& msg) {
     (void)msg;
     return Token{TOKEN_ERROR, -1, -1, -1};
   }
 
-  char advance() {
-    CHECK(!at_end());
+  char Advance() {
+    CHECK(!AtEnd());
     return source_[current_++];
   }
 
-  char peek() { return source_[current_]; }
+  char Peek() { return source_[current_]; }
 
-  char peek_next() { return source_[current_ + 1]; }
+  char PeekNext() { return source_[current_ + 1]; }
 
-  string get_lexeme() {
+  string GetLexeme() {
     if (start_ == current_) return "";
     CHECK(start_ < source_.size() && start_ < current_);
     return source_.substr(start_, current_ - start_);
   }
 
-  string get_lexeme(Token tk) {
+  string GetLexeme(Token tk) {
     if (tk.type == TOKEN_EOF) return "EOF";
     return source_.substr(tk.start, tk.length);
   }
 
-  bool match(char c) {
-    bool ok = !at_end() && source_[current_] == c;
+  bool Match(char c) {
+    bool ok = !AtEnd() && source_[current_] == c;
     if (ok) current_++;
     return ok;
   }
 
-  int start_pos() { return start_; }
-  int current_pos() { return current_; }
+  int StartPos() { return start_; }
+  int CurrentPos() { return current_; }
 
-  void skip_whitespace();
-  Token process_string();
-  Token process_number();
+  void SkipWhitespace();
+  Token ProcessString();
+  Token ProcessNumber();
 
-  TokenType check_keyword(const string& key, TokenType type);
-  TokenType identifier_type();
-  Token process_identifier_keyword();
+  TokenType CheckKeyword(const string& key, TokenType type);
+  TokenType IdentifierType();
+  Token ProcessIdentifierKeyword();
 
  private:
   string source_;

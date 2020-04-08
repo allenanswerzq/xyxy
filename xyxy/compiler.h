@@ -54,37 +54,37 @@ class Compiler {
 
   virtual ~Compiler() = default;
 
-  void advance();
-  void consume(TokenType type, const string& msg);
+  void Advance();
+  void Consume(TokenType type, const string& msg);
 
   // Add a Value `val` into chunk and return its index.
-  int make_constant(Value val);
+  int MakeConstant(Value val);
 
   // Emit a {OP_CONSTANT idx} inst.
   // Note: idx specifies where the constant stored inside chunk's value area.
-  void emit_constant(Value val);
+  void EmitConstant(Value val);
 
-  void emit_byte(uint8 byte);
-  void emit_byte(uint8 byte1, uint8 byte2);
-  void emit_return();
+  void EmitByte(uint8 byte);
+  void EmitByte(uint8 byte1, uint8 byte2);
+  void EmitReturn();
 
-  void parse_number();
-  void parse_grouping();
-  void parse_unary();
-  void parse_binary();
-  void parse_expression();
-  void parse_literal();
-  void parse_string();
-  void parse_with_prec_order(PrecOrder prec_order);
+  void ParseNumber();
+  void ParseGrouping();
+  void ParseUnary();
+  void ParseBinary();
+  void ParseExpression();
+  void ParseLiteral();
+  void ParseString();
+  void ParseWithPrecedenceOrder(PrecOrder prec_order);
 
-  string get_lexeme(Token tt);
+  string GetLexeme(Token tt);
 
   std::shared_ptr<Chunk> GetChunk() { return chunk_; }
 
-  Token prev_token() { return prev_; }
-  Token curr_token() { return curr_; }
+  Token PrevToken() { return prev_; }
+  Token CurrToken() { return curr_; }
 
-  PrecedenceRule* get_rule(TokenType type) {
+  PrecedenceRule* GetRule(TokenType type) {
     CHECK(GlobalPrecedenceRules());
     return GlobalPrecedenceRules()->at(type);
   }
@@ -96,7 +96,7 @@ class Compiler {
     string msg;
   };
 
-  void debug_parser(const DebugParser& debug);
+  void DebugParsing(const DebugParser& debug);
 
  private:
   Token curr_;
@@ -118,17 +118,17 @@ struct PrecRuleDefWrapper {
     ::xyxy::GlobalPrecedenceRules()->push_back(rule);
   }
 
-  PrecRuleDefWrapper& Prefix_Rule(::xyxy::ParseFunc f) {
+  PrecRuleDefWrapper& PrefixRule(::xyxy::ParseFunc f) {
     rule->prefix_rule = f;
     return *this;
   }
 
-  PrecRuleDefWrapper& Infix_Rule(::xyxy::ParseFunc f) {
+  PrecRuleDefWrapper& InfixRule(::xyxy::ParseFunc f) {
     rule->infix_rule = f;
     return *this;
   }
 
-  PrecRuleDefWrapper& Prec_Order(::xyxy::PrecOrder order) {
+  PrecRuleDefWrapper& PrecOrder(::xyxy::PrecOrder order) {
     rule->prec_order = order;
     return *this;
   }

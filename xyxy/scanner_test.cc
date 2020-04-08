@@ -12,41 +12,41 @@ TEST(Basic, TestScanner) {
   )";
 
   Scanner sc(source);
-  EXPECT_EQ(sc.at_end(), false);
-  EXPECT_EQ(sc.current_pos(), 0);
-  EXPECT_EQ(sc.peek(), 'v');
-  EXPECT_EQ(sc.peek_next(), 'a');
+  EXPECT_EQ(sc.AtEnd(), false);
+  EXPECT_EQ(sc.CurrentPos(), 0);
+  EXPECT_EQ(sc.Peek(), 'v');
+  EXPECT_EQ(sc.PeekNext(), 'a');
   // Advance one step.
-  EXPECT_EQ(sc.advance(), 'v');
-  EXPECT_EQ(sc.current_pos(), 1);
-  EXPECT_EQ(sc.peek(), 'a');
-  EXPECT_EQ(sc.peek_next(), 'r');
+  EXPECT_EQ(sc.Advance(), 'v');
+  EXPECT_EQ(sc.CurrentPos(), 1);
+  EXPECT_EQ(sc.Peek(), 'a');
+  EXPECT_EQ(sc.PeekNext(), 'r');
   // Advance one step.
-  EXPECT_EQ(sc.advance(), 'a');
-  EXPECT_EQ(sc.current_pos(), 2);
-  EXPECT_EQ(sc.advance(), 'r');
-  EXPECT_EQ(sc.get_lexeme(), "var");
+  EXPECT_EQ(sc.Advance(), 'a');
+  EXPECT_EQ(sc.CurrentPos(), 2);
+  EXPECT_EQ(sc.Advance(), 'r');
+  EXPECT_EQ(sc.GetLexeme(), "var");
   // Space.
-  EXPECT_EQ(sc.advance(), ' ');
-  // Match will implicitly advance one step.
-  EXPECT_EQ(sc.peek(), 'b');
-  EXPECT_EQ(sc.peek_next(), ' ');
-  EXPECT_TRUE(sc.match('b'));
-  EXPECT_EQ(sc.peek(), ' ');
+  EXPECT_EQ(sc.Advance(), ' ');
+  // Match will implicitly Advance one step.
+  EXPECT_EQ(sc.Peek(), 'b');
+  EXPECT_EQ(sc.PeekNext(), ' ');
+  EXPECT_TRUE(sc.Match('b'));
+  EXPECT_EQ(sc.Peek(), ' ');
 
-  EXPECT_EQ(sc.advance(), ' ');
-  EXPECT_EQ(sc.advance(), '=');
-  EXPECT_EQ(sc.advance(), ' ');
-  EXPECT_EQ(sc.advance(), 'a');
-  EXPECT_EQ(sc.advance(), ';');
-  EXPECT_TRUE(sc.at_end());
+  EXPECT_EQ(sc.Advance(), ' ');
+  EXPECT_EQ(sc.Advance(), '=');
+  EXPECT_EQ(sc.Advance(), ' ');
+  EXPECT_EQ(sc.Advance(), 'a');
+  EXPECT_EQ(sc.Advance(), ';');
+  EXPECT_TRUE(sc.AtEnd());
 }
 
-static bool compare(Scanner* sc, const string& lexeme, Token b) {
+static bool Compare(Scanner* sc, const string& lexeme, Token b) {
   Token a = sc->ScanToken();
   bool r = (a == b);
   // NOTE: After scanning a token, get the lexeme [start_, curr_).
-  r &= sc->get_lexeme() == lexeme;
+  r &= sc->GetLexeme() == lexeme;
   return r;
 }
 
@@ -55,12 +55,12 @@ TEST(Token, TestScanner) {
     var b = "xyxy";
   )";
   Scanner sc(source);
-  EXPECT_TRUE(compare(&sc, "var", Token{TOKEN_VAR, 0, 3, 1}));
-  EXPECT_TRUE(compare(&sc, "b", Token{TOKEN_IDENTIFIER, 4, 1, 1}));
-  EXPECT_TRUE(compare(&sc, "=", Token{TOKEN_EQUAL, 6, 1, 1}));
-  EXPECT_TRUE(compare(&sc, "\"xyxy\"", Token{TOKEN_STRING, 8, 6, 1}));
-  EXPECT_TRUE(compare(&sc, ";", Token{TOKEN_SEMICOLON, 14, 1, 1}));
-  EXPECT_TRUE(sc.at_end());
+  EXPECT_TRUE(Compare(&sc, "var", Token{TOKEN_VAR, 0, 3, 1}));
+  EXPECT_TRUE(Compare(&sc, "b", Token{TOKEN_IDENTIFIER, 4, 1, 1}));
+  EXPECT_TRUE(Compare(&sc, "=", Token{TOKEN_EQUAL, 6, 1, 1}));
+  EXPECT_TRUE(Compare(&sc, "\"xyxy\"", Token{TOKEN_STRING, 8, 6, 1}));
+  EXPECT_TRUE(Compare(&sc, ";", Token{TOKEN_SEMICOLON, 14, 1, 1}));
+  EXPECT_TRUE(sc.AtEnd());
 }
 
 TEST(Number, TestScanner) {
@@ -68,12 +68,12 @@ TEST(Number, TestScanner) {
     var x = 1.2346;
   )";
   Scanner sc(source);
-  EXPECT_TRUE(compare(&sc, "var", Token{TOKEN_VAR, 0, 3, 1}));
-  EXPECT_TRUE(compare(&sc, "x", Token{TOKEN_IDENTIFIER, 4, 1, 1}));
-  EXPECT_TRUE(compare(&sc, "=", Token{TOKEN_EQUAL, 6, 1, 1}));
-  EXPECT_TRUE(compare(&sc, "1.2346", Token{TOKEN_NUMBER, 8, 6, 1}));
-  EXPECT_TRUE(compare(&sc, ";", Token{TOKEN_SEMICOLON, 14, 1, 1}));
-  EXPECT_TRUE(compare(&sc, "", Token{TOKEN_EOF, -1, -1, -1}));
+  EXPECT_TRUE(Compare(&sc, "var", Token{TOKEN_VAR, 0, 3, 1}));
+  EXPECT_TRUE(Compare(&sc, "x", Token{TOKEN_IDENTIFIER, 4, 1, 1}));
+  EXPECT_TRUE(Compare(&sc, "=", Token{TOKEN_EQUAL, 6, 1, 1}));
+  EXPECT_TRUE(Compare(&sc, "1.2346", Token{TOKEN_NUMBER, 8, 6, 1}));
+  EXPECT_TRUE(Compare(&sc, ";", Token{TOKEN_SEMICOLON, 14, 1, 1}));
+  EXPECT_TRUE(Compare(&sc, "", Token{TOKEN_EOF, -1, -1, -1}));
 }
 
 TEST(Nil, TestScanner) {
@@ -81,12 +81,12 @@ TEST(Nil, TestScanner) {
     var x = nil;
   )";
   Scanner sc(source);
-  EXPECT_TRUE(compare(&sc, "var", Token{TOKEN_VAR, 0, 3, 1}));
-  EXPECT_TRUE(compare(&sc, "x", Token{TOKEN_IDENTIFIER, 4, 1, 1}));
-  EXPECT_TRUE(compare(&sc, "=", Token{TOKEN_EQUAL, 6, 1, 1}));
-  EXPECT_TRUE(compare(&sc, "nil", Token{TOKEN_NIL, 8, 3, 1}));
-  EXPECT_TRUE(compare(&sc, ";", Token{TOKEN_SEMICOLON, 11, 1, 1}));
-  EXPECT_TRUE(sc.at_end());
+  EXPECT_TRUE(Compare(&sc, "var", Token{TOKEN_VAR, 0, 3, 1}));
+  EXPECT_TRUE(Compare(&sc, "x", Token{TOKEN_IDENTIFIER, 4, 1, 1}));
+  EXPECT_TRUE(Compare(&sc, "=", Token{TOKEN_EQUAL, 6, 1, 1}));
+  EXPECT_TRUE(Compare(&sc, "nil", Token{TOKEN_NIL, 8, 3, 1}));
+  EXPECT_TRUE(Compare(&sc, ";", Token{TOKEN_SEMICOLON, 11, 1, 1}));
+  EXPECT_TRUE(sc.AtEnd());
 }
 
 }  // namespace xyxy

@@ -6,7 +6,7 @@
 
 namespace xyxy {
 
-static Token create_token(TokenType type, int start, int leng, int line) {
+static Token CreateToken(TokenType type, int start, int leng, int line) {
   return Token{type, start, leng, line};
 }
 
@@ -27,48 +27,48 @@ class TestCompiler : public ::testing::Test {
 
 TEST_F(TestCompiler, Basic) {
   // Advance one token.
-  parser_->advance();
-  EXPECT_EQ(parser_->prev_token(), create_token(TOKEN_NONE, 0, 0, 0));
-  EXPECT_EQ(parser_->curr_token(), create_token(TOKEN_BANG, 0, 1, 1));
+  parser_->Advance();
+  EXPECT_EQ(parser_->PrevToken(), CreateToken(TOKEN_NONE, 0, 0, 0));
+  EXPECT_EQ(parser_->CurrToken(), CreateToken(TOKEN_BANG, 0, 1, 1));
 
   // Advance one token.
-  parser_->advance();
-  EXPECT_EQ(parser_->prev_token(), create_token(TOKEN_BANG, 0, 1, 1));
-  EXPECT_EQ(parser_->curr_token(), create_token(TOKEN_LEFT_PAREN, 2, 1, 1));
+  parser_->Advance();
+  EXPECT_EQ(parser_->PrevToken(), CreateToken(TOKEN_BANG, 0, 1, 1));
+  EXPECT_EQ(parser_->CurrToken(), CreateToken(TOKEN_LEFT_PAREN, 2, 1, 1));
 
   // Test lexeme.
-  EXPECT_EQ(parser_->get_lexeme(parser_->curr_token()), "(");
+  EXPECT_EQ(parser_->GetLexeme(parser_->CurrToken()), "(");
 
   // TODO(zq7): add consume test with error handling.
 }
 
 TEST_F(TestCompiler, Emit) {
-  parser_->emit_byte(0);
-  parser_->emit_byte(1, 2);
+  parser_->EmitByte(0);
+  parser_->EmitByte(1, 2);
   EXPECT_EQ(chunk_->GetByte(0), 0);
   EXPECT_EQ(chunk_->GetByte(1), 1);
   EXPECT_EQ(chunk_->GetByte(2), 2);
-  parser_->emit_return();
+  parser_->EmitReturn();
   EXPECT_EQ(chunk_->GetByte(3), uint8(OP_RETURN));
   // The first value has index 0.
-  EXPECT_EQ(parser_->make_constant(Value(1.23)), 0);
-  EXPECT_EQ(parser_->make_constant(Value(false)), 1);
-  EXPECT_EQ(parser_->make_constant(XYXY_NIL), 2);
+  EXPECT_EQ(parser_->MakeConstant(Value(1.23)), 0);
+  EXPECT_EQ(parser_->MakeConstant(Value(false)), 1);
+  EXPECT_EQ(parser_->MakeConstant(XYXY_NIL), 2);
   // Test emit a constant.
-  parser_->emit_constant(Value(4.56));
+  parser_->EmitConstant(Value(4.56));
   EXPECT_EQ(chunk_->GetByte(4), uint8(OP_CONSTANT));
-  // Since emit_constant will add one value into chunk.
+  // Since EmitConstant will add one value into chunk.
   // here the index should be 4.
-  EXPECT_EQ(parser_->make_constant(XYXY_NIL), 4);
+  EXPECT_EQ(parser_->MakeConstant(XYXY_NIL), 4);
 }
 
 TEST_F(TestCompiler, Parse) {
-  EXPECT_TRUE(parser_->get_rule(TOKEN_FALSE)->prefix_rule);
-  EXPECT_TRUE(parser_->get_rule(TOKEN_TRUE)->prefix_rule);
-  auto rule = parser_->get_rule(TOKEN_NIL);
+  EXPECT_TRUE(parser_->GetRule(TOKEN_FALSE)->prefix_rule);
+  EXPECT_TRUE(parser_->GetRule(TOKEN_TRUE)->prefix_rule);
+  auto rule = parser_->GetRule(TOKEN_NIL);
   EXPECT_TRUE(rule);
   EXPECT_TRUE(rule->prefix_rule);
-  parser_->parse_expression();
+  parser_->ParseExpression();
   VM vm(chunk_);
   vm.Run();
 }
@@ -89,8 +89,8 @@ class TestSimple : public ::testing::Test {
 };
 
 TEST_F(TestSimple, Basic) {
-  parser_->parse_expression();
-  parser_->emit_return();
+  parser_->ParseExpression();
+  parser_->EmitReturn();
 
   EXPECT_EQ(chunk_->GetByte(0), uint8(OP_CONSTANT));
   // The index of the first const inside chunk.

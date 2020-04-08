@@ -10,9 +10,9 @@ namespace xyxy {
 // clang-format off
 // (
 REGISTER_PREC_RULE(TOKEN_LEFT_PAREN)
-    .Prefix_Rule(&Compiler::parse_grouping)
-    .Infix_Rule(nullptr)
-    .Prec_Order(PREC_NONE);
+    .PrefixRule(&Compiler::ParseGrouping)
+    .InfixRule(nullptr)
+    .PrecOrder(PREC_NONE);
 
 REGISTER_PREC_RULE(TOKEN_RIGHT_PAREN);
 REGISTER_PREC_RULE(TOKEN_LEFT_BRACE);
@@ -22,78 +22,78 @@ REGISTER_PREC_RULE(TOKEN_DOT);
 
 // -
 REGISTER_PREC_RULE(TOKEN_MINUS)
-    .Prefix_Rule(&Compiler::parse_unary)
-    .Infix_Rule(&Compiler::parse_binary)
-    .Prec_Order(PREC_TERM);
+    .PrefixRule(&Compiler::ParseUnary)
+    .InfixRule(&Compiler::ParseBinary)
+    .PrecOrder(PREC_TERM);
 
 // +
 REGISTER_PREC_RULE(TOKEN_PLUS)
-    .Prefix_Rule(nullptr)
-    .Infix_Rule(&Compiler::parse_binary)
-    .Prec_Order(PREC_TERM);
+    .PrefixRule(nullptr)
+    .InfixRule(&Compiler::ParseBinary)
+    .PrecOrder(PREC_TERM);
 
 REGISTER_PREC_RULE(TOKEN_SEMICOLON);
 
 // /
 REGISTER_PREC_RULE(TOKEN_SLASH)
-    .Prefix_Rule(nullptr)
-    .Infix_Rule(&Compiler::parse_binary)
-    .Prec_Order(PREC_FACTOR);
+    .PrefixRule(nullptr)
+    .InfixRule(&Compiler::ParseBinary)
+    .PrecOrder(PREC_FACTOR);
 
 // *
 REGISTER_PREC_RULE(TOKEN_STAR)
-    .Prefix_Rule(nullptr)
-    .Infix_Rule(&Compiler::parse_binary)
-    .Prec_Order(PREC_FACTOR);
+    .PrefixRule(nullptr)
+    .InfixRule(&Compiler::ParseBinary)
+    .PrecOrder(PREC_FACTOR);
 
 REGISTER_PREC_RULE(TOKEN_BANG)
-    .Prefix_Rule(&Compiler::parse_unary);
+    .PrefixRule(&Compiler::ParseUnary);
 
 REGISTER_PREC_RULE(TOKEN_BANG_EQUAL)
-    .Infix_Rule(&Compiler::parse_binary)
-    .Prec_Order(PREC_EQUALITY);
+    .InfixRule(&Compiler::ParseBinary)
+    .PrecOrder(PREC_EQUALITY);
 
 REGISTER_PREC_RULE(TOKEN_EQUAL);
 
 REGISTER_PREC_RULE(TOKEN_EQUAL_EQUAL)
-    .Infix_Rule(&Compiler::parse_binary)
-    .Prec_Order(PREC_EQUALITY);
+    .InfixRule(&Compiler::ParseBinary)
+    .PrecOrder(PREC_EQUALITY);
 
 REGISTER_PREC_RULE(TOKEN_GREATER)
-    .Infix_Rule(&Compiler::parse_binary)
-    .Prec_Order(PREC_COMPARISON);
+    .InfixRule(&Compiler::ParseBinary)
+    .PrecOrder(PREC_COMPARISON);
 
 REGISTER_PREC_RULE(TOKEN_GREATER_EQUAL)
-    .Infix_Rule(&Compiler::parse_binary)
-    .Prec_Order(PREC_COMPARISON);
+    .InfixRule(&Compiler::ParseBinary)
+    .PrecOrder(PREC_COMPARISON);
 
 REGISTER_PREC_RULE(TOKEN_LESS)
-    .Infix_Rule(&Compiler::parse_binary)
-    .Prec_Order(PREC_COMPARISON);
+    .InfixRule(&Compiler::ParseBinary)
+    .PrecOrder(PREC_COMPARISON);
 
 REGISTER_PREC_RULE(TOKEN_LESS_EQUAL)
-    .Infix_Rule(&Compiler::parse_binary)
-    .Prec_Order(PREC_COMPARISON);
+    .InfixRule(&Compiler::ParseBinary)
+    .PrecOrder(PREC_COMPARISON);
 
 REGISTER_PREC_RULE(TOKEN_IDENTIFIER);
 
 REGISTER_PREC_RULE(TOKEN_STRING)
-    .Prefix_Rule(&Compiler::parse_string);
+    .PrefixRule(&Compiler::ParseString);
 
 REGISTER_PREC_RULE(TOKEN_NUMBER)
-    .Prefix_Rule(&Compiler::parse_number);
+    .PrefixRule(&Compiler::ParseNumber);
 
 REGISTER_PREC_RULE(TOKEN_AND);
 REGISTER_PREC_RULE(TOKEN_IF);
 REGISTER_PREC_RULE(TOKEN_ELSE);
 REGISTER_PREC_RULE(TOKEN_FALSE)
-    .Prefix_Rule(&Compiler::parse_literal);
+    .PrefixRule(&Compiler::ParseLiteral);
 
 REGISTER_PREC_RULE(TOKEN_FUN);
 REGISTER_PREC_RULE(TOKEN_FOR);
 
 REGISTER_PREC_RULE(TOKEN_NIL)
-    .Prefix_Rule(&Compiler::parse_literal);
+    .PrefixRule(&Compiler::ParseLiteral);
 
 REGISTER_PREC_RULE(TOKEN_OR);
 REGISTER_PREC_RULE(TOKEN_CLASS);
@@ -103,7 +103,7 @@ REGISTER_PREC_RULE(TOKEN_SUPER);
 REGISTER_PREC_RULE(TOKEN_THIS);
 
 REGISTER_PREC_RULE(TOKEN_TRUE)
-    .Prefix_Rule(&Compiler::parse_literal);
+    .PrefixRule(&Compiler::ParseLiteral);
 
 REGISTER_PREC_RULE(TOKEN_VAR);
 REGISTER_PREC_RULE(TOKEN_WHILE);
@@ -114,15 +114,15 @@ REGISTER_PREC_RULE(TOKEN_ERROR);
 REGISTER_PREC_RULE(TOKEN_EOF);
 
 REGISTER_PREC_RULE(TOKEN_NONE)
-    .Prefix_Rule(&Compiler::parse_grouping);
+    .PrefixRule(&Compiler::ParseGrouping);
 
 // clang-format on
 
-void Compiler::advance() {
+void Compiler::Advance() {
   prev_ = curr_;
   while (true) {
     curr_ = scanner_->ScanToken();
-    VLOG(1) << "ScanToken: " << get_lexeme(curr_);
+    VLOG(1) << "ScanToken: " << GetLexeme(curr_);
     if (curr_.type != TOKEN_ERROR) {
       break;
     } else {
@@ -131,30 +131,30 @@ void Compiler::advance() {
   }
 }
 
-void Compiler::consume(TokenType type, const string& msg) {
-  CHECK(curr_.type == type) << "Not expected token: " << get_lexeme(curr_);
-  advance();
+void Compiler::Consume(TokenType type, const string& msg) {
+  CHECK(curr_.type == type) << "Not expected token: " << GetLexeme(curr_);
+  Advance();
   return;
 }
 
-void Compiler::emit_byte(uint8 byte) { GetChunk()->Write(byte, prev_.line); }
+void Compiler::EmitByte(uint8 byte) { GetChunk()->Write(byte, prev_.line); }
 
-void Compiler::emit_return() { emit_byte(OP_RETURN); }
+void Compiler::EmitReturn() { EmitByte(OP_RETURN); }
 
-void Compiler::emit_byte(uint8 byte1, uint8 byte2) {
-  emit_byte(byte1);
-  emit_byte(byte2);
+void Compiler::EmitByte(uint8 byte1, uint8 byte2) {
+  EmitByte(byte1);
+  EmitByte(byte2);
 }
 
-int Compiler::make_constant(Value val) {
+int Compiler::MakeConstant(Value val) {
   // Get the index after adding this val into chunk.
   int idx = GetChunk()->AddConstant(val);
   CHECK(idx <= UINT8_MAX) << "Not expect to many consts in one chunk.";
   return idx;
 }
 
-void Compiler::emit_constant(Value val) {
-  emit_byte(OP_CONSTANT, make_constant(val));
+void Compiler::EmitConstant(Value val) {
+  EmitByte(OP_CONSTANT, MakeConstant(val));
 }
 
 #define DEBUG_PARSER_ENTER(type)      \
@@ -166,63 +166,63 @@ void Compiler::emit_constant(Value val) {
 #define DEBUG_PARSER_EXIT()                    \
   debug.exit_pos = prev_.start + prev_.length; \
   parse_depth_--;                              \
-  debug_parser(debug)
+  DebugParsing(debug)
 
 // TODO(zq7): Make debug drawing looks more beautiful.
-void Compiler::debug_parser(const DebugParser& debug) {
+void Compiler::DebugParsing(const DebugParser& debug) {
   string prefix(debug.parse_depth * 3, '-');
   CHECK(debug.enter_pos < debug.exit_pos);
   string source = scanner_->GetSource(debug.enter_pos, debug.exit_pos);
   LOG(INFO) << prefix << std::to_string(debug.parse_depth) << "|   " << source;
 }
 
-void Compiler::parse_string() {
+void Compiler::ParseString() {
   DEBUG_PARSER_ENTER("string");
 
   string str = scanner_->GetSource(prev_.start, prev_.start + prev_.length);
-  emit_constant(Value(new ObjString(str)));
+  EmitConstant(Value(new ObjString(str)));
 
   DEBUG_PARSER_EXIT();
 }
 
-string Compiler::get_lexeme(Token tt) { return scanner_->get_lexeme(tt); }
-void Compiler::parse_number() {
+string Compiler::GetLexeme(Token tt) { return scanner_->GetLexeme(tt); }
+void Compiler::ParseNumber() {
   DEBUG_PARSER_ENTER("number");
 
-  double val = strtod(get_lexeme(prev_).c_str(), nullptr);
-  emit_constant(Value(val));
+  double val = strtod(GetLexeme(prev_).c_str(), nullptr);
+  EmitConstant(Value(val));
 
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::parse_expression() {
+void Compiler::ParseExpression() {
   DEBUG_PARSER_ENTER("express");
 
-  parse_with_prec_order(PREC_ASSIGNMENT);
+  ParseWithPrecedenceOrder(PREC_ASSIGNMENT);
 
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::parse_grouping() {
+void Compiler::ParseGrouping() {
   DEBUG_PARSER_ENTER("group");
 
-  parse_expression();
-  consume(TOKEN_RIGHT_PAREN, "Expect ')' after parse_expression.");
+  ParseExpression();
+  Consume(TOKEN_RIGHT_PAREN, "Expect ')' after ParseExpression.");
 
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::parse_unary() {
+void Compiler::ParseUnary() {
   DEBUG_PARSER_ENTER("unary");
 
   TokenType op_type = prev_.type;
-  parse_with_prec_order(PREC_UNARY);
+  ParseWithPrecedenceOrder(PREC_UNARY);
   switch (op_type) {
     case TOKEN_MINUS:
-      emit_byte(OP_NEGATE);
+      EmitByte(OP_NEGATE);
       break;
     case TOKEN_BANG:
-      emit_byte(OP_NOT);
+      EmitByte(OP_NOT);
       break;
     default:
       CHECK(false) << "Unreachable.";
@@ -232,42 +232,42 @@ void Compiler::parse_unary() {
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::parse_binary() {
+void Compiler::ParseBinary() {
   DEBUG_PARSER_ENTER("binary");
 
   TokenType op_type = prev_.type;
-  PrecedenceRule* rule = get_rule(op_type);
-  parse_with_prec_order(PrecOrder(rule->prec_order + 1));
+  PrecedenceRule* rule = GetRule(op_type);
+  ParseWithPrecedenceOrder(PrecOrder(rule->prec_order + 1));
   switch (op_type) {
     case TOKEN_PLUS:
-      emit_byte(OP_ADD);
+      EmitByte(OP_ADD);
       break;
     case TOKEN_MINUS:
-      emit_byte(OP_SUB);
+      EmitByte(OP_SUB);
       break;
     case TOKEN_STAR:
-      emit_byte(OP_MUL);
+      EmitByte(OP_MUL);
       break;
     case TOKEN_SLASH:
-      emit_byte(OP_DIV);
+      EmitByte(OP_DIV);
       break;
     case TOKEN_BANG_EQUAL:
-      emit_byte(OP_EQUAL, OP_NOT);
+      EmitByte(OP_EQUAL, OP_NOT);
       break;
     case TOKEN_EQUAL_EQUAL:
-      emit_byte(OP_EQUAL);
+      EmitByte(OP_EQUAL);
       break;
     case TOKEN_GREATER:
-      emit_byte(OP_GREATER);
+      EmitByte(OP_GREATER);
       break;
     case TOKEN_GREATER_EQUAL:
-      emit_byte(OP_LESS, OP_NOT);
+      EmitByte(OP_LESS, OP_NOT);
       break;
     case TOKEN_LESS:
-      emit_byte(OP_LESS);
+      EmitByte(OP_LESS);
       break;
     case TOKEN_LESS_EQUAL:
-      emit_byte(OP_GREATER, OP_NOT);
+      EmitByte(OP_GREATER, OP_NOT);
       break;
     default:
       CHECK(false) << "Unrecogined token: " << op_type;
@@ -277,18 +277,18 @@ void Compiler::parse_binary() {
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::parse_literal() {
+void Compiler::ParseLiteral() {
   DEBUG_PARSER_ENTER("literal");
 
   switch (prev_.type) {
     case TOKEN_FALSE:
-      emit_byte(OP_FALSE);
+      EmitByte(OP_FALSE);
       break;
     case TOKEN_TRUE:
-      emit_byte(OP_TRUE);
+      EmitByte(OP_TRUE);
       break;
     case TOKEN_NIL:
-      emit_byte(OP_NIL);
+      EmitByte(OP_NIL);
       break;
     default:
       CHECK(false) << "Unreachable.";
@@ -298,21 +298,21 @@ void Compiler::parse_literal() {
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::parse_with_prec_order(PrecOrder prec_order) {
+void Compiler::ParseWithPrecedenceOrder(PrecOrder prec_order) {
   DEBUG_PARSER_ENTER("prec_order");
 
-  advance();
+  Advance();
 
-  auto prev_rule = get_rule(prev_.type);
+  auto prev_rule = GetRule(prev_.type);
   CHECK(prev_rule);
   ParseFunc prefix_rule = prev_rule->prefix_rule;
   CHECK(prefix_rule);
 
   prefix_rule(this);
 
-  while (get_rule(curr_.type)->prec_order >= prec_order) {
-    advance();
-    ParseFunc infix_rule = get_rule(prev_.type)->infix_rule;
+  while (GetRule(curr_.type)->prec_order >= prec_order) {
+    Advance();
+    ParseFunc infix_rule = GetRule(prev_.type)->infix_rule;
     infix_rule(this);
   }
 

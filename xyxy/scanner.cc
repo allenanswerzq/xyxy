@@ -112,16 +112,16 @@ string TokenTypeName(TokenType type) {
   CHECK(false) << "Not recognized token: " << type;
 }
 
-void Scanner::skip_whitespace() {
+void Scanner::SkipWhitespace() {
   for (;;) {
-    char c = peek();
+    char c = Peek();
     if (c == ' ' || c == '\r' || c == '\t') {
-      advance();
+      Advance();
     } else if (c == '/') {
       // Handle comments.
-      if (peek_next() == '/') {
-        while (!at_end() && peek() != '\n') {
-          advance();
+      if (PeekNext() == '/') {
+        while (!AtEnd() && Peek() != '\n') {
+          Advance();
         }
       } else {
         // Not a comment, simply return.
@@ -133,18 +133,18 @@ void Scanner::skip_whitespace() {
   }
 }
 
-Token Scanner::process_string() {
+Token Scanner::ProcessString() {
   // Skip the first quote sign.
-  advance();
-  while (!at_end() && peek() != '"') {
-    advance();
+  Advance();
+  while (!AtEnd() && Peek() != '"') {
+    Advance();
   }
-  if (at_end() || peek() != '"') {
-    return make_error_token("Unterminated string.");
+  if (AtEnd() || Peek() != '"') {
+    return MakeErrorToken("Unterminated string.");
   }
   // Skip the second quote sign.
-  advance();
-  return make_token(TokenType::TOKEN_STRING);
+  Advance();
+  return MakeToken(TokenType::TOKEN_STRING);
 }
 
 static bool is_digit(char c) { return '0' <= c && c <= '9'; }
@@ -156,58 +156,58 @@ static bool is_alpha(char c) {
   return x;
 }
 
-Token Scanner::process_number() {
-  while (!at_end() && is_digit(peek())) {
-    advance();
+Token Scanner::ProcessNumber() {
+  while (!AtEnd() && is_digit(Peek())) {
+    Advance();
   }
-  if (!at_end() && peek() == '.' && is_digit(peek_next())) {
+  if (!AtEnd() && Peek() == '.' && is_digit(PeekNext())) {
     // Consume the '.' char.
-    advance();
-    while (!at_end() && is_digit(peek())) {
-      advance();
+    Advance();
+    while (!AtEnd() && is_digit(Peek())) {
+      Advance();
     }
   }
-  return make_token(TOKEN_NUMBER);
+  return MakeToken(TOKEN_NUMBER);
 }
 
-TokenType Scanner::check_keyword(const string& key, TokenType type) {
-  return get_lexeme() == key ? type : TOKEN_IDENTIFIER;
+TokenType Scanner::CheckKeyword(const string& key, TokenType type) {
+  return GetLexeme() == key ? type : TOKEN_IDENTIFIER;
 }
 
-TokenType Scanner::identifier_type() {
+TokenType Scanner::IdentifierType() {
   char c = source_[start_];
   switch (c) {
     case 'a':
-      return check_keyword("and", TOKEN_AND);
+      return CheckKeyword("and", TOKEN_AND);
     case 'c':
-      return check_keyword("class", TOKEN_CLASS);
+      return CheckKeyword("class", TOKEN_CLASS);
     case 'e':
-      return check_keyword("else", TOKEN_ELSE);
+      return CheckKeyword("else", TOKEN_ELSE);
     case 'i':
-      return check_keyword("if", TOKEN_IF);
+      return CheckKeyword("if", TOKEN_IF);
     case 'n':
-      return check_keyword("nil", TOKEN_NIL);
+      return CheckKeyword("nil", TOKEN_NIL);
     case 'o':
-      return check_keyword("or", TOKEN_OR);
+      return CheckKeyword("or", TOKEN_OR);
     case 'p':
-      return check_keyword("print", TOKEN_PRINT);
+      return CheckKeyword("print", TOKEN_PRINT);
     case 'r':
-      return check_keyword("return", TOKEN_RETURN);
+      return CheckKeyword("return", TOKEN_RETURN);
     case 's':
-      return check_keyword("super", TOKEN_SUPER);
+      return CheckKeyword("super", TOKEN_SUPER);
     case 'v':
-      return check_keyword("var", TOKEN_VAR);
+      return CheckKeyword("var", TOKEN_VAR);
     case 'w':
-      return check_keyword("while", TOKEN_WHILE);
+      return CheckKeyword("while", TOKEN_WHILE);
     case 'f': {
       char n = source_[start_ + 1];
       switch (n) {
         case 'a':
-          return check_keyword("false", TOKEN_FALSE);
+          return CheckKeyword("false", TOKEN_FALSE);
         case 'o':
-          return check_keyword("for", TOKEN_FOR);
+          return CheckKeyword("for", TOKEN_FOR);
         case 'u':
-          return check_keyword("fun", TOKEN_FUN);
+          return CheckKeyword("fun", TOKEN_FUN);
         default:
           break;
       }
@@ -217,9 +217,9 @@ TokenType Scanner::identifier_type() {
       char n = source_[start_ + 1];
       switch (n) {
         case 'h':
-          return check_keyword("this", TOKEN_THIS);
+          return CheckKeyword("this", TOKEN_THIS);
         case 'r':
-          return check_keyword("true", TOKEN_TRUE);
+          return CheckKeyword("true", TOKEN_TRUE);
         default:
           break;
       }
@@ -232,64 +232,64 @@ TokenType Scanner::identifier_type() {
   return TOKEN_IDENTIFIER;
 }
 
-Token Scanner::process_identifier_keyword() {
-  while (is_alpha(peek()) || is_digit(peek())) {
-    advance();
+Token Scanner::ProcessIdentifierKeyword() {
+  while (is_alpha(Peek()) || is_digit(Peek())) {
+    Advance();
   }
-  return make_token(identifier_type());
+  return MakeToken(IdentifierType());
 }
 
 Token Scanner::ScanToken() {
-  if (at_end()) {
-    return make_token(TOKEN_EOF);
+  if (AtEnd()) {
+    return MakeToken(TOKEN_EOF);
   }
-  skip_whitespace();
+  SkipWhitespace();
   start_ = current_;
-  char c = advance();
+  char c = Advance();
   switch (c) {
     case ',':
-      return make_token(TOKEN_COMMA);
+      return MakeToken(TOKEN_COMMA);
     case '.':
-      return make_token(TOKEN_DOT);
+      return MakeToken(TOKEN_DOT);
     case '-':
-      return make_token(TOKEN_MINUS);
+      return MakeToken(TOKEN_MINUS);
     case '+':
-      return make_token(TOKEN_PLUS);
+      return MakeToken(TOKEN_PLUS);
     case '/':
-      return make_token(TOKEN_SLASH);
+      return MakeToken(TOKEN_SLASH);
     case '*':
-      return make_token(TOKEN_STAR);
+      return MakeToken(TOKEN_STAR);
     case '(':
-      return make_token(TOKEN_LEFT_PAREN);
+      return MakeToken(TOKEN_LEFT_PAREN);
     case ')':
-      return make_token(TOKEN_RIGHT_PAREN);
+      return MakeToken(TOKEN_RIGHT_PAREN);
     case '{':
-      return make_token(TOKEN_LEFT_BRACE);
+      return MakeToken(TOKEN_LEFT_BRACE);
     case '}':
-      return make_token(TOKEN_RIGHT_BRACE);
+      return MakeToken(TOKEN_RIGHT_BRACE);
     case ';':
-      return make_token(TOKEN_SEMICOLON);
+      return MakeToken(TOKEN_SEMICOLON);
     case '!':
-      return make_token(match('=') ? TOKEN_BANG_EQUAL : TOKEN_BANG);
+      return MakeToken(Match('=') ? TOKEN_BANG_EQUAL : TOKEN_BANG);
     case '=':
-      return make_token(match('=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
+      return MakeToken(Match('=') ? TOKEN_EQUAL_EQUAL : TOKEN_EQUAL);
     case '<':
-      return make_token(match('=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
+      return MakeToken(Match('=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
     case '>':
-      return make_token(match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
+      return MakeToken(Match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
     case '\n': {
       line_++;
-      advance();
+      Advance();
       break;
     }
     case '"':
-      return process_string();
+      return ProcessString();
     default:
-      if (is_digit(c)) return process_number();
-      if (is_alpha(c)) return process_identifier_keyword();
+      if (is_digit(c)) return ProcessNumber();
+      if (is_alpha(c)) return ProcessIdentifierKeyword();
       break;
   }
-  return make_error_token("Unexpected characters met.");
+  return MakeErrorToken("Unexpected characters met.");
 }
 
 string Scanner::GetSource(int start, int end) {
@@ -303,7 +303,7 @@ string Scanner::GetSource(int start, int end) {
   return ret;
 }
 
-string Scanner::strip_source(const string& str) {
+string Scanner::StripSource(const string& str) {
   int n = str.size();
   int i = 0;
   while (i < n && (str[i] == '\n' || str[i] == ' ')) {
