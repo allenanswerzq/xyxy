@@ -25,19 +25,19 @@ class Chunk {
   uint8 GetByte(int index);
   uint8 GetLine(int index);
 
-  std::unique_ptr<std::vector<uint8>>& Code() { return code_; }
-  int Size() { return code_->size(); }
+  std::vector<uint8>& Code() { return code_; }
+  int Size() { return code_.size(); }
 
   int AddConstant(Value val);
   Value GetConstant(int index);
 
  private:
   // Store bytecode.
-  std::unique_ptr<std::vector<uint8>> code_;
+  std::vector<uint8> code_;
   // Constant pool used to store constant value, lookup by index.
-  std::unique_ptr<std::vector<Value>> constants_;
+  std::vector<Value> constants_;
   // Store the line number of source code.
-  std::unique_ptr<std::vector<int>> lines_;
+  std::vector<int> lines_;
 };
 
 }  // namespace xyxy

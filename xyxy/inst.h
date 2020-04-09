@@ -24,6 +24,11 @@ typedef enum {
   OP_EQUAL,
   OP_GREATER,
   OP_LESS,
+  OP_PRINT,
+  OP_POP,
+  OP_DEFINE_GLOBAL,
+  OP_SET_GLOBAL,
+  OP_GET_GLOBAL,
 } OpCode;
 
 class Inst {
@@ -45,7 +50,7 @@ class Inst {
   uint8 Opcode() { return opcode_; }
 
   void AddOperand(Value val) { operands_.push_back(val); }
-  const std::vector<Value>& Operands() { return operands_; }
+  std::vector<Value>& Operands() { return operands_; }
 
  protected:
   // Do not want to be called unless from its subclass.

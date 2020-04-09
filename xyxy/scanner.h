@@ -72,22 +72,34 @@ struct Token {
   friend bool operator!=(const Token& a, const Token& b);
 };
 
-string TokeTypeName();
+string TokenTypeName(TokenType type);
 
 class Scanner {
  public:
   Scanner(const string& source) {
+    Reset();
     source_ = StripSource(source);
-    start_ = 0;
-    current_ = 0;
-    line_ = 1;
   }
+
+  Scanner() { Reset(); }
 
   Token ScanToken();
 
   string GetSource(int start, int end);
 
+  void SetSource(const string& source) {
+    Reset();
+    source_ = StripSource(source);
+    VLOG(1) << "Scanner: `" << source_ << "`";
+  }
+
   string StripSource(const string& str);
+
+  void Reset() {
+    start_ = 0;
+    current_ = 0;
+    line_ = 1;
+  }
 
   bool AtEnd() { return current_ == source_.size(); }
 

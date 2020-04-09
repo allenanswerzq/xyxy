@@ -93,12 +93,12 @@ cc_test(
 #     ],
 # )
 
-# cc_test(
-#     name = "hash_table_test",
-#     srcs = ["hash_table_test.cc"],
-#     copts = XYXY_DEFAULT_COPTS,
-#     deps = [
-#         ":xyxy",
-#         "@com_google_googletest//:gtest_main",
-#     ],
-# )
+cc_test(
+    name = "hash_table_test",
+    srcs = ["hash_table_test.cc"],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        ":xyxy",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

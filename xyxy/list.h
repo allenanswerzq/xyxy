@@ -1,6 +1,8 @@
 #ifndef QIAN_LIST_H_
 #define QIAN_LIST_H_
 
+#include <cassert>
+
 #include "xyxy/base.h"
 
 namespace xyxy {
@@ -29,8 +31,12 @@ class List {
   List(const List&) = delete;
   List& operator==(const List&) = delete;
 
+  ListNode<T>* GetHead() {
+    return head_;
+  }
+
   T GetNext() {
-    // assert(cur_);
+    assert(cur_);
     T ret = cur_->value;
     cur_ = cur_->next;
     return ret;
@@ -46,9 +52,14 @@ class List {
   void AppendTail(T val) { AppendTail(new ListNode<T>{val, nullptr, nullptr}); }
 
   void AppendTail(ListNode<T>* val) {
-    // assert(cur_);
-    cur_->next = val;
-    cur_ = cur_->next;
+    if (cur_ == nullptr) {
+      head_ = cur_ = val;
+    }
+    else {
+      assert(cur_);
+      cur_->next = val;
+      cur_ = cur_->next;
+    }
   }
 
  private:

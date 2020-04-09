@@ -1,16 +1,20 @@
-#include "vm.h"
+#include "xyxy/vm.h"
 
-#include "inst_impl.h"
-#include "type.h"
+#include <glog/logging.h>
+
+#include "xyxy/inst_impl.h"
+#include "xyxy/type.h"
 
 namespace xyxy {
 
 VM::VM(std::shared_ptr<Chunk> chunk) : chunk_(chunk) {
+  global_ = std::make_shared<hash_table<string, Value>>();
   stk_ = std::make_shared<Stack<Value, STACK_SIZE>>();
   pc_ = 0;
 }
 
 VM::VM() {
+  global_ = std::make_shared<hash_table<string, Value>>();
   chunk_ = std::make_shared<Chunk>();
   stk_ = std::make_shared<Stack<Value, STACK_SIZE>>();
   pc_ = 0;

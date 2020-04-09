@@ -1,6 +1,8 @@
 #ifndef XYXY_TYPE_H_
 #define XYXY_TYPE_H_
 
+#include <cstring>
+
 #include "xyxy/object.h"
 
 namespace xyxy {
@@ -27,15 +29,27 @@ class Value {
 
  public:
   // By default, constructs a Nil value.
-  Value() : type_(ValueType::VAL_NIL) {}
+  Value() : type_(ValueType::VAL_NIL) { Reset(); }
 
-  Value(bool b) : type_(ValueType::VAL_BOOL) { as_.boolean = b; }
+  Value(bool b) : type_(ValueType::VAL_BOOL) {
+    Reset();
+    as_.boolean = b;
+  }
 
-  Value(double n) : type_(ValueType::VAL_FLOAT) { as_.number = n; }
+  Value(double n) : type_(ValueType::VAL_FLOAT) {
+    Reset();
+    as_.number = n;
+  }
 
-  Value(int n) : type_(ValueType::VAL_FLOAT) { as_.number = n; }
+  Value(int n) : type_(ValueType::VAL_FLOAT) {
+    Reset();
+    as_.number = n;
+  }
 
-  Value(Object* o) : type_(ValueType::VAL_OBJ) { as_.obj = o; }
+  Value(Object* o) : type_(ValueType::VAL_OBJ) {
+    Reset();
+    as_.obj = o;
+  }
 
   ValueType Type() const { return type_; }
 
@@ -43,6 +57,8 @@ class Value {
     assert(IsObject());
     return as_.obj->Type();
   }
+
+  void Reset() { std::memset((void*)&as_, 0, sizeof(as_)); }
 
   bool IsBool() { return type_ == ValueType::VAL_BOOL; }
   bool IsFloat() { return type_ == ValueType::VAL_FLOAT; }

@@ -1,6 +1,8 @@
 #ifndef XYXY_INST_IMPL_H_
 #define XYXY_INST_IMPL_H_
 
+#include <glog/logging.h>
+
 #include "xyxy/chunk.h"
 #include "xyxy/inst.h"
 #include "xyxy/status.h"
@@ -38,7 +40,7 @@ DEFINE_INST(
       printf("%-16s ", inst->Name().c_str());
       for (int i = 0; i < oprd.size(); i++) {
         Value val = oprd[i];
-        printf("%0.4f ", val.AsFloat());
+        printf("%s ", val.ToString().c_str());
       }
       printf("\n");
     },
@@ -120,6 +122,39 @@ DEFINE_INST(OP_GREATER, 1, DEFAULT_DEBUG_INFO,
 
 DEFINE_INST(OP_LESS, 1, DEFAULT_DEBUG_INFO,
             [](VM* vm) -> Status { BINARY_OP(<); });
+
+DEFINE_INST(OP_PRINT, 1, DEFAULT_DEBUG_INFO, [](VM* vm) -> Status {
+  printf("%s\n", vm->GetStack()->Pop().ToString().c_str());
+  return Status();
+});
+
+DEFINE_INST(OP_POP, 1, DEFAULT_DEBUG_INFO, [](VM* vm) -> Status {
+  vm->GetStack()->Pop();
+  return Status();
+});
+
+DEFINE_INST(OP_DEFINE_GLOBAL, 2, DEFAULT_DEBUG_INFO, [](VM* vm) -> Status {
+  auto inst = DispathInst(vm->GetChunk(), vm->PC());
+  assert(inst);
+  Value val = inst->Operands()[0];
+  vm->GetGlobal()->Insert(val.ToString(), vm->GetStack()->Top());
+  vm->GetStack()->Pop();
+  return Status();
+});
+
+DEFINE_INST(OP_GET_GLOBAL, 2, DEFAULT_DEBUG_INFO, [](VM* vm) -> Status {
+  auto inst = DispathInst(vm->GetChunk(), vm->PC());
+  assert(inst);
+  std::string val_name = inst->Operands()[0].ToString();
+  Value val;
+  if (!vm->GetGlobal()->Find(val_name, &val)) {
+    // TODO(): Error handling
+    assert(false);
+    return Status();
+  }
+  vm->GetStack()->Push(val);
+  return Status();
+});
 
 }  // namespace xyxy
 

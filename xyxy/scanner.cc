@@ -101,6 +101,7 @@ string TokenTypeName(TokenType type) {
 
     case TOKEN_ERROR:
       return "error";
+
     case TOKEN_EOF:
       return "eof";
 
@@ -147,9 +148,9 @@ Token Scanner::ProcessString() {
   return MakeToken(TokenType::TOKEN_STRING);
 }
 
-static bool is_digit(char c) { return '0' <= c && c <= '9'; }
+static bool IsDigit(char c) { return '0' <= c && c <= '9'; }
 
-static bool is_alpha(char c) {
+static bool IsAlpha(char c) {
   bool x = ('a' <= c && c <= 'z');
   x |= ('A' <= c && c <= 'Z');
   x |= (c == '_');
@@ -157,13 +158,13 @@ static bool is_alpha(char c) {
 }
 
 Token Scanner::ProcessNumber() {
-  while (!AtEnd() && is_digit(Peek())) {
+  while (!AtEnd() && IsDigit(Peek())) {
     Advance();
   }
-  if (!AtEnd() && Peek() == '.' && is_digit(PeekNext())) {
+  if (!AtEnd() && Peek() == '.' && IsDigit(PeekNext())) {
     // Consume the '.' char.
     Advance();
-    while (!AtEnd() && is_digit(Peek())) {
+    while (!AtEnd() && IsDigit(Peek())) {
       Advance();
     }
   }
@@ -233,7 +234,7 @@ TokenType Scanner::IdentifierType() {
 }
 
 Token Scanner::ProcessIdentifierKeyword() {
-  while (is_alpha(Peek()) || is_digit(Peek())) {
+  while (IsAlpha(Peek()) || IsDigit(Peek())) {
     Advance();
   }
   return MakeToken(IdentifierType());
@@ -285,8 +286,8 @@ Token Scanner::ScanToken() {
     case '"':
       return ProcessString();
     default:
-      if (is_digit(c)) return ProcessNumber();
-      if (is_alpha(c)) return ProcessIdentifierKeyword();
+      if (IsDigit(c)) return ProcessNumber();
+      if (IsAlpha(c)) return ProcessIdentifierKeyword();
       break;
   }
   return MakeErrorToken("Unexpected characters met.");
@@ -294,12 +295,7 @@ Token Scanner::ScanToken() {
 
 string Scanner::GetSource(int start, int end) {
   string ret;
-  ret.append(std::to_string(start));
-  ret.append("-");
-  ret.append(std::to_string(end));
-  ret.append(" `");
   ret.append(source_.substr(start, end - start));
-  ret.append("`");
   return ret;
 }
 

@@ -6,6 +6,7 @@
 #include "xyxy/chunk.h"
 #include "xyxy/stack.h"
 #include "xyxy/status.h"
+#include "xyxy/hash_table.h"
 
 namespace xyxy {
 
@@ -21,10 +22,13 @@ class VM {
 
   std::shared_ptr<Chunk> GetChunk() { return chunk_; }
   std::shared_ptr<Stack<Value, STACK_SIZE>> GetStack() { return stk_; }
+  std::shared_ptr<hash_table<string, Value>> GetGlobal() { return global_; }
 
   uint32 PC() { return pc_; }
 
  private:
+  // Store all global variabls.
+  std::shared_ptr<hash_table<string, Value>> global_;
   std::shared_ptr<Chunk> chunk_;
   std::shared_ptr<Stack<Value, STACK_SIZE>> stk_;
   uint32 pc_;

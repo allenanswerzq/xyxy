@@ -2,6 +2,7 @@
 
 #include "xyxy/inst.h"
 #include "xyxy/object.h"
+#include "xyxy/scanner.h"
 
 namespace xyxy {
 
@@ -75,7 +76,8 @@ REGISTER_PREC_RULE(TOKEN_LESS_EQUAL)
     .InfixRule(&Compiler::ParseBinary)
     .PrecOrder(PREC_COMPARISON);
 
-REGISTER_PREC_RULE(TOKEN_IDENTIFIER);
+REGISTER_PREC_RULE(TOKEN_IDENTIFIER)
+    .PrefixRule(&Compiler::ParseVariable);
 
 REGISTER_PREC_RULE(TOKEN_STRING)
     .PrefixRule(&Compiler::ParseString);
@@ -126,20 +128,23 @@ void Compiler::Advance() {
     if (curr_.type != TOKEN_ERROR) {
       break;
     } else {
-      CHECK(false) << "Unrecogined toke: " << curr_.type;
+      CHECK(false) << "Unrecognized token: " << TokenTypeName(curr_.type);
     }
   }
 }
 
 void Compiler::Consume(TokenType type, const string& msg) {
-  CHECK(curr_.type == type) << "Not expected token: " << GetLexeme(curr_);
+  CHECK(curr_.type == type) << msg;
   Advance();
   return;
 }
 
 void Compiler::EmitByte(uint8 byte) { GetChunk()->Write(byte, prev_.line); }
 
-void Compiler::EmitReturn() { EmitByte(OP_RETURN); }
+void Compiler::EmitReturn() {
+  VLOG(1) << "Emiting OP_RETURN";
+  EmitByte(OP_RETURN);
+}
 
 void Compiler::EmitByte(uint8 byte1, uint8 byte2) {
   EmitByte(byte1);
@@ -154,6 +159,7 @@ int Compiler::MakeConstant(Value val) {
 }
 
 void Compiler::EmitConstant(Value val) {
+  VLOG(1) << "Emiting OP_CONSTANT: " << val.ToString();
   EmitByte(OP_CONSTANT, MakeConstant(val));
 }
 
@@ -173,19 +179,23 @@ void Compiler::DebugParsing(const DebugParser& debug) {
   string prefix(debug.parse_depth * 3, '-');
   CHECK(debug.enter_pos < debug.exit_pos);
   string source = scanner_->GetSource(debug.enter_pos, debug.exit_pos);
-  LOG(INFO) << prefix << std::to_string(debug.parse_depth) << "|   " << source;
+  VLOG(1) << prefix << debug.msg << "--" << std::to_string(debug.parse_depth)
+          << "|   " << source;
 }
 
 void Compiler::ParseString() {
   DEBUG_PARSER_ENTER("string");
 
   string str = scanner_->GetSource(prev_.start, prev_.start + prev_.length);
-  EmitConstant(Value(new ObjString(str)));
+  int n = str.size();
+  CHECK(n >= 2);
+  EmitConstant(Value(new ObjString(str.substr(1, n - 2))));
 
   DEBUG_PARSER_EXIT();
 }
 
 string Compiler::GetLexeme(Token tt) { return scanner_->GetLexeme(tt); }
+
 void Compiler::ParseNumber() {
   DEBUG_PARSER_ENTER("number");
 
@@ -196,7 +206,7 @@ void Compiler::ParseNumber() {
 }
 
 void Compiler::ParseExpression() {
-  DEBUG_PARSER_ENTER("express");
+  DEBUG_PARSER_ENTER("expression");
 
   ParseWithPrecedenceOrder(PREC_ASSIGNMENT);
 
@@ -240,6 +250,7 @@ void Compiler::ParseBinary() {
   ParseWithPrecedenceOrder(PrecOrder(rule->prec_order + 1));
   switch (op_type) {
     case TOKEN_PLUS:
+      VLOG(1) << "Emiting OP_ADD";
       EmitByte(OP_ADD);
       break;
     case TOKEN_MINUS:
@@ -303,9 +314,9 @@ void Compiler::ParseWithPrecedenceOrder(PrecOrder prec_order) {
 
   Advance();
 
-  auto prev_rule = GetRule(prev_.type);
-  CHECK(prev_rule);
-  ParseFunc prefix_rule = prev_rule->prefix_rule;
+  auto rule = GetRule(prev_.type);
+  CHECK(rule);
+  ParseFunc prefix_rule = rule->prefix_rule;
   CHECK(prefix_rule);
 
   prefix_rule(this);
@@ -317,6 +328,89 @@ void Compiler::ParseWithPrecedenceOrder(PrecOrder prec_order) {
   }
 
   DEBUG_PARSER_EXIT();
+}
+
+bool Compiler::CheckType(TokenType type) { return curr_.type == type; }
+
+bool Compiler::Match(TokenType type) {
+  if (!CheckType(type)) {
+    return false;
+  }
+  Advance();
+  return true;
+}
+
+// declaration    -> varDecl
+//                | statement ;
+void Compiler::ParseDeclaration() {
+  VLOG(1) << "Parsing declaration...";
+  DEBUG_PARSER_ENTER("declaration");
+  if (Match(TOKEN_VAR)) {
+    ParseVarDeclaration();
+  }
+  else {
+    ParseStatement();
+  }
+
+  // TODO(): Error handling.
+  DEBUG_PARSER_EXIT();
+}
+
+void Compiler::ParseVarDeclaration() {
+  Consume(TOKEN_IDENTIFIER, "Expect variable name.");
+  uint8 global = MakeConstant(Value(new ObjString(GetLexeme(prev_))));
+
+  if (Match(TOKEN_EQUAL)) {
+    ParseExpression();
+  }
+  else {
+    // By default, assign a variable to NILL;
+    EmitByte(OP_NIL);
+  }
+  Consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
+
+  DefineVariable(global);
+}
+
+void Compiler::DefineVariable(uint8 global) {
+  EmitByte(OP_DEFINE_GLOBAL, global);
+}
+
+void Compiler::ParseVariable() {
+  Consume(TOKEN_IDENTIFIER, "Expect variable name.");
+  uint8 arg = MakeConstant(Value(new ObjString(GetLexeme(prev_))));
+  EmitByte(OP_GET_GLOBAL, arg);
+}
+
+// statement      -> exprStmt
+//                | printStmt ;
+void Compiler::ParseStatement() {
+  VLOG(1) << "Parsing statement...";
+  if (Match(TOKEN_PRINT)) {
+    DEBUG_PARSER_ENTER("statement");
+    ParsePrintStatement();
+    DEBUG_PARSER_EXIT();
+  }
+  else {
+    ParseExpressStatement();
+  }
+}
+
+void Compiler::ParsePrintStatement() {
+  VLOG(1) << "Parsing print...";
+  DEBUG_PARSER_ENTER("print");
+  ParseExpression();
+  Consume(TOKEN_SEMICOLON, "Expect ';' after a value.");
+  VLOG(1) << "Emiting OP_PRINT";
+  EmitByte(OP_PRINT);
+  DEBUG_PARSER_EXIT();
+}
+
+// var_a = "xy";
+void Compiler::ParseExpressStatement() {
+  ParseExpression();
+  Consume(TOKEN_SEMICOLON, "Expect ';' after an expression.");
+  EmitByte(OP_POP);
 }
 
 }  // namespace xyxy

@@ -17,7 +17,6 @@ static std::vector<Object*>* Collector() {
 
 enum class ObjType {
   OBJ_STRING,
-
 };
 
 class Object {

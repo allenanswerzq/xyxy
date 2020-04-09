@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <vector>
+#include <memory>
 
 #include "xyxy/list.h"
 
@@ -35,9 +36,15 @@ struct DefaultHasher<std::string> {
 template <class K, class V, class Hasher = DefaultHasher<K>>
 class hash_table {
  public:
-  const int kMaxSlot = 1e6 + 7;
+  const int kMaxSlot = 1e3;
 
-  hash_table() { table_.reverse(kMaxSlot); }
+  hash_table() {
+    table_.resize(kMaxSlot);
+    for (int i = 0; i < kMaxSlot; i++) {
+      table_[i] = std::make_shared<List<KeyType>>();
+      assert(table_[i].get());
+    }
+  }
 
   using KeyType = std::pair<K, V>;
 
@@ -68,7 +75,7 @@ class hash_table {
       ret = true;
     }
     int slot = hash_.Hash(key.first) % kMaxSlot;
-    table_[slot].AppendTail(key);
+    table_[slot]->AppendTail(key);
     return ret;
   }
 
@@ -79,11 +86,12 @@ class hash_table {
   // }
   bool Find(const K& key, V* val = nullptr) const {
     int32 slot = hash_.Hash(key) % kMaxSlot;
+    assert(table_[slot]);
     return Find(table_[slot], key, val);
   }
 
-  bool Find(const List<KeyType>& li, const K& key, V* val) const {
-    auto root = li.GetHead();
+  bool Find(std::shared_ptr<List<KeyType>> li, const K& key, V* val) const {
+    auto root = li->GetHead();
     while (root) {
       if (root->value.first == key) {
         if (val) {
@@ -97,7 +105,7 @@ class hash_table {
   }
 
  private:
-  std::vector<List<KeyType>> table_;
+  std::vector<std::shared_ptr<List<KeyType>>> table_;
   Hasher hash_;
 };
 

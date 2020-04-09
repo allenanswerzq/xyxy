@@ -52,10 +52,32 @@ class Compiler {
     prev_ = Token{TOKEN_NONE, 0, 0, 0};
   }
 
+  Compiler() {
+    scanner_ = std::make_unique<Scanner>();
+    curr_ = Token{TOKEN_NONE, 0, 0, 0};
+    prev_ = Token{TOKEN_NONE, 0, 0, 0};
+    chunk_ = std::make_shared<Chunk>();
+  }
+
   virtual ~Compiler() = default;
 
+  void Compile(const string& source_code) {
+    VLOG(1) << "Compiling: " << source_code;
+    scanner_->SetSource(source_code);
+    curr_ = Token{TOKEN_NONE, 0, 0, 0};
+    prev_ = Token{TOKEN_NONE, 0, 0, 0};
+    Advance();
+    while (!Match(TOKEN_EOF)) {
+      ParseDeclaration();
+    }
+  }
+
   void Advance();
+  bool Match(TokenType type);
+  bool CheckType(TokenType type);
   void Consume(TokenType type, const string& msg);
+
+  void DefineVariable(uint8 global);
 
   // Add a Value `val` into chunk and return its index.
   int MakeConstant(Value val);
@@ -68,6 +90,12 @@ class Compiler {
   void EmitByte(uint8 byte1, uint8 byte2);
   void EmitReturn();
 
+  void ParseDeclaration();
+  void ParseVarDeclaration();
+  void ParseVariable();
+  void ParseStatement();
+  void ParsePrintStatement();
+  void ParseExpressStatement();
   void ParseNumber();
   void ParseGrouping();
   void ParseUnary();

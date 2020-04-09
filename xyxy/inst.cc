@@ -1,5 +1,7 @@
 #include "xyxy/inst.h"
 
+#include <glog/logging.h>
+
 #include <memory>
 
 #include "xyxy/inst_impl.h"
@@ -11,7 +13,7 @@ static std::unique_ptr<Inst> create_inst(OpCode byte) {
     case OP_RETURN:
       return std::make_unique<Inst_OP_RETURN>();
     case OP_CONSTANT:
-      return std::make_unique<Inst_OP_RETURN>();
+      return std::make_unique<Inst_OP_CONSTANT>();
     case OP_NEGATE:
       return std::make_unique<Inst_OP_NEGATE>();
     case OP_ADD:
@@ -36,6 +38,12 @@ static std::unique_ptr<Inst> create_inst(OpCode byte) {
       return std::make_unique<Inst_OP_GREATER>();
     case OP_LESS:
       return std::make_unique<Inst_OP_LESS>();
+    case OP_PRINT:
+      return std::make_unique<Inst_OP_PRINT>();
+    case OP_POP:
+      return std::make_unique<Inst_OP_POP>();
+    case OP_DEFINE_GLOBAL:
+      return std::make_unique<Inst_OP_DEFINE_GLOBAL>();
     default:
       break;
   }
@@ -45,6 +53,8 @@ static std::unique_ptr<Inst> create_inst(OpCode byte) {
 std::unique_ptr<Inst> DispathInst(std::shared_ptr<Chunk> chunk, uint8 offset) {
   OpCode byte = (OpCode)chunk->GetByte(offset);
   auto inst = create_inst(byte);
+  VLOG(1) << "DispathInst: OFF:" << std::to_string(offset) << " BYTE: " << byte
+          << " " << inst->Name();
   for (int i = 1; i <= inst->Length() - 1; i++) {
     // Get the index of the constants assoicated with this inst.
     int index = chunk->GetByte(offset + i);
