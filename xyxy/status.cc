@@ -19,7 +19,8 @@ void Status::SlowCopyFrom(const State* src) {
   delete state_;
   if (src == nullptr) {
     state_ = nullptr;
-  } else {
+  }
+  else {
     state_ = new State(*src);
   }
 }
@@ -32,7 +33,8 @@ const string& Status::empty_string() {
 string Status::ToString() const {
   if (state_ == NULL) {
     return "OK";
-  } else {
+  }
+  else {
     char tmp[30];
     const char* type;
     switch (code()) {

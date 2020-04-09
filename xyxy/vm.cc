@@ -23,6 +23,7 @@ VM::VM() {
 Status VM::Run() {
   for (; pc_ < chunk_->Size();) {
     auto inst = DispathInst(chunk_, pc_);
+    CHECK(inst);
 #ifndef NDEBUG
     inst->DebugInfo();
 #endif

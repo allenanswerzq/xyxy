@@ -124,11 +124,10 @@ void Compiler::Advance() {
   prev_ = curr_;
   while (true) {
     curr_ = scanner_->ScanToken();
-    VLOG(1) << "ScanToken: " << GetLexeme(curr_);
+    VLOG(1) << "ScanToken: | Curr: " << GetLexeme(curr_)
+            << " | Prev: " << GetLexeme(prev_);
     if (curr_.type != TOKEN_ERROR) {
       break;
-    } else {
-      CHECK(false) << "Unrecognized token: " << TokenTypeName(curr_.type);
     }
   }
 }
@@ -356,10 +355,14 @@ void Compiler::ParseDeclaration() {
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::ParseVarDeclaration() {
-  Consume(TOKEN_IDENTIFIER, "Expect variable name.");
-  uint8 global = MakeConstant(Value(new ObjString(GetLexeme(prev_))));
+uint8 Compiler::IdentifierConstant(const string& name) {
+  return MakeConstant(Value(new ObjString(name)));
+}
 
+void Compiler::ParseVarDeclaration() {
+  VLOG(1) << "Parsing var declaration...";
+  Consume(TOKEN_IDENTIFIER, "Expect variable name.");
+  uint8 global = IdentifierConstant(GetLexeme(prev_));
   if (Match(TOKEN_EQUAL)) {
     ParseExpression();
   }
@@ -373,12 +376,14 @@ void Compiler::ParseVarDeclaration() {
 }
 
 void Compiler::DefineVariable(uint8 global) {
+  VLOG(1) << "Emiting OP_DEFINE_GLOBAL " << global;
   EmitByte(OP_DEFINE_GLOBAL, global);
 }
 
 void Compiler::ParseVariable() {
-  Consume(TOKEN_IDENTIFIER, "Expect variable name.");
-  uint8 arg = MakeConstant(Value(new ObjString(GetLexeme(prev_))));
+  VLOG(1) << "Parsing variable...";
+  uint8 arg = IdentifierConstant(GetLexeme(prev_));
+  VLOG(1) << "Emiting OP_GET_GLOBAL " << arg;
   EmitByte(OP_GET_GLOBAL, arg);
 }
 

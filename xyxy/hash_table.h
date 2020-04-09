@@ -2,8 +2,8 @@
 #define QIAN_HASH_TABLE_H_
 
 #include <cassert>
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "xyxy/list.h"
 

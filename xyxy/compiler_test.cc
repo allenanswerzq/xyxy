@@ -105,9 +105,14 @@ TEST(Print, TestCompiler) {
 
 TEST(GlobalVariable, TestCompiler) {
   Compiler compiler = Compiler();
-  compiler.Compile(" var xy = \"xy\"; print xy; ");
+  string source = R"(
+    var xy = "aaaaaaaaa";
+    print xy;
+  )";
+  compiler.Compile(source);
   VM vm(compiler.GetChunk());
   vm.Run();
+  EXPECT_TRUE(vm.GetStack()->Empty());
 }
 
 }  // namespace xyxy

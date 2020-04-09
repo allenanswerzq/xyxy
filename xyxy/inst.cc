@@ -44,6 +44,8 @@ static std::unique_ptr<Inst> create_inst(OpCode byte) {
       return std::make_unique<Inst_OP_POP>();
     case OP_DEFINE_GLOBAL:
       return std::make_unique<Inst_OP_DEFINE_GLOBAL>();
+    case OP_GET_GLOBAL:
+      return std::make_unique<Inst_OP_GET_GLOBAL>();
     default:
       break;
   }

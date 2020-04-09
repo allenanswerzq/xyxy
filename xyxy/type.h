@@ -103,13 +103,17 @@ class Value {
   std::string ToString() {
     if (IsBool()) {
       return std::to_string(AsBool());
-    } else if (IsFloat()) {
+    }
+    else if (IsFloat()) {
       return std::to_string(AsFloat());
-    } else if (IsNil()) {
+    }
+    else if (IsNil()) {
       return "Nill";
-    } else if (IsObject()) {
+    }
+    else if (IsObject()) {
       return AsRawObject()->ToString();
-    } else {
+    }
+    else {
       // Expect never reach here.
       assert(false);
       return "";
@@ -123,11 +127,14 @@ inline bool is_equal(Value a, Value b) {
   }
   if (a.Type() == ValueType::VAL_BOOL) {
     return a.AsBool() == b.AsBool();
-  } else if (a.Type() == ValueType::VAL_NIL) {
+  }
+  else if (a.Type() == ValueType::VAL_NIL) {
     return true;
-  } else if (a.Type() == ValueType::VAL_FLOAT) {
+  }
+  else if (a.Type() == ValueType::VAL_FLOAT) {
     return a.AsFloat() == b.AsFloat();
-  } else {
+  }
+  else {
     return false;
   }
 }

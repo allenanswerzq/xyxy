@@ -1,12 +1,12 @@
-#ifndef QIAN_LIST_H_
-#define QIAN_LIST_H_
+#ifndef XYXY_LIST_H_
+#define XYXY_LIST_H_
 
 #include <cassert>
+#include <type_traits>
 
 #include "xyxy/base.h"
 
 namespace xyxy {
-
 template <class T>
 struct ListNode {
   T value;
@@ -19,7 +19,7 @@ class List {
  public:
   List() : head_(nullptr) {}
 
-  ~List() {
+  virtual ~List() {
     cur_ = head_;
     while (cur_) {
       ListNode<T>* next = cur_->next;
@@ -28,45 +28,47 @@ class List {
     }
   }
 
+  // Disable copy constructors.
   List(const List&) = delete;
-  List& operator==(const List&) = delete;
+  List& operator=(const List&) = delete;
 
-  ListNode<T>* GetHead() {
-    return head_;
+  // Move assignment.
+  List& operator=(List&& li) {
+    this->head_ = li->head_;
+    this->cur_ = li->cur_;
+    li->head_ = nullptr;
+    li->cur_ = nullptr;
   }
 
-  T GetNext() {
-    assert(cur_);
-    T ret = cur_->value;
-    cur_ = cur_->next;
-    return ret;
-  }
-
-  // ListNode<T>* GetNext() {
-  //   assert(cur_);
-  //   ListNode<T>* ret = cur_;
-  //   cur_ = cur_->next;
-  //   return ret;
-  // }
+  ListNode<T>* GetHead() const { return head_; }
 
   void AppendTail(T val) { AppendTail(new ListNode<T>{val, nullptr, nullptr}); }
 
   void AppendTail(ListNode<T>* val) {
-    if (cur_ == nullptr) {
-      head_ = cur_ = val;
+    if (head_ == nullptr) {
+      cur_ = head_ = val;
     }
     else {
-      assert(cur_);
       cur_->next = val;
       cur_ = cur_->next;
     }
+  }
+
+  bool Find(const T& val) {
+    auto node = GetHead();
+    while (node) {
+      if (node->val == val) {
+        return node->val;
+      }
+      node = node->next;
+    }
+    return false;
   }
 
  private:
   ListNode<T>* cur_;
   ListNode<T>* head_;
 };
-
 }  // namespace xyxy
 
-#endif  // QIAN_LIST_H_
+#endif  // XYXY_LIST_H_

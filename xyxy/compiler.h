@@ -81,6 +81,7 @@ class Compiler {
 
   // Add a Value `val` into chunk and return its index.
   int MakeConstant(Value val);
+  uint8 IdentifierConstant(const string& name);
 
   // Emit a {OP_CONSTANT idx} inst.
   // Note: idx specifies where the constant stored inside chunk's value area.

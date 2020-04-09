@@ -27,30 +27,30 @@ namespace xyxy {
 #define DEFAULT_DEBUG_INFO \
   [](Inst* inst) -> void { printf("%s\n", inst->Name().c_str()); }
 
+#define ARGS_DEBUG_INFO                         \
+  [](Inst* inst) -> void {                      \
+    std::vector<Value> oprd = inst->Operands(); \
+    printf("%-16s ", inst->Name().c_str());     \
+    for (int i = 0; i < oprd.size(); i++) {     \
+      Value val = oprd[i];                      \
+      printf("%s ", val.ToString().c_str());    \
+    }                                           \
+    printf("\n");                               \
+  }
+
 DEFINE_INST(OP_RETURN, 1, DEFAULT_DEBUG_INFO, [](VM* vm) -> Status {
   // DumpStack(vm->GetStack());
   return Status();
 });
 
-DEFINE_INST(
-    OP_CONSTANT, 2,
-    // --- debug_info
-    [](Inst* inst) -> void {
-      std::vector<Value> oprd = inst->Operands();
-      printf("%-16s ", inst->Name().c_str());
-      for (int i = 0; i < oprd.size(); i++) {
-        Value val = oprd[i];
-        printf("%s ", val.ToString().c_str());
-      }
-      printf("\n");
-    },
-    // --- run
-    [](VM* vm) -> Status {
-      auto inst = DispathInst(vm->GetChunk(), vm->PC());
-      auto oprds = inst->Operands();
-      vm->GetStack()->Push(oprds[0]);
-      return Status();
-    });
+DEFINE_INST(OP_CONSTANT, 2, ARGS_DEBUG_INFO,
+            // --- run
+            [](VM* vm) -> Status {
+              auto inst = DispathInst(vm->GetChunk(), vm->PC());
+              auto oprds = inst->Operands();
+              vm->GetStack()->Push(oprds[0]);
+              return Status();
+            });
 
 DEFINE_INST(OP_NEGATE, 1, DEFAULT_DEBUG_INFO, [](VM* vm) -> Status {
   auto stk = vm->GetStack();
@@ -133,20 +133,26 @@ DEFINE_INST(OP_POP, 1, DEFAULT_DEBUG_INFO, [](VM* vm) -> Status {
   return Status();
 });
 
-DEFINE_INST(OP_DEFINE_GLOBAL, 2, DEFAULT_DEBUG_INFO, [](VM* vm) -> Status {
+DEFINE_INST(OP_DEFINE_GLOBAL, 2, ARGS_DEBUG_INFO, [](VM* vm) -> Status {
   auto inst = DispathInst(vm->GetChunk(), vm->PC());
   assert(inst);
+  assert(!inst->Operands().empty());
   Value val = inst->Operands()[0];
-  vm->GetGlobal()->Insert(val.ToString(), vm->GetStack()->Top());
+  assert(vm->GetGlobal());
+  assert(vm->GetStack());
+  vm->GetGlobal()->Insert(val.ToString(), val);
   vm->GetStack()->Pop();
   return Status();
 });
 
-DEFINE_INST(OP_GET_GLOBAL, 2, DEFAULT_DEBUG_INFO, [](VM* vm) -> Status {
+DEFINE_INST(OP_GET_GLOBAL, 2, ARGS_DEBUG_INFO, [](VM* vm) -> Status {
   auto inst = DispathInst(vm->GetChunk(), vm->PC());
   assert(inst);
+  assert(!inst->Operands().empty());
   std::string val_name = inst->Operands()[0].ToString();
   Value val;
+  assert(vm->GetGlobal());
+  assert(vm->GetStack());
   if (!vm->GetGlobal()->Find(val_name, &val)) {
     // TODO(): Error handling
     assert(false);

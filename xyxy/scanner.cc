@@ -118,17 +118,24 @@ void Scanner::SkipWhitespace() {
     char c = Peek();
     if (c == ' ' || c == '\r' || c == '\t') {
       Advance();
-    } else if (c == '/') {
+    }
+    else if (c == '/') {
       // Handle comments.
       if (PeekNext() == '/') {
         while (!AtEnd() && Peek() != '\n') {
           Advance();
         }
-      } else {
+      }
+      else {
         // Not a comment, simply return.
         return;
       }
-    } else {
+    }
+    else if (c == '\n') {
+      line_++;
+      Advance();
+    }
+    else {
       return;
     }
   }
@@ -278,11 +285,6 @@ Token Scanner::ScanToken() {
       return MakeToken(Match('=') ? TOKEN_LESS_EQUAL : TOKEN_LESS);
     case '>':
       return MakeToken(Match('=') ? TOKEN_GREATER_EQUAL : TOKEN_GREATER);
-    case '\n': {
-      line_++;
-      Advance();
-      break;
-    }
     case '"':
       return ProcessString();
     default:

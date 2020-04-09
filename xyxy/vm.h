@@ -4,9 +4,9 @@
 #include <memory>
 
 #include "xyxy/chunk.h"
+#include "xyxy/hash_table.h"
 #include "xyxy/stack.h"
 #include "xyxy/status.h"
-#include "xyxy/hash_table.h"
 
 namespace xyxy {
 
