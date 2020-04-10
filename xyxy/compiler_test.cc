@@ -1,7 +1,6 @@
 #include "xyxy/compiler.h"
 
 #include "gtest/gtest.h"
-#include "xyxy/inst.h"
 #include "xyxy/vm.h"
 
 namespace xyxy {
@@ -78,18 +77,6 @@ TEST(TestSimple, Basic) {
 
   EXPECT_EQ(chunk->GetByte(4), uint8(OP_CONSTANT));
 
-  auto inst = DispathInst(chunk, 0);
-  auto oprd = inst->Operands();
-  EXPECT_EQ(oprd.size(), 1);
-  EXPECT_EQ(oprd[0], Value(1.0));
-
-  auto inst1 = DispathInst(chunk, 2);
-  EXPECT_NE(inst, inst1);
-  auto oprd1 = inst->Operands();
-  EXPECT_EQ(oprd1.size(), 1);
-  // TODO(): why this fails.
-  // EXPECT_EQ(oprd1[0], Value(2.0));
-
   VM vm(chunk);
   vm.Run();
 }
@@ -112,7 +99,21 @@ TEST(GlobalVariable, TestCompiler) {
   compiler.Compile(source);
   VM vm(compiler.GetChunk());
   vm.Run();
-  EXPECT_TRUE(vm.GetStack()->Empty());
+  EXPECT_TRUE(vm.GetStack().Empty());
+}
+
+TEST(StringAdd, TestCompiler) {
+  Compiler compiler = Compiler();
+  string source = R"(
+    var xy = "aaaaaaaaa";
+    var xx = xy + "bbbbbb";
+    print xy;
+    print xx;
+  )";
+  compiler.Compile(source);
+  VM vm(compiler.GetChunk());
+  vm.Run();
+  EXPECT_TRUE(vm.GetStack().Empty());
 }
 
 }  // namespace xyxy

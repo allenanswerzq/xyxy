@@ -59,7 +59,7 @@ TEST(String, TypeTest) {
   std::unique_ptr<ObjString> p(new ObjString("hello world"));
   Value val(p.get());
   EXPECT_TRUE(val.IsString());
-  EXPECT_TRUE(val.AsString() == p.get());
+  EXPECT_EQ(val.AsString(), "hello world");
   EXPECT_EQ(val.ToString(), "hello world");
 }
 

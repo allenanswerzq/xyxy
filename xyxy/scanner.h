@@ -72,8 +72,6 @@ struct Token {
   friend bool operator!=(const Token& a, const Token& b);
 };
 
-string TokenTypeName(TokenType type);
-
 class Scanner {
  public:
   Scanner(const string& source) {

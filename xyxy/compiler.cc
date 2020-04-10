@@ -1,8 +1,8 @@
 #include "xyxy/compiler.h"
 
-#include "xyxy/inst.h"
 #include "xyxy/object.h"
 #include "xyxy/scanner.h"
+#include "xyxy/vm.h"
 
 namespace xyxy {
 

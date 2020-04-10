@@ -65,6 +65,7 @@ class Value {
   bool IsObject() { return type_ == ValueType::VAL_OBJ; }
   bool IsNil() { return type_ == ValueType::VAL_NIL; }
   bool IsFalsey() { return IsNil() || (IsBool() && !AsBool()); }
+  bool IsString() { return IsObject() && AsRawObject()->IsString(); }
 
   bool AsBool() {
     assert(IsBool());
@@ -90,14 +91,9 @@ class Value {
     as_.obj = reinterpret_cast<Object*>(p);
   }
 
-  bool IsString() {
-    assert(IsObject());
-    return AsRawObject()->IsString();
-  }
-
-  ObjString* AsString() {
+  std::string AsString() {
     assert(IsString());
-    return reinterpret_cast<ObjString*>(AsRawObject());
+    return reinterpret_cast<ObjString*>(AsRawObject())->ToString();
   }
 
   std::string ToString() {
