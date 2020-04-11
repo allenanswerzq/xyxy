@@ -3,7 +3,7 @@ package(default_visibility = ["//visibility:public"])
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 
 XYXY_DEFAULT_COPTS = [
-        "-O2",
+        "-O0",
         "--std=c++17",
     ]
 

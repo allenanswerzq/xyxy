@@ -22,14 +22,14 @@ class Chunk {
   void Write(uint8 byte, int index, Value val);
   void Write(uint8 byte, int index, Value val, int ln);
 
-  uint8 GetByte(int index);
-  uint8 GetLine(int index);
+  uint8 GetByte(int index) const;
+  uint8 GetLine(int index) const;
 
-  std::vector<uint8>& Code() { return code_; }
-  int Size() { return code_.size(); }
+  // std::vector<uint8>& Code() const { return code_; }
+  int Size() const { return code_.size(); }
 
   int AddConstant(Value val);
-  Value GetConstant(int index);
+  Value GetConstant(int index) const;
 
  private:
   // Store bytecode.

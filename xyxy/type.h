@@ -101,6 +101,7 @@ class Value {
       return std::to_string(AsBool());
     }
     else if (IsFloat()) {
+      // TODO(): make consistant with float number format.
       return std::to_string(AsFloat());
     }
     else if (IsNil()) {

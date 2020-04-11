@@ -44,7 +44,7 @@ class Inst {
 
   uint8 Length() { return length_; }
 
-  void DebugInfo();
+  std::string DebugInfo();
 
   uint8 Opcode() { return opcode_; }
 
@@ -52,9 +52,9 @@ class Inst {
 
   std::vector<Value>& Operands() { return operands_; }
 
- private:
+ protected:
   friend class VM;
-
+  const int kDumpWidth = 16;
   string name_;
   uint8 opcode_;
   uint8 length_;
@@ -63,7 +63,7 @@ class Inst {
 
 class VM {
  public:
-  explicit VM(std::shared_ptr<Chunk> chunk);
+  explicit VM(Chunk* chunk);
 
   virtual ~VM() = default;
 
@@ -71,7 +71,9 @@ class VM {
 
   std::unique_ptr<Inst> CreateInst(uint8 offset);
 
-  std::shared_ptr<Chunk> GetChunk() { return chunk_; }
+  Chunk* GetChunk() { return chunk_; }
+
+  std::string DumpInsts();
 
   Stack<Value, STACK_SIZE>& GetStack() { return stack_; }
 
@@ -80,7 +82,7 @@ class VM {
   uint32 PC() { return pc_; }
 
  private:
-  std::shared_ptr<Chunk> chunk_;
+  Chunk* chunk_;  // Not owned.
   // Virtual machine stack.
   Stack<Value, STACK_SIZE> stack_;
   // Store all global variabls.

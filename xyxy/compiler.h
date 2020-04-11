@@ -45,18 +45,11 @@ static std::vector<PrecedenceRule*>* GlobalPrecedenceRules() {
 
 class Compiler {
  public:
-  Compiler(const string& source, std::shared_ptr<Chunk> chunk) {
-    scanner_ = std::make_unique<Scanner>(source);
-    chunk_ = chunk;
-    curr_ = Token{TOKEN_NONE, 0, 0, 0};
-    prev_ = Token{TOKEN_NONE, 0, 0, 0};
-  }
-
   Compiler() {
     scanner_ = std::make_unique<Scanner>();
     curr_ = Token{TOKEN_NONE, 0, 0, 0};
     prev_ = Token{TOKEN_NONE, 0, 0, 0};
-    chunk_ = std::make_shared<Chunk>();
+    chunk_ = std::make_unique<Chunk>();
   }
 
   virtual ~Compiler() = default;
@@ -108,7 +101,7 @@ class Compiler {
 
   string GetLexeme(Token tt);
 
-  std::shared_ptr<Chunk> GetChunk() { return chunk_; }
+  Chunk* GetChunk() { return chunk_.get(); }
 
   Token PrevToken() { return prev_; }
   Token CurrToken() { return curr_; }
@@ -130,7 +123,7 @@ class Compiler {
  private:
   Token curr_;
   Token prev_;
-  std::shared_ptr<Chunk> chunk_;
+  std::unique_ptr<Chunk> chunk_;
   std::unique_ptr<Scanner> scanner_;
   bool has_error_ = false;
   bool panic_mode_ = false;
