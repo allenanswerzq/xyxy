@@ -1,13 +1,11 @@
-### qian
+### xyxy
 
 
 
 Build:
 
 ```shell
-makdir build
-cd build
-cmake ..
+bazel build -c dbg //...:all -s --sandbox_debug
 ```
 
 
@@ -15,7 +13,7 @@ cmake ..
 Run all tests:
 
 ```shell
-ctest .
+bazel test -c dbg //xyxy:compiler_test --test_output=all --action_env="GTEST_COLOR=1"
 ```
 
 
@@ -23,7 +21,7 @@ ctest .
 Run a specific test:
 
 ```shell
-./qian/qian_parser_test
+./bazel-bin/xyxy/compiler_test
 ```
 
 

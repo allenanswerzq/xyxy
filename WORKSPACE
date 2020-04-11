@@ -1,6 +1,6 @@
-workspace(name = "com_github_qian")
+workspace(name = "com_github_xyxy")
 
-load("//bazel:qian_deps_setup.bzl", "qian_deps_setup")
+load("//bazel:xyxy_deps_setup.bzl", "xyxy_deps_setup")
 
-qian_deps_setup()
+xyxy_deps_setup()
 

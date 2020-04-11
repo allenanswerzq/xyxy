@@ -1,0 +1,94 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+
+XYXY_DEFAULT_COPTS = [
+        "-O0",
+        "--std=c++17",
+    ]
+
+cc_library(
+    name = "xyxy",
+    hdrs = glob([ "*.h" ]),
+    srcs = [
+        "chunk.cc",
+        "vm.cc",
+        "scanner.cc",
+        "compiler.cc",
+        "status.cc"
+    ],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        "@com_github_google_glog//:glog"
+    ]
+)
+
+cc_test(
+    name = "type_test",
+    srcs = ["type_test.cc"],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        ":xyxy",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "chunk_test",
+    srcs = ["chunk_test.cc"],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        ":xyxy",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "stack_test",
+    srcs = ["stack_test.cc"],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        ":xyxy",
+        "@com_google_googletest//:gtest_main",
+    ],
+ )
+
+cc_test(
+    name = "scanner_test",
+    srcs = ["scanner_test.cc"],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        ":xyxy",
+        "@com_google_googletest//:gtest_main",
+    ],
+ )
+
+cc_test(
+    name = "compiler_test",
+    srcs = ["compiler_test.cc"],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        ":xyxy",
+        "@com_google_googletest//:gtest_main",
+    ],
+ )
+
+cc_test(
+    name = "list_test",
+    srcs = ["list_test.cc"],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        ":xyxy",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "hash_table_test",
+    srcs = ["hash_table_test.cc"],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        ":xyxy",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
