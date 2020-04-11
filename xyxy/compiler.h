@@ -2,6 +2,7 @@
 #define XYXY_PARSE_H_
 
 #include <functional>
+#include <unordered_map>
 #include <vector>
 
 #include "xyxy/chunk.h"
@@ -29,19 +30,10 @@ class Compiler;
 typedef std::function<void(Compiler*)> ParseFunc;
 
 typedef struct {
-  TokenType token_type;
   ParseFunc prefix_rule;
   ParseFunc infix_rule;
   PrecOrder prec_order;
 } PrecedenceRule;
-
-static std::vector<PrecedenceRule*>* GlobalPrecedenceRules() {
-  static std::vector<PrecedenceRule*>* registry;
-  if (!registry) {
-    registry = new std::vector<PrecedenceRule*>;
-  }
-  return registry;
-}
 
 class Compiler {
  public:
@@ -106,9 +98,12 @@ class Compiler {
   Token PrevToken() { return prev_; }
   Token CurrToken() { return curr_; }
 
-  PrecedenceRule* GetRule(TokenType type) {
-    CHECK(GlobalPrecedenceRules());
-    return GlobalPrecedenceRules()->at(type);
+  static const std::unordered_map<int, PrecedenceRule>& kPrecedenceTable;
+
+  PrecedenceRule GetRule(TokenType type) {
+    auto it = kPrecedenceTable.find(type);
+    CHECK(it != kPrecedenceTable.end());
+    return it->second;
   }
 
   struct DebugParser {
@@ -130,41 +125,5 @@ class Compiler {
   int parse_depth_ = 1;
 };
 }  // namespace xyxy
-
-namespace register_prec_rule {
-
-struct PrecRuleDefWrapper {
-  PrecRuleDefWrapper(::xyxy::TokenType type) {
-    rule = new ::xyxy::PrecedenceRule();
-    rule->token_type = type;
-    ::xyxy::GlobalPrecedenceRules()->push_back(rule);
-  }
-
-  PrecRuleDefWrapper& PrefixRule(::xyxy::ParseFunc f) {
-    rule->prefix_rule = f;
-    return *this;
-  }
-
-  PrecRuleDefWrapper& InfixRule(::xyxy::ParseFunc f) {
-    rule->infix_rule = f;
-    return *this;
-  }
-
-  PrecRuleDefWrapper& PrecOrder(::xyxy::PrecOrder order) {
-    rule->prec_order = order;
-    return *this;
-  }
-
- private:
-  ::xyxy::PrecedenceRule* rule;
-};
-
-}  // namespace register_prec_rule
-
-#define REGISTER_PREC_RULE(name) REGISTER_PREC_RULE_HELPER(__COUNTER__, name)
-#define REGISTER_PREC_RULE_HELPER(ctr, name) REGISTER_PREC_RULE_UNIQ(ctr, name)
-#define REGISTER_PREC_RULE_UNIQ(ctr, name)                           \
-  static ::register_prec_rule::PrecRuleDefWrapper register_inst##ctr \
-      XY_ATTRIBUTE_UNUSED = ::register_prec_rule::PrecRuleDefWrapper(name)
 
 #endif  // XYXY_COMPILER_H_

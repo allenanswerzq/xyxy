@@ -6,119 +6,66 @@
 
 namespace xyxy {
 
-// NOTE: the order must be the same as token definition.
-// TODO(zq7): this whole piece code looks very ugly.
-// clang-format off
-// (
-REGISTER_PREC_RULE(TOKEN_LEFT_PAREN)
-    .PrefixRule(&Compiler::ParseGrouping)
-    .InfixRule(nullptr)
-    .PrecOrder(PREC_NONE);
+static PrecedenceRule CreateRule(ParseFunc prefix, ParseFunc infix, PrecOrder
+                                 order) {
+  return PrecedenceRule{prefix, infix, order};
+}
 
-REGISTER_PREC_RULE(TOKEN_RIGHT_PAREN);
-REGISTER_PREC_RULE(TOKEN_LEFT_BRACE);
-REGISTER_PREC_RULE(TOKEN_RIGHT_BRACE);
-REGISTER_PREC_RULE(TOKEN_COMMA);
-REGISTER_PREC_RULE(TOKEN_DOT);
-
-// -
-REGISTER_PREC_RULE(TOKEN_MINUS)
-    .PrefixRule(&Compiler::ParseUnary)
-    .InfixRule(&Compiler::ParseBinary)
-    .PrecOrder(PREC_TERM);
-
-// +
-REGISTER_PREC_RULE(TOKEN_PLUS)
-    .PrefixRule(nullptr)
-    .InfixRule(&Compiler::ParseBinary)
-    .PrecOrder(PREC_TERM);
-
-REGISTER_PREC_RULE(TOKEN_SEMICOLON);
-
-// /
-REGISTER_PREC_RULE(TOKEN_SLASH)
-    .PrefixRule(nullptr)
-    .InfixRule(&Compiler::ParseBinary)
-    .PrecOrder(PREC_FACTOR);
-
-// *
-REGISTER_PREC_RULE(TOKEN_STAR)
-    .PrefixRule(nullptr)
-    .InfixRule(&Compiler::ParseBinary)
-    .PrecOrder(PREC_FACTOR);
-
-REGISTER_PREC_RULE(TOKEN_BANG)
-    .PrefixRule(&Compiler::ParseUnary);
-
-REGISTER_PREC_RULE(TOKEN_BANG_EQUAL)
-    .InfixRule(&Compiler::ParseBinary)
-    .PrecOrder(PREC_EQUALITY);
-
-REGISTER_PREC_RULE(TOKEN_EQUAL);
-
-REGISTER_PREC_RULE(TOKEN_EQUAL_EQUAL)
-    .InfixRule(&Compiler::ParseBinary)
-    .PrecOrder(PREC_EQUALITY);
-
-REGISTER_PREC_RULE(TOKEN_GREATER)
-    .InfixRule(&Compiler::ParseBinary)
-    .PrecOrder(PREC_COMPARISON);
-
-REGISTER_PREC_RULE(TOKEN_GREATER_EQUAL)
-    .InfixRule(&Compiler::ParseBinary)
-    .PrecOrder(PREC_COMPARISON);
-
-REGISTER_PREC_RULE(TOKEN_LESS)
-    .InfixRule(&Compiler::ParseBinary)
-    .PrecOrder(PREC_COMPARISON);
-
-REGISTER_PREC_RULE(TOKEN_LESS_EQUAL)
-    .InfixRule(&Compiler::ParseBinary)
-    .PrecOrder(PREC_COMPARISON);
-
-REGISTER_PREC_RULE(TOKEN_IDENTIFIER)
-    .PrefixRule(&Compiler::ParseVariable);
-
-REGISTER_PREC_RULE(TOKEN_STRING)
-    .PrefixRule(&Compiler::ParseString);
-
-REGISTER_PREC_RULE(TOKEN_NUMBER)
-    .PrefixRule(&Compiler::ParseNumber);
-
-REGISTER_PREC_RULE(TOKEN_AND);
-REGISTER_PREC_RULE(TOKEN_IF);
-REGISTER_PREC_RULE(TOKEN_ELSE);
-REGISTER_PREC_RULE(TOKEN_FALSE)
-    .PrefixRule(&Compiler::ParseLiteral);
-
-REGISTER_PREC_RULE(TOKEN_FUN);
-REGISTER_PREC_RULE(TOKEN_FOR);
-
-REGISTER_PREC_RULE(TOKEN_NIL)
-    .PrefixRule(&Compiler::ParseLiteral);
-
-REGISTER_PREC_RULE(TOKEN_OR);
-REGISTER_PREC_RULE(TOKEN_CLASS);
-REGISTER_PREC_RULE(TOKEN_PRINT);
-REGISTER_PREC_RULE(TOKEN_RETURN);
-REGISTER_PREC_RULE(TOKEN_SUPER);
-REGISTER_PREC_RULE(TOKEN_THIS);
-
-REGISTER_PREC_RULE(TOKEN_TRUE)
-    .PrefixRule(&Compiler::ParseLiteral);
-
-REGISTER_PREC_RULE(TOKEN_VAR);
-REGISTER_PREC_RULE(TOKEN_WHILE);
-REGISTER_PREC_RULE(TOKEN_NEWLINE);
-REGISTER_PREC_RULE(TOKEN_WHITESPACE);
-
-REGISTER_PREC_RULE(TOKEN_ERROR);
-REGISTER_PREC_RULE(TOKEN_EOF);
-
-REGISTER_PREC_RULE(TOKEN_NONE)
-    .PrefixRule(&Compiler::ParseGrouping);
-
-// clang-format on
+const std::unordered_map<int, PrecedenceRule>& Compiler::kPrecedenceTable =
+    *new std::unordered_map<int, PrecedenceRule>({
+        {TOKEN_LEFT_PAREN,
+         CreateRule(&Compiler::ParseGrouping, nullptr, PREC_NONE)},
+        {TOKEN_RIGHT_PAREN, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_LEFT_BRACE, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_RIGHT_BRACE, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_COMMA, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_DOT, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_MINUS,
+         CreateRule(&Compiler::ParseUnary, &Compiler::ParseBinary, PREC_TERM)},
+        {TOKEN_PLUS, CreateRule(nullptr, &Compiler::ParseBinary, PREC_TERM)},
+        {TOKEN_SEMICOLON, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_SLASH, CreateRule(nullptr, &Compiler::ParseBinary, PREC_FACTOR)},
+        {TOKEN_STAR, CreateRule(nullptr, &Compiler::ParseBinary, PREC_FACTOR)},
+        {TOKEN_BANG, CreateRule(&Compiler::ParseUnary, nullptr, PREC_NONE)},
+        {TOKEN_BANG_EQUAL,
+         CreateRule(nullptr, &Compiler::ParseBinary, PREC_EQUALITY)},
+        {TOKEN_EQUAL, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_EQUAL_EQUAL,
+         CreateRule(nullptr, &Compiler::ParseBinary, PREC_EQUALITY)},
+        {TOKEN_GREATER,
+         CreateRule(nullptr, &Compiler::ParseBinary, PREC_COMPARISON)},
+        {TOKEN_GREATER_EQUAL,
+         CreateRule(nullptr, &Compiler::ParseBinary, PREC_COMPARISON)},
+        {TOKEN_LESS,
+         CreateRule(nullptr, &Compiler::ParseBinary, PREC_COMPARISON)},
+        {TOKEN_LESS_EQUAL,
+         CreateRule(nullptr, &Compiler::ParseBinary, PREC_COMPARISON)},
+        {TOKEN_IDENTIFIER,
+         CreateRule(&Compiler::ParseVariable, nullptr, PREC_NONE)},
+        {TOKEN_STRING, CreateRule(&Compiler::ParseString, nullptr, PREC_NONE)},
+        {TOKEN_NUMBER, CreateRule(&Compiler::ParseNumber, nullptr, PREC_NONE)},
+        {TOKEN_AND, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_IF, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_ELSE, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_FALSE, CreateRule(&Compiler::ParseLiteral, nullptr, PREC_NONE)},
+        {TOKEN_FUN, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_FOR, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_NIL, CreateRule(&Compiler::ParseLiteral, nullptr, PREC_NONE)},
+        {TOKEN_OR, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_CLASS, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_PRINT, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_RETURN, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_SUPER, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_THIS, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_TRUE, CreateRule(&Compiler::ParseLiteral, nullptr, PREC_NONE)},
+        {TOKEN_VAR, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_WHILE, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_NEWLINE, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_WHITESPACE, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_ERROR, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_EOF, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_EOF, CreateRule(&Compiler::ParseGrouping, nullptr, PREC_NONE)},
+    });
 
 void Compiler::Advance() {
   prev_ = curr_;
@@ -245,8 +192,8 @@ void Compiler::ParseBinary() {
   DEBUG_PARSER_ENTER("binary");
 
   TokenType op_type = prev_.type;
-  PrecedenceRule* rule = GetRule(op_type);
-  ParseWithPrecedenceOrder(PrecOrder(rule->prec_order + 1));
+  PrecedenceRule rule = GetRule(op_type);
+  ParseWithPrecedenceOrder(PrecOrder(rule.prec_order + 1));
   switch (op_type) {
     case TOKEN_PLUS:
       VLOG(1) << "Emiting OP_ADD";
@@ -314,15 +261,14 @@ void Compiler::ParseWithPrecedenceOrder(PrecOrder prec_order) {
   Advance();
 
   auto rule = GetRule(prev_.type);
-  CHECK(rule);
-  ParseFunc prefix_rule = rule->prefix_rule;
+  ParseFunc prefix_rule = rule.prefix_rule;
   CHECK(prefix_rule);
 
   prefix_rule(this);
 
-  while (GetRule(curr_.type)->prec_order >= prec_order) {
+  while (GetRule(curr_.type).prec_order >= prec_order) {
     Advance();
-    ParseFunc infix_rule = GetRule(prev_.type)->infix_rule;
+    ParseFunc infix_rule = GetRule(prev_.type).infix_rule;
     infix_rule(this);
   }
 

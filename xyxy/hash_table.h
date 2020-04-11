@@ -1,5 +1,5 @@
-#ifndef QIAN_HASH_TABLE_H_
-#define QIAN_HASH_TABLE_H_
+#ifndef XYXY_HASH_TABLE_H_
+#define XYXY_HASH_TABLE_H_
 
 #include <cassert>
 #include <memory>
@@ -114,4 +114,4 @@ template <class T>
 using hash_set = hash_table<T, bool>;
 }  // namespace xyxy
 
-#endif  // QIAN_HASH_TABLE_H_
+#endif  // XYXY_HASH_TABLE_H_

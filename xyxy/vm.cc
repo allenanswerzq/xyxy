@@ -117,7 +117,7 @@ std::unique_ptr<Inst> VM::CreateInst(uint8 offset) {
 
 std::string VM::DumpInsts() {
   std::string ret;
-  for (int pc = 0; pc < chunk_->Size(); ) {
+  for (int pc = 0; pc < chunk_->size();) {
     auto inst = CreateInst(pc);
     ret += inst->DebugInfo();
     pc += inst->Length();
@@ -126,7 +126,7 @@ std::string VM::DumpInsts() {
 }
 
 Status VM::Run() {
-  for (; pc_ < chunk_->Size();) {
+  for (; pc_ < chunk_->size();) {
     auto inst = CreateInst(pc_);
     std::cout << inst->DebugInfo();
     switch (inst->opcode_) {

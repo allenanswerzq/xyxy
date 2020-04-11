@@ -25,8 +25,7 @@ class Chunk {
   uint8 GetByte(int index) const;
   uint8 GetLine(int index) const;
 
-  // std::vector<uint8>& Code() const { return code_; }
-  int Size() const { return code_.size(); }
+  int size() const { return code_.size(); }
 
   int AddConstant(Value val);
   Value GetConstant(int index) const;
