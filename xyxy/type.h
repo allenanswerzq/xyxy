@@ -2,6 +2,7 @@
 #define XYXY_TYPE_H_
 
 #include <cstring>
+#include <cassert>
 
 #include "xyxy/object.h"
 

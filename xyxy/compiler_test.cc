@@ -62,7 +62,7 @@ static Token CreateToken(TokenType type, int start, int leng, int line) {
 // }
 
 TEST(TestSimple, Basic) {
-  Compiler compiler = Compiler();
+  Compiler compiler;
   compiler.Compile(" print 1 + 2 * 10 - (2 + 3) * 6; ");
   auto chunk = compiler.GetChunk();
 
@@ -82,7 +82,7 @@ TEST(TestSimple, Basic) {
 }
 
 TEST(Print, TestCompiler) {
-  Compiler compiler = Compiler();
+  Compiler compiler;
   compiler.Compile("print 1 + 2;");
   compiler.Compile("print 1 + 3;");
   compiler.Compile("print 1 + 2 * 10 - (2 + 3) * 6;");
@@ -94,7 +94,7 @@ TEST(Print, TestCompiler) {
 }
 
 TEST(GlobalVariable, TestCompiler) {
-  Compiler compiler = Compiler();
+  Compiler compiler;
   string source = R"(
     var xy = "aaaaaaaaa";
     print xy;
@@ -106,7 +106,7 @@ TEST(GlobalVariable, TestCompiler) {
 }
 
 TEST(StringAdd, TestCompiler) {
-  Compiler compiler = Compiler();
+  Compiler compiler;
   string source = R"(
     var xy = "aaaaaaaaa";
     var xx = xy + "bbbbbb";
