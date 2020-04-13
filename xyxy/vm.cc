@@ -218,7 +218,7 @@ Status VM::Run() {
         // Pop one value out from stack and assign it as the global variable.
         CHECK(!inst->operands_.empty());
         std::string var_name = inst->operands_[0].ToString();
-        VLOG(1) << "Define global: "  << var_name << " "
+        VLOG(1) << "Define global: " << var_name << " "
                 << stack_.Top().ToString();
         global_.Insert(var_name, stack_.Pop());
         break;
@@ -231,7 +231,7 @@ Status VM::Run() {
           // TODO(): Error handling
           CHECK(false);
         }
-        VLOG(1) << "Get global: "  << var_name << " " << val.ToString();
+        VLOG(1) << "Get global: " << var_name << " " << val.ToString();
         stack_.Push(val);
         break;
       }

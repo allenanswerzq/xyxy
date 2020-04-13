@@ -1,8 +1,7 @@
 #include "xyxy/stack.h"
 
-#include "xyxy/type.h"
 #include "gtest/gtest.h"
-
+#include "xyxy/type.h"
 
 namespace xyxy {
 

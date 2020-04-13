@@ -1,8 +1,8 @@
 #ifndef XYXY_TYPE_H_
 #define XYXY_TYPE_H_
 
-#include <cstring>
 #include <cassert>
+#include <cstring>
 
 #include "xyxy/object.h"
 

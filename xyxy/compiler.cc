@@ -6,8 +6,8 @@
 
 namespace xyxy {
 
-static PrecedenceRule CreateRule(ParseFunc prefix, ParseFunc infix, PrecOrder
-                                 order) {
+static PrecedenceRule CreateRule(ParseFunc prefix, ParseFunc infix,
+                                 PrecOrder order) {
   return PrecedenceRule{prefix, infix, order};
 }
 
