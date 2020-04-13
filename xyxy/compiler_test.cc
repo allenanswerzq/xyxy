@@ -90,7 +90,7 @@ TEST(MultipleStatement, TestCompiler) {
   EXPECT_TRUE(vm.GetStack().Empty());
 }
 
-TEST(GlobalVariable, TestCompiler) {
+TEST(GlobalVariableDefine, TestCompiler) {
   Compiler compiler;
   string source = R"(
     var xy = "aaaa";
@@ -115,6 +115,20 @@ TEST(StringAdd, TestCompiler) {
   VM vm(compiler.GetChunk());
   vm.Run();
   EXPECT_EQ(vm.FinalResult(), "aaaabbbb");
+  EXPECT_TRUE(vm.GetStack().Empty());
+}
+
+TEST(GlobalVariableSet, TestCompiler) {
+  Compiler compiler;
+  string source = R"(
+    var xy = "aaaa";
+    xy = "bbbb";
+    print xy;
+  )";
+  compiler.Compile(source);
+  VM vm(compiler.GetChunk());
+  vm.Run();
+  EXPECT_EQ(vm.FinalResult(), "bbbb");
   EXPECT_TRUE(vm.GetStack().Empty());
 }
 

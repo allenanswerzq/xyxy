@@ -6,6 +6,8 @@
 
 namespace xyxy {
 
+const int Inst::kDumpWidth = 30;
+
 std::string Inst::DebugInfo() {
   std::string ret;
   ret += name_;
@@ -126,6 +128,9 @@ std::string VM::DumpInsts() {
 }
 
 Status VM::Run() {
+  VLOG(1) << "---------------------------------------";
+  VLOG(1) << "\n" << DumpInsts();
+  VLOG(1) << "---------------------------------------\n\n";
   for (; pc_ < chunk_->size();) {
     auto inst = CreateInst(pc_);
     std::cout << inst->DebugInfo();
@@ -233,6 +238,19 @@ Status VM::Run() {
         }
         VLOG(1) << "Get global: " << var_name << " " << val.ToString();
         stack_.Push(val);
+        break;
+      }
+      case OP_SET_GLOBAL: {
+        CHECK(!inst->operands_.empty());
+        string var_name = inst->operands_[0].ToString();
+        if (!global_.Find(var_name)) {
+          // TODO(): Error handling
+          CHECK(false);
+        }
+        // Sets to a new value.
+        VLOG(1) << "Set global: " << var_name << " " << stack_.Top().ToString();
+        // NOTE: here we dont pop the value from stack.
+        global_.Insert(var_name, stack_.Top());
         break;
       }
       default: {

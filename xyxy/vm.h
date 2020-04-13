@@ -63,8 +63,6 @@ class Inst {
   std::vector<Value> operands_;
 };
 
-const int Inst::kDumpWidth = 30;
-
 class VM {
  public:
   explicit VM(Chunk* chunk);

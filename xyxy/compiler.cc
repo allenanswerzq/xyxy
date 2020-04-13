@@ -67,6 +67,31 @@ const std::unordered_map<int, PrecedenceRule>& Compiler::kPrecedenceTable =
         {TOKEN_EOF, CreateRule(&Compiler::ParseGrouping, nullptr, PREC_NONE)},
     });
 
+Compiler::Compiler() {
+  scanner_ = std::make_unique<Scanner>();
+  curr_ = Token{TOKEN_NONE, 0, 0, 0};
+  prev_ = Token{TOKEN_NONE, 0, 0, 0};
+  chunk_ = std::make_unique<Chunk>();
+}
+
+Compiler::Compiler(const string& source) {
+  scanner_ = std::make_unique<Scanner>(source);
+  curr_ = Token{TOKEN_NONE, 0, 0, 0};
+  prev_ = Token{TOKEN_NONE, 0, 0, 0};
+  chunk_ = std::make_unique<Chunk>();
+}
+
+void Compiler::Compile(const string& source_code) {
+  VLOG(1) << "Compiling: " << source_code;
+  scanner_->SetSource(source_code);
+  curr_ = Token{TOKEN_NONE, 0, 0, 0};
+  prev_ = Token{TOKEN_NONE, 0, 0, 0};
+  Advance();
+  while (!Match(TOKEN_EOF)) {
+    ParseDeclaration();
+  }
+}
+
 void Compiler::Advance() {
   prev_ = curr_;
   while (true) {
@@ -329,8 +354,16 @@ void Compiler::DefineVariable(uint8 global) {
 void Compiler::ParseVariable() {
   VLOG(1) << "Parsing variable...";
   uint8 arg = IdentifierConstant(GetLexeme(prev_));
-  VLOG(1) << "Emiting OP_GET_GLOBAL " << arg;
-  EmitByte(OP_GET_GLOBAL, arg);
+  if (Match(TOKEN_EQUAL)) {
+    // x = 1 + 2 + 3;
+    ParseExpression();
+    VLOG(1) << "Emiting OP_SET_GLOBAL " << arg;
+    EmitByte(OP_SET_GLOBAL, arg);
+  }
+  else {
+    VLOG(1) << "Emiting OP_GET_GLOBAL " << arg;
+    EmitByte(OP_GET_GLOBAL, arg);
+  }
 }
 
 // statement      -> exprStmt
@@ -357,10 +390,11 @@ void Compiler::ParsePrintStatement() {
   DEBUG_PARSER_EXIT();
 }
 
-// var_a = "xy";
 void Compiler::ParseExpressStatement() {
+  VLOG(1) << "Parsing expression statement...";
   ParseExpression();
   Consume(TOKEN_SEMICOLON, "Expect ';' after an expression.");
+  VLOG(1) << "Emiting OP_POP";
   EmitByte(OP_POP);
 }
 

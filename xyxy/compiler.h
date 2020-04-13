@@ -37,32 +37,11 @@ typedef struct {
 
 class Compiler {
  public:
-  Compiler() {
-    scanner_ = std::make_unique<Scanner>();
-    curr_ = Token{TOKEN_NONE, 0, 0, 0};
-    prev_ = Token{TOKEN_NONE, 0, 0, 0};
-    chunk_ = std::make_unique<Chunk>();
-  }
-
-  Compiler(const string& source) {
-    scanner_ = std::make_unique<Scanner>(source);
-    curr_ = Token{TOKEN_NONE, 0, 0, 0};
-    prev_ = Token{TOKEN_NONE, 0, 0, 0};
-    chunk_ = std::make_unique<Chunk>();
-  }
-
+  Compiler();
+  explicit Compiler(const string& source);
   virtual ~Compiler() = default;
 
-  void Compile(const string& source_code) {
-    VLOG(1) << "Compiling: " << source_code;
-    scanner_->SetSource(source_code);
-    curr_ = Token{TOKEN_NONE, 0, 0, 0};
-    prev_ = Token{TOKEN_NONE, 0, 0, 0};
-    Advance();
-    while (!Match(TOKEN_EOF)) {
-      ParseDeclaration();
-    }
-  }
+  void Compile(const string& source_code);
 
   void Advance();
   bool Match(TokenType type);
