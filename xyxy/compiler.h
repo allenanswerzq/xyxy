@@ -44,6 +44,13 @@ class Compiler {
     chunk_ = std::make_unique<Chunk>();
   }
 
+  Compiler(const string& source) {
+    scanner_ = std::make_unique<Scanner>(source);
+    curr_ = Token{TOKEN_NONE, 0, 0, 0};
+    prev_ = Token{TOKEN_NONE, 0, 0, 0};
+    chunk_ = std::make_unique<Chunk>();
+  }
+
   virtual ~Compiler() = default;
 
   void Compile(const string& source_code) {

@@ -108,7 +108,7 @@ std::unique_ptr<Inst> VM::CreateInst(uint8 offset) {
       double a = lhs.AsFloat();                                      \
       double b = rhs.AsFloat();                                      \
       stack_.Push(Value(a op b));                                    \
-      return Status();                                               \
+      break;                                                         \
     }                                                                \
     else {                                                           \
       return Status(RUNTIME_ERROR, "Unsupported binary operation."); \
@@ -135,6 +135,7 @@ Status VM::Run() {
       }
       case OP_CONSTANT: {
         CHECK(!inst->operands_.empty());
+        VLOG(1) << "Define constant: " << inst->operands_[0].ToString();
         stack_.Push(inst->operands_[0]);
         break;
       }
@@ -155,8 +156,9 @@ Status VM::Run() {
           }
           string a = lhs.AsString();
           string b = rhs.AsString();
-          a += b;
-          stack_.Push(Value(new ObjString(a)));
+          // NOTE: the order here must be `b + a`.
+          b += a;
+          stack_.Push(Value(new ObjString(b)));
         }
         else {
           BINARY_OP(+);
@@ -204,6 +206,7 @@ Status VM::Run() {
         break;
       }
       case OP_PRINT: {
+        final_print_ = stack_.Top().ToString();
         printf("%s\n", stack_.Pop().ToString().c_str());
         break;
       }
@@ -212,10 +215,12 @@ Status VM::Run() {
         break;
       }
       case OP_DEFINE_GLOBAL: {
+        // Pop one value out from stack and assign it as the global variable.
         CHECK(!inst->operands_.empty());
-        Value val = inst->operands_[0];
-        global_.Insert(val.ToString(), val);
-        stack_.Pop();
+        std::string var_name = inst->operands_[0].ToString();
+        VLOG(1) << "Define global: "  << var_name << " "
+                << stack_.Top().ToString();
+        global_.Insert(var_name, stack_.Pop());
         break;
       }
       case OP_GET_GLOBAL: {
@@ -226,6 +231,7 @@ Status VM::Run() {
           // TODO(): Error handling
           CHECK(false);
         }
+        VLOG(1) << "Get global: "  << var_name << " " << val.ToString();
         stack_.Push(val);
         break;
       }

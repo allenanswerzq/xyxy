@@ -1,6 +1,8 @@
 #ifndef XYXY_STACK_H_
 #define XYXY_STACK_H_
 
+#include <glog/logging.h>
+
 #include "xyxy/base.h"
 
 namespace xyxy {
@@ -35,7 +37,10 @@ class Stack {
     return *(--top_);
   }
 
-  T Top() { return *top_; }
+  T Top() {
+    assert(!Empty());
+    return *(top_ - 1);
+  }
 
  private:
   T* stk_;

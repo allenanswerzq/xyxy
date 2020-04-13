@@ -54,12 +54,16 @@ class Inst {
 
  protected:
   friend class VM;
-  const int kDumpWidth = 16;
+
+  static const int kDumpWidth;
+
   string name_;
   uint8 opcode_;
   uint8 length_;
   std::vector<Value> operands_;
 };
+
+const int Inst::kDumpWidth = 30;
 
 class VM {
  public:
@@ -75,6 +79,8 @@ class VM {
 
   std::string DumpInsts();
 
+  std::string FinalResult() { return final_print_; }
+
   Stack<Value, STACK_SIZE>& GetStack() { return stack_; }
 
   hash_table<string, Value>& GetGlobal() { return global_; }
@@ -82,6 +88,10 @@ class VM {
   uint32 PC() { return pc_; }
 
  private:
+  // A simple way to remember the last print result for verifying,
+  // TODO(): not only verfiy the final result, but also the intermediate
+  // execution result.
+  std::string final_print_;
   Chunk* chunk_;  // Not owned.
   // Virtual machine stack.
   Stack<Value, STACK_SIZE> stack_;
