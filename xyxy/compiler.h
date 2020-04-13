@@ -27,7 +27,7 @@ typedef enum {
 
 class Compiler;
 
-typedef std::function<void(Compiler*)> ParseFunc;
+typedef std::function<void(Compiler*, bool can_assign)> ParseFunc;
 
 typedef struct {
   ParseFunc prefix_rule;
@@ -64,17 +64,19 @@ class Compiler {
 
   void ParseDeclaration();
   void ParseVarDeclaration();
-  void ParseVariable();
+  void ParseVariable(bool can_assign);
   void ParseStatement();
   void ParsePrintStatement();
   void ParseExpressStatement();
-  void ParseNumber();
-  void ParseGrouping();
-  void ParseUnary();
-  void ParseBinary();
-  void ParseExpression();
-  void ParseLiteral();
-  void ParseString();
+  void ParseNumber(bool can_assign);
+  void ParseGrouping(bool can_assign);
+  void ParseUnary(bool can_assign);
+  void ParseBinary(bool can_assign);
+  void ParseExpression(bool can_assign);
+  void ParseLiteral(bool can_assign);
+  void ParseString(bool can_assign);
+
+  // Continue parsing until read a token that has a higher precedence.
   void ParseWithPrecedenceOrder(PrecOrder prec_order);
 
   string GetLexeme(Token tt);

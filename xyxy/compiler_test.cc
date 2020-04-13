@@ -132,4 +132,12 @@ TEST(GlobalVariableSet, TestCompiler) {
   EXPECT_TRUE(vm.GetStack().Empty());
 }
 
+TEST(Set, TestCompiler) {
+  Compiler compiler;
+  string source = R"(
+     a * b = c + d;
+  )";
+  // TODO(): Rewrite after add error handling code.
+  EXPECT_DEATH({ compiler.Compile(source); }, "");
+}
 }  // namespace xyxy

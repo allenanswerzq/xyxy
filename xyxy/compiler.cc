@@ -154,7 +154,7 @@ void Compiler::DebugParsing(const DebugParser& debug) {
           << "|   " << source;
 }
 
-void Compiler::ParseString() {
+void Compiler::ParseString(bool can_assign) {
   DEBUG_PARSER_ENTER("string");
 
   string str = scanner_->GetSource(prev_.start, prev_.start + prev_.length);
@@ -167,7 +167,7 @@ void Compiler::ParseString() {
 
 string Compiler::GetLexeme(Token tt) { return scanner_->GetLexeme(tt); }
 
-void Compiler::ParseNumber() {
+void Compiler::ParseNumber(bool can_assign) {
   DEBUG_PARSER_ENTER("number");
 
   double val = strtod(GetLexeme(prev_).c_str(), nullptr);
@@ -176,7 +176,7 @@ void Compiler::ParseNumber() {
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::ParseExpression() {
+void Compiler::ParseExpression(bool can_assign) {
   DEBUG_PARSER_ENTER("expression");
 
   ParseWithPrecedenceOrder(PREC_ASSIGNMENT);
@@ -184,16 +184,16 @@ void Compiler::ParseExpression() {
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::ParseGrouping() {
+void Compiler::ParseGrouping(bool can_assign) {
   DEBUG_PARSER_ENTER("group");
 
-  ParseExpression();
+  ParseExpression(can_assign);
   Consume(TOKEN_RIGHT_PAREN, "Expect ')' after ParseExpression.");
 
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::ParseUnary() {
+void Compiler::ParseUnary(bool can_assign) {
   DEBUG_PARSER_ENTER("unary");
 
   TokenType op_type = prev_.type;
@@ -213,7 +213,7 @@ void Compiler::ParseUnary() {
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::ParseBinary() {
+void Compiler::ParseBinary(bool can_assign) {
   DEBUG_PARSER_ENTER("binary");
 
   TokenType op_type = prev_.type;
@@ -259,7 +259,7 @@ void Compiler::ParseBinary() {
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::ParseLiteral() {
+void Compiler::ParseLiteral(bool can_assign) {
   DEBUG_PARSER_ENTER("literal");
 
   switch (prev_.type) {
@@ -280,8 +280,8 @@ void Compiler::ParseLiteral() {
   DEBUG_PARSER_EXIT();
 }
 
-void Compiler::ParseWithPrecedenceOrder(PrecOrder prec_order) {
-  DEBUG_PARSER_ENTER("prec_order");
+void Compiler::ParseWithPrecedenceOrder(PrecOrder order) {
+  DEBUG_PARSER_ENTER("precedence order");
 
   Advance();
 
@@ -289,12 +289,19 @@ void Compiler::ParseWithPrecedenceOrder(PrecOrder prec_order) {
   ParseFunc prefix_rule = rule.prefix_rule;
   CHECK(prefix_rule);
 
-  prefix_rule(this);
+  bool can_assign = order <= PREC_ASSIGNMENT;
+  prefix_rule(this, can_assign);
 
-  while (GetRule(curr_.type).prec_order >= prec_order) {
+  while (GetRule(curr_.type).prec_order >= order) {
     Advance();
     ParseFunc infix_rule = GetRule(prev_.type).infix_rule;
-    infix_rule(this);
+    infix_rule(this, can_assign);
+  }
+
+  // NOTE: further research on this.
+  if (can_assign && Match(TOKEN_EQUAL)) {
+    // TODO(): Error handling.
+    CHECK(false) << "Invalid assignment target";
   }
 
   DEBUG_PARSER_EXIT();
@@ -335,7 +342,7 @@ void Compiler::ParseVarDeclaration() {
   Consume(TOKEN_IDENTIFIER, "Expect variable name.");
   uint8 global = IdentifierConstant(GetLexeme(prev_));
   if (Match(TOKEN_EQUAL)) {
-    ParseExpression();
+    ParseExpression(/*can_assign=*/false);
   }
   else {
     // By default, assign a variable to NILL;
@@ -351,12 +358,11 @@ void Compiler::DefineVariable(uint8 global) {
   EmitByte(OP_DEFINE_GLOBAL, global);
 }
 
-void Compiler::ParseVariable() {
+void Compiler::ParseVariable(bool can_assign) {
   VLOG(1) << "Parsing variable...";
   uint8 arg = IdentifierConstant(GetLexeme(prev_));
-  if (Match(TOKEN_EQUAL)) {
-    // x = 1 + 2 + 3;
-    ParseExpression();
+  if (can_assign && Match(TOKEN_EQUAL)) {
+    ParseExpression(can_assign);
     VLOG(1) << "Emiting OP_SET_GLOBAL " << arg;
     EmitByte(OP_SET_GLOBAL, arg);
   }
@@ -383,7 +389,7 @@ void Compiler::ParseStatement() {
 void Compiler::ParsePrintStatement() {
   VLOG(1) << "Parsing print...";
   DEBUG_PARSER_ENTER("print");
-  ParseExpression();
+  ParseExpression(/*can_assign=*/false);
   Consume(TOKEN_SEMICOLON, "Expect ';' after a value.");
   VLOG(1) << "Emiting OP_PRINT";
   EmitByte(OP_PRINT);
@@ -392,7 +398,7 @@ void Compiler::ParsePrintStatement() {
 
 void Compiler::ParseExpressStatement() {
   VLOG(1) << "Parsing expression statement...";
-  ParseExpression();
+  ParseExpression(/*can_assign=*/false);
   Consume(TOKEN_SEMICOLON, "Expect ';' after an expression.");
   VLOG(1) << "Emiting OP_POP";
   EmitByte(OP_POP);
