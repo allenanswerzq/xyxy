@@ -90,4 +90,19 @@ TEST(Nil, TestScanner) {
   // EXPECT_TRUE(sc.AtEnd());
 }
 
+TEST(TokenEqual, TestToken) {
+  Token a, b;
+  EXPECT_TRUE(a == b);
+  // EXPECT_EQ(a, b);
+
+  Token c{TOKEN_LESS, 0, 1, 2};
+  Token d{TOKEN_LESS, 0, 1, 2};
+  EXPECT_TRUE(c == d);
+  // EXPECT_EQ(c, d);
+
+  Token e{TOKEN_LESS, 0, 1, 2};
+  Token f{TOKEN_EOF, 0, 1, 2};
+  EXPECT_TRUE(e != f);
+}
+
 }  // namespace xyxy

@@ -45,4 +45,25 @@ TEST(PushDeath, TestStack) {
   }
 }
 
+TEST(Get, TestStack) {
+  const int N = 16;
+  Stack<int, N> stk;
+  for (size_t i = 0; i < N; i++) {
+    stk.Push(i);
+  }
+  for (size_t i = 0; i < N; i++) {
+    EXPECT_EQ(stk.Get(i), i);
+  }
+}
+
+TEST(SET, TestStack) {
+  const int N = 16;
+  Stack<int, N> stk;
+  for (size_t i = 0; i < N; i++) {
+    stk.Set(i, i);
+  }
+  for (size_t i = 0; i < N; i++) {
+    EXPECT_EQ(stk.Get(i), i);
+  }
+}
 }  // namespace xyxy

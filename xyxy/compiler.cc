@@ -1,5 +1,6 @@
 #include "xyxy/compiler.h"
 
+#include "xyxy/logging.h"
 #include "xyxy/object.h"
 #include "xyxy/scanner.h"
 #include "xyxy/vm.h"
@@ -67,6 +68,8 @@ const std::unordered_map<int, PrecedenceRule>& Compiler::kPrecedenceTable =
         {TOKEN_EOF, CreateRule(&Compiler::ParseGrouping, nullptr, PREC_NONE)},
     });
 
+const int Compiler::kLocalUnitialized = -1;
+
 Compiler::Compiler() {
   scanner_ = std::make_unique<Scanner>();
   curr_ = Token{TOKEN_NONE, 0, 0, 0};
@@ -82,7 +85,7 @@ Compiler::Compiler(const string& source) {
 }
 
 void Compiler::Compile(const string& source_code) {
-  VLOG(1) << "Compiling: " << source_code;
+  LOGvvv << "Compiling: " << source_code;
   scanner_->SetSource(source_code);
   curr_ = Token{TOKEN_NONE, 0, 0, 0};
   prev_ = Token{TOKEN_NONE, 0, 0, 0};
@@ -96,8 +99,8 @@ void Compiler::Advance() {
   prev_ = curr_;
   while (true) {
     curr_ = scanner_->ScanToken();
-    VLOG(1) << "ScanToken: | Curr: " << GetLexeme(curr_)
-            << " | Prev: " << GetLexeme(prev_);
+    LOGvvv << "ScanToken: | Curr: " << GetLexeme(curr_)
+           << " | Prev: " << GetLexeme(prev_);
     if (curr_.type != TOKEN_ERROR) {
       break;
     }
@@ -113,7 +116,7 @@ void Compiler::Consume(TokenType type, const string& msg) {
 void Compiler::EmitByte(uint8 byte) { GetChunk()->Write(byte, prev_.line); }
 
 void Compiler::EmitReturn() {
-  VLOG(1) << "Emiting OP_RETURN";
+  LOGrrr << "Emiting OP_RETURN";
   EmitByte(OP_RETURN);
 }
 
@@ -130,72 +133,34 @@ int Compiler::MakeConstant(Value val) {
 }
 
 void Compiler::EmitConstant(Value val) {
-  VLOG(1) << "Emiting OP_CONSTANT: " << val.ToString();
+  LOGrrr << "Emiting OP_CONSTANT: " << val.ToString();
   EmitByte(OP_CONSTANT, MakeConstant(val));
 }
 
-#define DEBUG_PARSER_ENTER(type)      \
-  DebugParser debug;                  \
-  debug.enter_pos = prev_.start;      \
-  debug.parse_depth = parse_depth_++; \
-  debug.msg = type
-
-#define DEBUG_PARSER_EXIT()                    \
-  debug.exit_pos = prev_.start + prev_.length; \
-  parse_depth_--;                              \
-  DebugParsing(debug)
-
-// TODO(zq7): Make debug drawing looks more beautiful.
-void Compiler::DebugParsing(const DebugParser& debug) {
-  string prefix(debug.parse_depth * 3, '-');
-  CHECK(debug.enter_pos < debug.exit_pos);
-  string source = scanner_->GetSource(debug.enter_pos, debug.exit_pos);
-  VLOG(1) << prefix << debug.msg << "--" << std::to_string(debug.parse_depth)
-          << "|   " << source;
-}
-
 void Compiler::ParseString(bool can_assign) {
-  DEBUG_PARSER_ENTER("string");
-
   string str = scanner_->GetSource(prev_.start, prev_.start + prev_.length);
   int n = str.size();
   CHECK(n >= 2);
   EmitConstant(Value(new ObjString(str.substr(1, n - 2))));
-
-  DEBUG_PARSER_EXIT();
 }
 
 string Compiler::GetLexeme(Token tt) { return scanner_->GetLexeme(tt); }
 
 void Compiler::ParseNumber(bool can_assign) {
-  DEBUG_PARSER_ENTER("number");
-
   double val = strtod(GetLexeme(prev_).c_str(), nullptr);
   EmitConstant(Value(val));
-
-  DEBUG_PARSER_EXIT();
 }
 
 void Compiler::ParseExpression(bool can_assign) {
-  DEBUG_PARSER_ENTER("expression");
-
   ParseWithPrecedenceOrder(PREC_ASSIGNMENT);
-
-  DEBUG_PARSER_EXIT();
 }
 
 void Compiler::ParseGrouping(bool can_assign) {
-  DEBUG_PARSER_ENTER("group");
-
   ParseExpression(can_assign);
   Consume(TOKEN_RIGHT_PAREN, "Expect ')' after ParseExpression.");
-
-  DEBUG_PARSER_EXIT();
 }
 
 void Compiler::ParseUnary(bool can_assign) {
-  DEBUG_PARSER_ENTER("unary");
-
   TokenType op_type = prev_.type;
   ParseWithPrecedenceOrder(PREC_UNARY);
   switch (op_type) {
@@ -209,19 +174,15 @@ void Compiler::ParseUnary(bool can_assign) {
       CHECK(false) << "Unreachable.";
       break;
   }
-
-  DEBUG_PARSER_EXIT();
 }
 
 void Compiler::ParseBinary(bool can_assign) {
-  DEBUG_PARSER_ENTER("binary");
-
   TokenType op_type = prev_.type;
   PrecedenceRule rule = GetRule(op_type);
   ParseWithPrecedenceOrder(PrecOrder(rule.prec_order + 1));
   switch (op_type) {
     case TOKEN_PLUS:
-      VLOG(1) << "Emiting OP_ADD";
+      LOGrrr << "Emiting OP_ADD";
       EmitByte(OP_ADD);
       break;
     case TOKEN_MINUS:
@@ -255,13 +216,9 @@ void Compiler::ParseBinary(bool can_assign) {
       CHECK(false) << "Unrecogined token: " << op_type;
       break;
   }
-
-  DEBUG_PARSER_EXIT();
 }
 
 void Compiler::ParseLiteral(bool can_assign) {
-  DEBUG_PARSER_ENTER("literal");
-
   switch (prev_.type) {
     case TOKEN_FALSE:
       EmitByte(OP_FALSE);
@@ -276,13 +233,9 @@ void Compiler::ParseLiteral(bool can_assign) {
       CHECK(false) << "Unreachable.";
       break;
   }
-
-  DEBUG_PARSER_EXIT();
 }
 
 void Compiler::ParseWithPrecedenceOrder(PrecOrder order) {
-  DEBUG_PARSER_ENTER("precedence order");
-
   Advance();
 
   auto rule = GetRule(prev_.type);
@@ -303,8 +256,6 @@ void Compiler::ParseWithPrecedenceOrder(PrecOrder order) {
     // TODO(): Error handling.
     CHECK(false) << "Invalid assignment target";
   }
-
-  DEBUG_PARSER_EXIT();
 }
 
 bool Compiler::CheckType(TokenType type) { return curr_.type == type; }
@@ -320,27 +271,54 @@ bool Compiler::Match(TokenType type) {
 // declaration    -> varDecl
 //                | statement ;
 void Compiler::ParseDeclaration() {
-  VLOG(1) << "Parsing declaration...";
-  DEBUG_PARSER_ENTER("declaration");
+  LOGvvv << "Parsing declaration...";
+
   if (Match(TOKEN_VAR)) {
     ParseVarDeclaration();
   }
   else {
     ParseStatement();
   }
-
-  // TODO(): Error handling.
-  DEBUG_PARSER_EXIT();
 }
 
 uint8 Compiler::IdentifierConstant(const string& name) {
   return MakeConstant(Value(new ObjString(name)));
 }
 
+uint8 Compiler::HandleVariable(const string& msg) {
+  Consume(TOKEN_IDENTIFIER, msg);
+
+  DeclareLocals();
+  if (scope_depth_ > 0) return 0;
+
+  return IdentifierConstant(GetLexeme(prev_));
+}
+
+void Compiler::DeclareLocals() {
+  // If we are at the global scope, do nothing.
+  if (scope_depth_ == 0) return;
+
+  if (locals_.size() >= UINT8_MAX) {
+    CHECK(false) << "Too many local variables defined";
+  }
+  for (size_t i = locals_.size(); i >= 1; i--) {
+    if (locals_[i - 1].depth != kLocalUnitialized &&
+        locals_[i - 1].depth < scope_depth_) {
+      break;
+    }
+    if (prev_ == locals_[i].token) {
+      CHECK(false) << "Variable with the name `" << GetLexeme(prev_)
+                   << "` already defined in this scope.";
+    }
+  }
+  LOGrrr << "New local variable: " << GetLexeme(prev_);
+  locals_.push_back(LocalDef{prev_, kLocalUnitialized, GetLexeme(prev_)});
+}
+
 void Compiler::ParseVarDeclaration() {
-  VLOG(1) << "Parsing var declaration...";
-  Consume(TOKEN_IDENTIFIER, "Expect variable name.");
-  uint8 global = IdentifierConstant(GetLexeme(prev_));
+  LOGvvv << "Parsing var declaration...";
+
+  uint8 global = HandleVariable("Expect variable name");
   if (Match(TOKEN_EQUAL)) {
     ParseExpression(/*can_assign=*/false);
   }
@@ -354,53 +332,126 @@ void Compiler::ParseVarDeclaration() {
 }
 
 void Compiler::DefineVariable(uint8 global) {
-  VLOG(1) << "Emiting OP_DEFINE_GLOBAL " << global;
-  EmitByte(OP_DEFINE_GLOBAL, global);
+  if (scope_depth_ > 0) {
+    // Mark the local variable as initialized.
+    CHECK(!locals_.empty());
+    LOGrrr << "Initializing local variable: " << locals_.back().name;
+    locals_.back().depth = scope_depth_;
+  }
+  else {
+    // This is a global variable.
+    LOGrrr << "Emiting OP_DEFINE_GLOBAL " << global;
+    EmitByte(OP_DEFINE_GLOBAL, global);
+  }
+}
+
+bool Compiler::ResolveLocal(const std::string& name, uint8* arg) {
+  for (size_t i = locals_.size(); i >= 1; i--) {
+    if (locals_[i - 1].name == name) {
+      if (locals_[i - 1].depth == kLocalUnitialized) {
+        CHECK(false) << "Cannot read local variable in its own initializer.";
+      }
+      *arg = i;
+      return true;
+    }
+  }
+  return false;
 }
 
 void Compiler::ParseVariable(bool can_assign) {
-  VLOG(1) << "Parsing variable...";
-  uint8 arg = IdentifierConstant(GetLexeme(prev_));
-  if (can_assign && Match(TOKEN_EQUAL)) {
-    ParseExpression(can_assign);
-    VLOG(1) << "Emiting OP_SET_GLOBAL " << arg;
-    EmitByte(OP_SET_GLOBAL, arg);
+  LOGvvv << "Parsing variable...";
+  NamedVariable(can_assign);
+}
+
+void Compiler::NamedVariable(bool can_assign) {
+  uint8 arg = 0;
+  uint8 set_op = 0;
+  uint8 get_op = 0;
+  std::string name = GetLexeme(prev_);
+  if (ResolveLocal(name, &arg)) {
+    // If the prev_ is a local variable.
+    LOGvvv << "Find the local variable: " << name;
+    set_op = OP_SET_LOCAL;
+    get_op = OP_GET_LOCAL;
   }
   else {
-    VLOG(1) << "Emiting OP_GET_GLOBAL " << arg;
-    EmitByte(OP_GET_GLOBAL, arg);
+    arg = IdentifierConstant(name);
+    set_op = OP_SET_GLOBAL;
+    get_op = OP_GET_GLOBAL;
+  }
+
+  if (can_assign && Match(TOKEN_EQUAL)) {
+    ParseExpression(can_assign);
+    LOGrrr << "Emiting "
+           << (set_op == OP_SET_LOCAL ? "OP_SET_LOCAL" : "OP_SET_GLOBAL") << " "
+           << name;
+    EmitByte(set_op, arg);
+  }
+  else {
+    LOGrrr << "Emiting "
+           << (get_op == OP_GET_LOCAL ? "OP_GET_LOCAL" : "OP_GET_GLOBAL") << " "
+           << name;
+    EmitByte(get_op, arg);
   }
 }
 
-// statement      -> exprStmt
-//                | printStmt ;
+// statement     ->  exprStmt
+//               |   printStmt
+//               |   block ;
+// block         ->  "{" declaration* "}"
 void Compiler::ParseStatement() {
-  VLOG(1) << "Parsing statement...";
+  LOGvvv << "Parsing statement...";
   if (Match(TOKEN_PRINT)) {
-    DEBUG_PARSER_ENTER("statement");
     ParsePrintStatement();
-    DEBUG_PARSER_EXIT();
+  }
+  else if (Match(TOKEN_LEFT_BRACE)) {
+    BeginScope();
+    ParseBlock();
+    EndScope();
   }
   else {
     ParseExpressStatement();
   }
 }
 
+void Compiler::BeginScope() { scope_depth_++; }
+
+void Compiler::EndScope() {
+  scope_depth_--;
+  // Remove all the local varibles that are out of its scope.
+  while (!locals_.empty() && locals_.back().depth > scope_depth_) {
+    LOGrrr << "Emiting OP_POP";
+    EmitByte(OP_POP);
+    locals_.pop_back();
+  }
+}
+
+void Compiler::ParseBlock() {
+  LOGvvv << "Parsing {...";
+
+  while (!CheckType(TOKEN_RIGHT_BRACE) && !CheckType(TOKEN_EOF)) {
+    ParseDeclaration();
+  }
+  Consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");
+}
+
 void Compiler::ParsePrintStatement() {
-  VLOG(1) << "Parsing print...";
-  DEBUG_PARSER_ENTER("print");
+  LOGvvv << "Parsing print...";
+
   ParseExpression(/*can_assign=*/false);
   Consume(TOKEN_SEMICOLON, "Expect ';' after a value.");
-  VLOG(1) << "Emiting OP_PRINT";
+
+  LOGrrr << "Emiting OP_PRINT";
   EmitByte(OP_PRINT);
-  DEBUG_PARSER_EXIT();
 }
 
 void Compiler::ParseExpressStatement() {
-  VLOG(1) << "Parsing expression statement...";
+  LOGvvv << "Parsing expression statement...";
+
   ParseExpression(/*can_assign=*/false);
   Consume(TOKEN_SEMICOLON, "Expect ';' after an expression.");
-  VLOG(1) << "Emiting OP_POP";
+
+  LOGrrr << "Emiting OP_POP";
   EmitByte(OP_POP);
 }
 

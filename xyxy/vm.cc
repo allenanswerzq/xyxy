@@ -1,14 +1,13 @@
 #include "xyxy/vm.h"
 
-#include <glog/logging.h>
-
+#include "xyxy/logging.h"
 #include "xyxy/type.h"
 
 namespace xyxy {
 
 const int Inst::kDumpWidth = 30;
 
-std::string Inst::DebugInfo() {
+void Inst::DebugInfo() {
   std::string ret;
   ret += name_;
   ret += string(kDumpWidth - name_.size(), ' ');
@@ -16,8 +15,7 @@ std::string Inst::DebugInfo() {
     Value val = operands_[i];
     ret += val.ToString();
   }
-  ret += "\n";
-  return ret;
+  LOGvv << ret;
 }
 
 #define DEFINE_INST(opcode, length) DEFINE_INST_HELPER(#opcode, opcode, length)
@@ -51,6 +49,8 @@ DEFINE_INST(OP_POP, 1)
 DEFINE_INST(OP_DEFINE_GLOBAL, 2)
 DEFINE_INST(OP_SET_GLOBAL, 2)
 DEFINE_INST(OP_GET_GLOBAL, 2)
+DEFINE_INST(OP_SET_LOCAL, 2)
+DEFINE_INST(OP_GET_LOCAL, 2)
 
 VM::VM(Chunk* chunk) : chunk_(chunk) { pc_ = 0; }
 
@@ -80,6 +80,8 @@ static std::unique_ptr<Inst> DispatchInst(uint8 opcode) {
     CREATE_INST_INSTANCE(OP_DEFINE_GLOBAL)
     CREATE_INST_INSTANCE(OP_SET_GLOBAL)
     CREATE_INST_INSTANCE(OP_GET_GLOBAL)
+    CREATE_INST_INSTANCE(OP_SET_LOCAL)
+    CREATE_INST_INSTANCE(OP_GET_LOCAL)
     default: {
       CHECK(false);
       break;
@@ -91,10 +93,15 @@ static std::unique_ptr<Inst> DispatchInst(uint8 opcode) {
 std::unique_ptr<Inst> VM::CreateInst(uint8 offset) {
   OpCode byte = (OpCode)chunk_->GetByte(offset);
   auto inst = DispatchInst(byte);
-  for (int i = 1; i <= inst->Length() - 1; i++) {
-    int index = chunk_->GetByte(offset + i);
-    Value val = chunk_->GetConstant(index);
-    inst->AddOperand(val);
+  if (byte == OP_SET_LOCAL || byte == OP_GET_LOCAL) {
+    inst->metadata_.push_back(chunk_->GetByte(offset + 1));
+  }
+  else {
+    for (int i = 1; i <= inst->Length() - 1; i++) {
+      int index = chunk_->GetByte(offset + i);
+      Value val = chunk_->GetConstant(index);
+      inst->AddOperand(val);
+    }
   }
   return inst;
 }
@@ -117,30 +124,28 @@ std::unique_ptr<Inst> VM::CreateInst(uint8 offset) {
     }                                                                \
   } while (false)
 
-std::string VM::DumpInsts() {
-  std::string ret;
+void VM::DumpInsts() {
+  LOGvv << "-------------RAW INSTS------------------";
   for (int pc = 0; pc < chunk_->size();) {
     auto inst = CreateInst(pc);
-    ret += inst->DebugInfo();
+    inst->DebugInfo();
     pc += inst->Length();
   }
-  return ret;
+  LOGvv << "---------------------------------------";
 }
 
 Status VM::Run() {
-  VLOG(1) << "---------------------------------------";
-  VLOG(1) << "\n" << DumpInsts();
-  VLOG(1) << "---------------------------------------\n\n";
+  DumpInsts();
   for (; pc_ < chunk_->size();) {
     auto inst = CreateInst(pc_);
-    std::cout << inst->DebugInfo();
+    inst->DebugInfo();
     switch (inst->opcode_) {
       case OP_RETURN: {
         break;
       }
       case OP_CONSTANT: {
         CHECK(!inst->operands_.empty());
-        VLOG(1) << "Define constant: " << inst->operands_[0].ToString();
+        LOGvv << "Define constant: " << inst->operands_[0].ToString();
         stack_.Push(inst->operands_[0]);
         break;
       }
@@ -223,8 +228,8 @@ Status VM::Run() {
         // Pop one value out from stack and assign it as the global variable.
         CHECK(!inst->operands_.empty());
         std::string var_name = inst->operands_[0].ToString();
-        VLOG(1) << "Define global: " << var_name << " "
-                << stack_.Top().ToString();
+        LOGvv << "Define global: " << var_name << " "
+              << stack_.Top().ToString();
         global_.Insert(var_name, stack_.Pop());
         break;
       }
@@ -236,7 +241,7 @@ Status VM::Run() {
           // TODO(): Error handling
           CHECK(false);
         }
-        VLOG(1) << "Get global: " << var_name << " " << val.ToString();
+        LOGvv << "Get global: " << var_name << " " << val.ToString();
         stack_.Push(val);
         break;
       }
@@ -248,9 +253,26 @@ Status VM::Run() {
           CHECK(false);
         }
         // Sets to a new value.
-        VLOG(1) << "Set global: " << var_name << " " << stack_.Top().ToString();
+        LOGvv << "Set global: " << var_name << " " << stack_.Top().ToString();
         // NOTE: here we dont pop the value from stack.
         global_.Insert(var_name, stack_.Top());
+        break;
+      }
+      case OP_GET_LOCAL: {
+        CHECK(!inst->metadata_.empty());
+        uint8 slot = inst->metadata_[0];
+        LOGvv << "Get local: " << stack_.Get(slot).ToString();
+        stack_.Push(stack_.Get(slot));
+        break;
+      }
+      case OP_SET_LOCAL: {
+        // NOTE: the stack must be empty before we set a local variable.
+        CHECK(stack_.Empty());
+        CHECK(!inst->metadata_.empty());
+        uint8 slot = inst->metadata_[0];
+        // NOTE: here we dont pop the value from stack.
+        LOGvv << "Set local: " << stack_.Top().ToString();
+        stack_.Set(slot, stack_.Top());
         break;
       }
       default: {

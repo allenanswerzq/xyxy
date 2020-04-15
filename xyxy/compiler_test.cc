@@ -71,13 +71,18 @@ TEST(Basic, TestCompiler) {
   EXPECT_TRUE(vm.GetStack().Empty());
 }
 
-TEST(SingleStatement, TestCompiler) {
-  Compiler compiler;
-  compiler.Compile("print 1 + 2;");
-  VM vm(compiler.GetChunk());
-  vm.Run();
-  EXPECT_EQ(vm.FinalResult(), "3.000000");
+#define COMPILE_AND_RUN(source, result) \
+  Compiler compiler;                    \
+  compiler.Compile(source);             \
+  VM vm(compiler.GetChunk());           \
+  vm.Run();                             \
+  EXPECT_EQ(vm.FinalResult(), result);  \
   EXPECT_TRUE(vm.GetStack().Empty());
+
+// clang-format off
+
+TEST(SingleStatement, TestCompiler) {
+  COMPILE_AND_RUN("print 1 + 2;", "3.000000")
 }
 
 TEST(MultipleStatement, TestCompiler) {
@@ -87,49 +92,43 @@ TEST(MultipleStatement, TestCompiler) {
   compiler.Compile("print 1 + 2 * 10 - (2 + 3) * 6;");
   VM vm(compiler.GetChunk());
   vm.Run();
+  EXPECT_EQ(vm.FinalResult(), "9.000000");
   EXPECT_TRUE(vm.GetStack().Empty());
 }
 
-TEST(GlobalVariableDefine, TestCompiler) {
-  Compiler compiler;
-  string source = R"(
+TEST(GlobalDef0, TestCompiler) {
+  COMPILE_AND_RUN(R"(
     var xy = "aaaa";
     print xy;
-  )";
-  compiler.Compile(source);
-  VM vm(compiler.GetChunk());
-  vm.Run();
-  EXPECT_EQ(vm.FinalResult(), "aaaa");
-  EXPECT_TRUE(vm.GetStack().Empty());
+  )", "aaaa")
+}
+
+
+TEST(GlobalDef1, TestCompiler) {
+  COMPILE_AND_RUN(R"(
+    var a = 1;
+    var b = 2;
+    var c = 3;
+    var d = a + b + c;
+    print d;
+  )", "6.000000");
 }
 
 TEST(StringAdd, TestCompiler) {
-  Compiler compiler;
-  string source = R"(
+  COMPILE_AND_RUN(R"(
     var xy = "aaaa";
     var xx = xy + "bbbb";
     print xy;
     print xx;
-  )";
-  compiler.Compile(source);
-  VM vm(compiler.GetChunk());
-  vm.Run();
-  EXPECT_EQ(vm.FinalResult(), "aaaabbbb");
-  EXPECT_TRUE(vm.GetStack().Empty());
+  )", "aaaabbbb")
 }
 
-TEST(GlobalVariableSet, TestCompiler) {
-  Compiler compiler;
-  string source = R"(
+TEST(GlobalSet, TestCompiler) {
+  COMPILE_AND_RUN(R"(
     var xy = "aaaa";
     xy = "bbbb";
     print xy;
-  )";
-  compiler.Compile(source);
-  VM vm(compiler.GetChunk());
-  vm.Run();
-  EXPECT_EQ(vm.FinalResult(), "bbbb");
-  EXPECT_TRUE(vm.GetStack().Empty());
+  )", "bbbb");
 }
 
 TEST(Set, TestCompiler) {
@@ -140,4 +139,68 @@ TEST(Set, TestCompiler) {
   // TODO(): Rewrite after add error handling code.
   EXPECT_DEATH({ compiler.Compile(source); }, "");
 }
+
+TEST(LocalDef0, TestCompiler) {
+  COMPILE_AND_RUN(R"(
+    {
+      var a = 1;
+      {
+        var b = 2;
+        {
+          var c = 3;
+          var d = a + b + c;
+          print d;
+        }
+      }
+    }
+  )", "6.000000")
+}
+
+// TEST(LocalDefSame, TestCompiler) {
+//   Compiler compiler;
+//   string source = R"(
+//     {
+//       var a = "first";
+//       var a = "second";
+//     }
+//   )";
+//   compiler.Compile(source);
+//   VM vm(compiler.GetChunk());
+//   vm.Run();
+//   EXPECT_TRUE(vm.GetStack().Empty());
+// }
+
+// TEST(LocalDef1, TestCompiler) {
+//   Compiler compiler;
+//   string source = R"(
+//     {
+//       var a = "outer";
+//       {
+//         var a = a;
+//       }
+//     }
+//   )";
+//   compiler.Compile(source);
+//   VM vm(compiler.GetChunk());
+//   vm.Run();
+//   EXPECT_TRUE(vm.GetStack().Empty());
+// }
+
+// TEST(LocalDef2, TestCompiler) {
+//   Compiler compiler;
+//   string source = R"(
+//     {
+//       var a = "outer";
+//       {
+//         var a = "inner";
+//       }
+//     }
+//   )";
+//   compiler.Compile(source);
+//   VM vm(compiler.GetChunk());
+//   vm.Run();
+//   EXPECT_TRUE(vm.GetStack().Empty());
+// }
+// clang-format on
+
 }  // namespace xyxy

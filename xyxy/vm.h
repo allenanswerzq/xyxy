@@ -30,6 +30,8 @@ typedef enum {
   OP_DEFINE_GLOBAL,
   OP_SET_GLOBAL,
   OP_GET_GLOBAL,
+  OP_GET_LOCAL,
+  OP_SET_LOCAL,
 } OpCode;
 
 // Forward declaration.
@@ -44,7 +46,7 @@ class Inst {
 
   uint8 Length() { return length_; }
 
-  std::string DebugInfo();
+  void DebugInfo();
 
   uint8 Opcode() { return opcode_; }
 
@@ -54,13 +56,14 @@ class Inst {
 
  protected:
   friend class VM;
-
   static const int kDumpWidth;
-
   string name_;
   uint8 opcode_;
   uint8 length_;
   std::vector<Value> operands_;
+  // Stores some meta data to use.
+  // TODO(): may make this into a class.
+  std::vector<uint8> metadata_;
 };
 
 class VM {
@@ -75,7 +78,7 @@ class VM {
 
   Chunk* GetChunk() { return chunk_; }
 
-  std::string DumpInsts();
+  void DumpInsts();
 
   std::string FinalResult() { return final_print_; }
 

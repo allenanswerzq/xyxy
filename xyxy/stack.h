@@ -32,6 +32,16 @@ class Stack {
     *top_++ = value;
   }
 
+  T Get(int idx) {
+    assert(idx < N);
+    return *(stk_ + idx);
+  }
+
+  void Set(int idx, const T& val) {
+    assert(idx < N);
+    *(stk_ + idx) = val;
+  }
+
   T Pop() {
     assert(!Empty());
     return *(--top_);

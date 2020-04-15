@@ -65,6 +65,7 @@ class Compiler {
   void ParseDeclaration();
   void ParseVarDeclaration();
   void ParseVariable(bool can_assign);
+  void NamedVariable(bool can_assign);
   void ParseStatement();
   void ParsePrintStatement();
   void ParseExpressStatement();
@@ -75,6 +76,12 @@ class Compiler {
   void ParseExpression(bool can_assign);
   void ParseLiteral(bool can_assign);
   void ParseString(bool can_assign);
+  void ParseBlock();
+  void BeginScope();
+  void EndScope();
+  void DeclareLocals();
+  bool ResolveLocal(const std::string& name, uint8* arg);
+  uint8 HandleVariable(const string& msg);
 
   // Continue parsing until read a token that has a higher precedence.
   void ParseWithPrecedenceOrder(PrecOrder prec_order);
@@ -94,23 +101,24 @@ class Compiler {
     return it->second;
   }
 
-  struct DebugParser {
-    int parse_depth = 0;
-    int enter_pos;
-    int exit_pos;
-    string msg;
+  // Local variable defition.
+  struct LocalDef {
+    Token token;
+    int depth;
+    string name;
   };
 
-  void DebugParsing(const DebugParser& debug);
+  static const int kLocalUnitialized;
 
  private:
+  std::vector<LocalDef> locals_;
+  int scope_depth_ = 0;
   Token curr_;
   Token prev_;
   std::unique_ptr<Chunk> chunk_;
   std::unique_ptr<Scanner> scanner_;
-  bool has_error_ = false;
-  bool panic_mode_ = false;
-  int parse_depth_ = 1;
+  // bool has_error_ = false;
+  // bool panic_mode_ = false;
 };
 }  // namespace xyxy
 

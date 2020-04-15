@@ -46,11 +46,9 @@ struct NewLogMessage : LogMessage {
 
   ~NewLogMessage() { stream() << kColors[(size_t)ColorType::NONE]; }
 
-  static const int kAlignmentSize;
+  // TODO(): make this configurable or autofit terminal width.
+  const int kAlignmentSize = 45;
 };
-
-// TODO(): make this configurable or autofit terminal width.
-const int NewLogMessage::kAlignmentSize = 45;
 
 // Undef LOG from glog
 #undef LOG
@@ -77,19 +75,19 @@ const int NewLogMessage::kAlignmentSize = 45;
 #define LOGvvv XYLOG(3, ColorType::NONE)
 
 // Logging with color in red
-#define LOGRv XYLOG(1, ColorType::RED)
-#define LOGRvv XYLOG(2, ColorType::RED)
-#define LOGRvvv XYLOG(3, ColorType::RED)
+#define LOGr XYLOG(1, ColorType::RED)
+#define LOGrr XYLOG(2, ColorType::RED)
+#define LOGrrr XYLOG(3, ColorType::RED)
 
 // Logging with color in cyan
-#define LOGCv XYLOG(1, ColorType::CYAN)
-#define LOGCvv XYLOG(2, ColorType::CYAN)
-#define LOGCvvv XYLOG(3, ColorType::CYAN)
+#define LOGc XYLOG(1, ColorType::CYAN)
+#define LOGcc XYLOG(2, ColorType::CYAN)
+#define LOGccc XYLOG(3, ColorType::CYAN)
 
 // Logging with color in yellow
-#define LOGYv XYLOG(1, ColorType::YELLOW)
-#define LOGYvv XYLOG(2, ColorType::YELLOW)
-#define LOGYvvv XYLOG(3, ColorType::YELLOW)
+#define LOGy XYLOG(1, ColorType::YELLOW)
+#define LOGyy XYLOG(2, ColorType::YELLOW)
+#define LOGyyy XYLOG(3, ColorType::YELLOW)
 
 }  // namespace xyxy
 

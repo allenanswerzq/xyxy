@@ -1,9 +1,8 @@
 #ifndef XYXY_SCANNER_H_
 #define XYXY_SCANNER_H_
 
-#include <glog/logging.h>
-
 #include "xyxy/base.h"
+#include "xyxy/logging.h"
 
 namespace xyxy {
 
@@ -64,13 +63,14 @@ typedef enum {
 } TokenType;
 
 struct Token {
-  TokenType type;
-  int start;
-  int length;
-  int line;
-  friend bool operator==(const Token& a, const Token& b);
-  friend bool operator!=(const Token& a, const Token& b);
+  TokenType type = TOKEN_NONE;
+  int start = 0;
+  int length = 0;
+  int line = 0;
 };
+
+bool operator==(const Token& a, const Token& b);
+bool operator!=(const Token& a, const Token& b);
 
 class Scanner {
  public:
@@ -88,7 +88,7 @@ class Scanner {
   void SetSource(const string& source) {
     Reset();
     source_ = StripSource(source);
-    VLOG(1) << "Scanner: `" << source_ << "`";
+    LOGvvv << "Scanner: \n`" << source_ << "`";
   }
 
   string StripSource(const string& str);
