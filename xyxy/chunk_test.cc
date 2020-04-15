@@ -46,4 +46,13 @@ TEST(Constant, TestChunk) {
   }
 }
 
+TEST(WriteAt, TestChunk) {
+  Chunk chunk;
+  for (int i = 0; i < 4; i++) {
+    chunk.Write(i, 0);
+  }
+  EXPECT_EQ(chunk.size(), 4);
+  chunk.WriteAt(2, 122);
+  EXPECT_FLOAT_EQ(122, chunk.GetByte(2));
+}
 }  // namespace xyxy

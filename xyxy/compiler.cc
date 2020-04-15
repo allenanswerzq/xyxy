@@ -125,6 +125,13 @@ void Compiler::EmitByte(uint8 byte1, uint8 byte2) {
   EmitByte(byte2);
 }
 
+int Compiler::EmitJump(uint8 inst) {
+  EmitByte(inst);
+  EmitByte(0xff);
+  EmitByte(0xff);
+  return GetChunk()->size() - 2;
+}
+
 int Compiler::MakeConstant(Value val) {
   // Get the index after adding this val into chunk.
   int idx = GetChunk()->AddConstant(val);
@@ -306,12 +313,13 @@ void Compiler::DeclareLocals() {
         locals_[i - 1].depth < scope_depth_) {
       break;
     }
-    if (prev_ == locals_[i].token) {
+    if (GetLexeme(prev_) == locals_[i - 1].name) {
       CHECK(false) << "Variable with the name `" << GetLexeme(prev_)
                    << "` already defined in this scope.";
     }
   }
-  LOGrrr << "New local variable: " << GetLexeme(prev_);
+  LOGrrr << "New local variable: " << GetLexeme(prev_)
+         << " slot: " << std::to_string(locals_.size());
   locals_.push_back(LocalDef{prev_, kLocalUnitialized, GetLexeme(prev_)});
 }
 
@@ -351,7 +359,7 @@ bool Compiler::ResolveLocal(const std::string& name, uint8* arg) {
       if (locals_[i - 1].depth == kLocalUnitialized) {
         CHECK(false) << "Cannot read local variable in its own initializer.";
       }
-      *arg = i;
+      *arg = i - 1;
       return true;
     }
   }
@@ -370,7 +378,8 @@ void Compiler::NamedVariable(bool can_assign) {
   std::string name = GetLexeme(prev_);
   if (ResolveLocal(name, &arg)) {
     // If the prev_ is a local variable.
-    LOGvvv << "Find the local variable: " << name;
+    LOGvvv << "Find the local variable: " << name
+           << " slot: " << std::to_string(arg);
     set_op = OP_SET_LOCAL;
     get_op = OP_GET_LOCAL;
   }
@@ -404,6 +413,9 @@ void Compiler::ParseStatement() {
   if (Match(TOKEN_PRINT)) {
     ParsePrintStatement();
   }
+  else if (Match(TOKEN_IF)) {
+    ParseIfStatement();
+  }
   else if (Match(TOKEN_LEFT_BRACE)) {
     BeginScope();
     ParseBlock();
@@ -412,6 +424,38 @@ void Compiler::ParseStatement() {
   else {
     ParseExpressStatement();
   }
+}
+
+void Compiler::PatchJump(int patch_place) {
+  int jump_count = GetChunk()->size() - patch_place - 2;
+  CHECK(jump_count >= 0);
+
+  if (jump_count > UINT16_MAX) {
+    CHECK(false) << "Too much code to jump over.";
+  }
+
+  GetChunk()->WriteAt(patch_place, (jump_count >> 8) & 0xff);  // high
+  GetChunk()->WriteAt(patch_place, jump_count & 0xff);         // low
+}
+
+void Compiler::ParseIfStatement() {
+  Consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if' ");
+
+  LOGrrr << "Emiting OP_JUMP_IF_FALSE";
+  ParseExpression(/*can_assign=*/false);
+  Consume(TOKEN_RIGHT_PAREN, "Expect ')' after 'if' condition");
+
+  int then_jump = EmitJump(OP_JUMP_IF_FALSE);
+  EmitByte(OP_POP);
+  ParseStatement();
+  int else_jump = EmitJump(then_jump);
+  PatchJump(then_jump);
+
+  EmitByte(OP_POP);
+  if (Match(TOKEN_ELSE)) {
+    ParseStatement();
+  }
+  PatchJump(else_jump);
 }
 
 void Compiler::BeginScope() { scope_depth_++; }

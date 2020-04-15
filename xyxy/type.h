@@ -59,6 +59,7 @@ class Value {
     return as_.obj->Type();
   }
 
+  // TODO(): Is this really sets the union to be zero?
   void Reset() { std::memset((void*)&as_, 0, sizeof(as_)); }
 
   bool IsBool() { return type_ == ValueType::VAL_BOOL; }

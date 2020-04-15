@@ -74,6 +74,16 @@ cc_test(
  )
 
 cc_test(
+    name = "compiler_error_test",
+    srcs = ["compiler_error_test.cc"],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        ":xyxy",
+        "@com_google_googletest//:gtest_main",
+    ],
+ )
+
+cc_test(
     name = "list_test",
     srcs = ["list_test.cc"],
     copts = XYXY_DEFAULT_COPTS,

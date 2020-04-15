@@ -11,9 +11,15 @@ void Inst::DebugInfo() {
   std::string ret;
   ret += name_;
   ret += string(kDumpWidth - name_.size(), ' ');
-  for (int i = 0; i < operands_.size(); i++) {
+  for (size_t i = 0; i < operands_.size(); i++) {
     Value val = operands_[i];
     ret += val.ToString();
+  }
+  for (size_t i = 0; i < metadata_.size(); i++) {
+    if (i > 0) {
+      ret += " ";
+    }
+    ret += std::to_string(metadata_[i]);
   }
   LOGvv << ret;
 }
@@ -51,6 +57,8 @@ DEFINE_INST(OP_SET_GLOBAL, 2)
 DEFINE_INST(OP_GET_GLOBAL, 2)
 DEFINE_INST(OP_SET_LOCAL, 2)
 DEFINE_INST(OP_GET_LOCAL, 2)
+DEFINE_INST(OP_JUMP_IF_FALSE, 3);
+DEFINE_INST(OP_JUMP, 3);
 
 VM::VM(Chunk* chunk) : chunk_(chunk) { pc_ = 0; }
 
@@ -82,6 +90,8 @@ static std::unique_ptr<Inst> DispatchInst(uint8 opcode) {
     CREATE_INST_INSTANCE(OP_GET_GLOBAL)
     CREATE_INST_INSTANCE(OP_SET_LOCAL)
     CREATE_INST_INSTANCE(OP_GET_LOCAL)
+    CREATE_INST_INSTANCE(OP_JUMP_IF_FALSE)
+    CREATE_INST_INSTANCE(OP_JUMP);
     default: {
       CHECK(false);
       break;
@@ -96,6 +106,10 @@ std::unique_ptr<Inst> VM::CreateInst(uint8 offset) {
   if (byte == OP_SET_LOCAL || byte == OP_GET_LOCAL) {
     inst->metadata_.push_back(chunk_->GetByte(offset + 1));
   }
+  else if (byte == OP_JUMP_IF_FALSE || byte == OP_JUMP) {
+    inst->metadata_.push_back(chunk_->GetByte(offset + 1));
+    inst->metadata_.push_back(chunk_->GetByte(offset + 2));
+  }
   else {
     for (int i = 1; i <= inst->Length() - 1; i++) {
       int index = chunk_->GetByte(offset + i);
@@ -106,26 +120,27 @@ std::unique_ptr<Inst> VM::CreateInst(uint8 offset) {
   return inst;
 }
 
-#define BINARY_OP(op)                                                \
-  do {                                                               \
-    auto lhs = stack_.Pop();                                         \
-    auto rhs = stack_.Pop();                                         \
-    if (lhs.IsFloat()) {                                             \
-      if (!rhs.IsFloat()) {                                          \
-        return Status(RUNTIME_ERROR, "Operand must be a number.");   \
-      }                                                              \
-      double a = lhs.AsFloat();                                      \
-      double b = rhs.AsFloat();                                      \
-      stack_.Push(Value(a op b));                                    \
-      break;                                                         \
-    }                                                                \
-    else {                                                           \
-      return Status(RUNTIME_ERROR, "Unsupported binary operation."); \
-    }                                                                \
+#define BINARY_OP(op)                                                   \
+  do {                                                                  \
+    auto lhs = stack_.Pop();                                            \
+    auto rhs = stack_.Pop();                                            \
+    LOGvv << "Binary add: " << lhs.ToString() << " " << rhs.ToString(); \
+    if (lhs.IsFloat()) {                                                \
+      if (!rhs.IsFloat()) {                                             \
+        return Status(RUNTIME_ERROR, "Operand must be a number.");      \
+      }                                                                 \
+      double a = lhs.AsFloat();                                         \
+      double b = rhs.AsFloat();                                         \
+      stack_.Push(Value(a op b));                                       \
+      break;                                                            \
+    }                                                                   \
+    else {                                                              \
+      return Status(RUNTIME_ERROR, "Unsupported binary operation.");    \
+    }                                                                   \
   } while (false)
 
 void VM::DumpInsts() {
-  LOGvv << "-------------RAW INSTS------------------";
+  LOGvv << "-------------RAW CODE-------------------";
   for (int pc = 0; pc < chunk_->size();) {
     auto inst = CreateInst(pc);
     inst->DebugInfo();
@@ -161,6 +176,7 @@ Status VM::Run() {
         if (stack_.Top().IsString()) {
           auto lhs = stack_.Pop();
           auto rhs = stack_.Pop();
+          LOGvv << "Binary add: " << lhs.ToString() << " " << rhs.ToString();
           if (!rhs.IsString()) {
             return Status(RUNTIME_ERROR, "Operand must be a string.");
           }
@@ -274,6 +290,20 @@ Status VM::Run() {
         LOGvv << "Set local: " << stack_.Top().ToString();
         stack_.Set(slot, stack_.Top());
         break;
+      }
+      case OP_JUMP_IF_FALSE: {
+        CHECK(inst->metadata_.size() == 2);
+        uint16_t count =
+            (uint16_t)((inst->metadata_[0] << 8) | inst->metadata_[1]);
+        if (stack_.Top().IsFalsey()) {
+          pc_ += count;
+        }
+        break;
+      }
+      case OP_JUMP: {
+        uint16_t count =
+            (uint16_t)((inst->metadata_[0] << 8) | inst->metadata_[1]);
+        pc_ += count;
       }
       default: {
         CHECK(false);

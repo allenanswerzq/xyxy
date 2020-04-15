@@ -71,21 +71,25 @@ TEST(Basic, TestCompiler) {
   EXPECT_TRUE(vm.GetStack().Empty());
 }
 
-#define COMPILE_AND_RUN(source, result) \
-  Compiler compiler;                    \
-  compiler.Compile(source);             \
-  VM vm(compiler.GetChunk());           \
-  vm.Run();                             \
-  EXPECT_EQ(vm.FinalResult(), result);  \
+#define XY_COMPILE_AND_RUN(source, result) \
+  Compiler compiler;                       \
+  compiler.Compile(source);                \
+  VM vm(compiler.GetChunk());              \
+  vm.Run();                                \
+  EXPECT_EQ(vm.FinalResult(), result);     \
   EXPECT_TRUE(vm.GetStack().Empty());
 
-// clang-format off
+// TODO(): Improve this after adding error handling
+#define XY_COMPILE_SHOLD_ERROR(source) \
+  Compiler compiler;                   \
+  compiler.Compile(source);            \
+  EXPECT_DEATH({ compiler.Compile(source); }, "");
 
 TEST(SingleStatement, TestCompiler) {
-  COMPILE_AND_RUN("print 1 + 2;", "3.000000")
+  XY_COMPILE_AND_RUN("print 1 + 2;", "3.000000")
 }
 
-TEST(MultipleStatement, TestCompiler) {
+TEST(CompileMultipleStatements, TestCompiler) {
   Compiler compiler;
   compiler.Compile("print 1 + 2;");
   compiler.Compile("print 1 + 3;");
@@ -97,51 +101,49 @@ TEST(MultipleStatement, TestCompiler) {
 }
 
 TEST(GlobalDef0, TestCompiler) {
-  COMPILE_AND_RUN(R"(
+  XY_COMPILE_AND_RUN(R"(
     var xy = "aaaa";
     print xy;
-  )", "aaaa")
+  )",
+                     "aaaa")
 }
 
-
 TEST(GlobalDef1, TestCompiler) {
-  COMPILE_AND_RUN(R"(
+  // Mulitple global varibles addition.
+  XY_COMPILE_AND_RUN(R"(
     var a = 1;
     var b = 2;
     var c = 3;
     var d = a + b + c;
     print d;
-  )", "6.000000");
+  )",
+                     "6.000000")
 }
 
 TEST(StringAdd, TestCompiler) {
-  COMPILE_AND_RUN(R"(
+  // Test two string addition.
+  XY_COMPILE_AND_RUN(R"(
     var xy = "aaaa";
     var xx = xy + "bbbb";
     print xy;
     print xx;
-  )", "aaaabbbb")
+  )",
+                     "aaaabbbb")
 }
 
 TEST(GlobalSet, TestCompiler) {
-  COMPILE_AND_RUN(R"(
+  // Reassign after declaring.
+  XY_COMPILE_AND_RUN(R"(
     var xy = "aaaa";
     xy = "bbbb";
     print xy;
-  )", "bbbb");
-}
-
-TEST(Set, TestCompiler) {
-  Compiler compiler;
-  string source = R"(
-     a * b = c + d;
-  )";
-  // TODO(): Rewrite after add error handling code.
-  EXPECT_DEATH({ compiler.Compile(source); }, "");
+  )",
+                     "bbbb")
 }
 
 TEST(LocalDef0, TestCompiler) {
-  COMPILE_AND_RUN(R"(
+  // Normal nesting scope test.
+  XY_COMPILE_AND_RUN(R"(
     {
       var a = 1;
       {
@@ -153,54 +155,54 @@ TEST(LocalDef0, TestCompiler) {
         }
       }
     }
-  )", "6.000000")
+  )",
+                     "6.000000")
 }
 
-// TEST(LocalDefSame, TestCompiler) {
-//   Compiler compiler;
-//   string source = R"(
-//     {
-//       var a = "first";
-//       var a = "second";
-//     }
-//   )";
-//   compiler.Compile(source);
-//   VM vm(compiler.GetChunk());
-//   vm.Run();
-//   EXPECT_TRUE(vm.GetStack().Empty());
-// }
+TEST(LocalDef1, TestCompiler) {
+  // Define variables that have same name in different scopes.
+  XY_COMPILE_AND_RUN(R"(
+    {
+      var a = "outer";
+      {
+        var a = "inner";
+        {
+          var a = "innerest";
+        }
+      }
+    }
+  )",
+                     "")
+}
 
-// TEST(LocalDef1, TestCompiler) {
-//   Compiler compiler;
-//   string source = R"(
-//     {
-//       var a = "outer";
-//       {
-//         var a = a;
-//       }
-//     }
-//   )";
-//   compiler.Compile(source);
-//   VM vm(compiler.GetChunk());
-//   vm.Run();
-//   EXPECT_TRUE(vm.GetStack().Empty());
-// }
+TEST(LocalDef2, TestCompiler) {
+  // Normal nesting scope test.
+  XY_COMPILE_AND_RUN(R"(
+    var g = 0; {
+      var a = 1; {
+        var b = 2; {
+          var c = 3;
+          g = g + c;
+        }
+        g = g + b;
+      }
+      g = g + a;
+    }
+    print g;
+  )",
+                     "6.000000")
+}
 
-// TEST(LocalDef2, TestCompiler) {
-//   Compiler compiler;
-//   string source = R"(
-//     {
-//       var a = "outer";
-//       {
-//         var a = "inner";
-//       }
-//     }
-//   )";
-//   compiler.Compile(source);
-//   VM vm(compiler.GetChunk());
-//   vm.Run();
-//   EXPECT_TRUE(vm.GetStack().Empty());
-// }
-// clang-format on
+TEST(IfElse0, TestCompiler) {
+  // Normal nesting scope test.
+  XY_COMPILE_AND_RUN(R"(
+    var a = 1;
+    if (true) {
+      a = 2;
+    }
+    print a;
+  )",
+                     "1.000000")
+}
 
 }  // namespace xyxy
