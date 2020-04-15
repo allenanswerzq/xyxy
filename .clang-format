@@ -152,6 +152,8 @@ Standard:        Auto
 StatementMacros:
   - Q_UNUSED
   - QT_REQUIRE_VERSION
+  - XY_COMPILE_AND_RUN
+  - XY_COMPILE_SHOLD_ERROR
 TabWidth:        4
 UseTab:          Never
 ...
