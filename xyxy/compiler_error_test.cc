@@ -43,4 +43,15 @@ TEST(LocalUnitialized, TestCompiler) {
   )")
 }
 
+TEST(IfElse, TestCompiler) {
+  // TODO(): This test should fail.
+  // XY_COMPILE_SHOLD_ERROR(R"(
+  //   var a = 1;
+  //   elif (a == 1) {
+  //     a = 2;
+  //   }
+  //   print a;
+  // )")
+}
+
 }  // namespace xyxy

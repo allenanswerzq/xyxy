@@ -63,21 +63,24 @@ class Compiler {
   void EmitReturn();
   int EmitJump(uint8 inst);
   void PatchJump(int place);
+  void EmitLoop(int loop_start);
 
   void ParseDeclaration();
   void ParseVarDeclaration();
   void ParseVariable(bool can_assign);
   void NamedVariable(bool can_assign);
-  void ParseStatement();
-  void ParsePrintStatement();
-  void ParseExpressStatement();
+  void ParseStmt();
+  void ParsePrintStmt();
+  void ParseExpressStmt();
   void ParseNumber(bool can_assign);
   void ParseGrouping(bool can_assign);
   void ParseUnary(bool can_assign);
   void ParseBinary(bool can_assign);
-  void ParseExpression(bool can_assign);
   void ParseLiteral(bool can_assign);
   void ParseString(bool can_assign);
+  void ParseExpression();
+  void LogicAnd(bool can_assign);
+  void LogicOr(bool can_assign);
 
   void ParseBlock();
   void BeginScope();
@@ -86,7 +89,9 @@ class Compiler {
   bool ResolveLocal(const std::string& name, uint8* arg);
   uint8 HandleVariable(const string& msg);
 
-  void ParseIfStatement();
+  void ParseIfStmt();
+  void ParseForStmt();
+  void ParseWhileStmt();
 
   // Continue parsing until read a token that has a higher precedence.
   void ParseWithPrecedenceOrder(PrecOrder prec_order);

@@ -37,6 +37,8 @@ class Stack {
     return *(stk_ + idx);
   }
 
+  int Size() { return top_ - stk_; }
+
   void Set(int idx, const T& val) {
     assert(idx < N);
     *(stk_ + idx) = val;

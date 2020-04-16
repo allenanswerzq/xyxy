@@ -88,8 +88,6 @@ TokenType Scanner::IdentifierType() {
       return CheckKeyword("and", TOKEN_AND);
     case 'c':
       return CheckKeyword("class", TOKEN_CLASS);
-    case 'e':
-      return CheckKeyword("else", TOKEN_ELSE);
     case 'i':
       return CheckKeyword("if", TOKEN_IF);
     case 'n':
@@ -118,7 +116,17 @@ TokenType Scanner::IdentifierType() {
         default:
           break;
       }
-      break;
+    }
+    case 'e': {
+      char n = source_[start_ + 2];
+      switch (n) {
+        case 'i':
+          return CheckKeyword("elif", TOKEN_ELIF);
+        case 's':
+          return CheckKeyword("else", TOKEN_ELSE);
+        default:
+          break;
+      }
     }
     case 't': {
       char n = source_[start_ + 1];
@@ -195,9 +203,7 @@ Token Scanner::ScanToken() {
 }
 
 string Scanner::GetSource(int start, int end) {
-  string ret;
-  ret.append(source_.substr(start, end - start));
-  return ret;
+  return source_.substr(start, end - start);
 }
 
 string Scanner::StripSource(const string& str) {

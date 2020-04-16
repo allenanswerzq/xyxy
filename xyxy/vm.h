@@ -34,6 +34,7 @@ typedef enum {
   OP_SET_LOCAL,
   OP_JUMP_IF_FALSE,
   OP_JUMP,
+  OP_LOOP,
 } OpCode;
 
 // Forward declaration.
@@ -63,6 +64,8 @@ class Inst {
   uint8 opcode_;
   uint8 length_;
   std::vector<Value> operands_;
+  // Address where this inst locate in bytecode.
+  int address_;
   // Stores some meta data to use.
   // TODO(): may make this into a class.
   std::vector<uint8> metadata_;

@@ -45,14 +45,14 @@ const std::unordered_map<int, PrecedenceRule>& Compiler::kPrecedenceTable =
          CreateRule(&Compiler::ParseVariable, nullptr, PREC_NONE)},
         {TOKEN_STRING, CreateRule(&Compiler::ParseString, nullptr, PREC_NONE)},
         {TOKEN_NUMBER, CreateRule(&Compiler::ParseNumber, nullptr, PREC_NONE)},
-        {TOKEN_AND, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_AND, CreateRule(nullptr, &Compiler::LogicAnd, PREC_AND)},
         {TOKEN_IF, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_ELSE, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_FALSE, CreateRule(&Compiler::ParseLiteral, nullptr, PREC_NONE)},
         {TOKEN_FUN, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_FOR, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_NIL, CreateRule(&Compiler::ParseLiteral, nullptr, PREC_NONE)},
-        {TOKEN_OR, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_OR, CreateRule(nullptr, &Compiler::LogicOr, PREC_OR)},
         {TOKEN_CLASS, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_PRINT, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_RETURN, CreateRule(nullptr, nullptr, PREC_NONE)},
@@ -127,8 +127,8 @@ void Compiler::EmitByte(uint8 byte1, uint8 byte2) {
 
 int Compiler::EmitJump(uint8 inst) {
   EmitByte(inst);
-  EmitByte(0xff);
-  EmitByte(0xff);
+  EmitByte(0);
+  EmitByte(0);
   return GetChunk()->size() - 2;
 }
 
@@ -153,17 +153,35 @@ void Compiler::ParseString(bool can_assign) {
 
 string Compiler::GetLexeme(Token tt) { return scanner_->GetLexeme(tt); }
 
+void Compiler::LogicAnd(bool can_assign) {
+  int end_jump = EmitJump(OP_JUMP_IF_FALSE);
+  LOGrrr << "Emiting OP_POP";
+  EmitByte(OP_POP);
+  ParseWithPrecedenceOrder(PREC_AND);
+  PatchJump(end_jump);
+}
+
+void Compiler::LogicOr(bool can_assign) {
+  int else_jump = EmitJump(OP_JUMP_IF_FALSE);
+  // If current condition is true, then skip all the rest condition checks.
+  int end_jump = EmitJump(OP_JUMP);
+  PatchJump(else_jump);
+  LOGrrr << "Emiting OP_POP";
+  EmitByte(OP_POP);
+
+  ParseWithPrecedenceOrder(PREC_OR);
+  PatchJump(end_jump);
+}
+
 void Compiler::ParseNumber(bool can_assign) {
   double val = strtod(GetLexeme(prev_).c_str(), nullptr);
   EmitConstant(Value(val));
 }
 
-void Compiler::ParseExpression(bool can_assign) {
-  ParseWithPrecedenceOrder(PREC_ASSIGNMENT);
-}
+void Compiler::ParseExpression() { ParseWithPrecedenceOrder(PREC_ASSIGNMENT); }
 
 void Compiler::ParseGrouping(bool can_assign) {
-  ParseExpression(can_assign);
+  ParseExpression();
   Consume(TOKEN_RIGHT_PAREN, "Expect ')' after ParseExpression.");
 }
 
@@ -284,7 +302,7 @@ void Compiler::ParseDeclaration() {
     ParseVarDeclaration();
   }
   else {
-    ParseStatement();
+    ParseStmt();
   }
 }
 
@@ -328,7 +346,7 @@ void Compiler::ParseVarDeclaration() {
 
   uint8 global = HandleVariable("Expect variable name");
   if (Match(TOKEN_EQUAL)) {
-    ParseExpression(/*can_assign=*/false);
+    ParseExpression();
   }
   else {
     // By default, assign a variable to NILL;
@@ -390,7 +408,7 @@ void Compiler::NamedVariable(bool can_assign) {
   }
 
   if (can_assign && Match(TOKEN_EQUAL)) {
-    ParseExpression(can_assign);
+    ParseExpression();
     LOGrrr << "Emiting "
            << (set_op == OP_SET_LOCAL ? "OP_SET_LOCAL" : "OP_SET_GLOBAL") << " "
            << name;
@@ -406,15 +424,24 @@ void Compiler::NamedVariable(bool can_assign) {
 
 // statement     ->  exprStmt
 //               |   printStmt
+//               |   ifStmt
+//               |   whileStmt
+//               |   forStmt
 //               |   block ;
 // block         ->  "{" declaration* "}"
-void Compiler::ParseStatement() {
+void Compiler::ParseStmt() {
   LOGvvv << "Parsing statement...";
   if (Match(TOKEN_PRINT)) {
-    ParsePrintStatement();
+    ParsePrintStmt();
   }
-  else if (Match(TOKEN_IF)) {
-    ParseIfStatement();
+  else if (Match(TOKEN_IF) || Match(TOKEN_ELIF)) {
+    ParseIfStmt();
+  }
+  else if (Match(TOKEN_WHILE)) {
+    ParseWhileStmt();
+  }
+  else if (Match(TOKEN_FOR)) {
+    ParseForStmt();
   }
   else if (Match(TOKEN_LEFT_BRACE)) {
     BeginScope();
@@ -422,8 +449,105 @@ void Compiler::ParseStatement() {
     EndScope();
   }
   else {
-    ParseExpressStatement();
+    ParseExpressStmt();
   }
+}
+
+void Compiler::ParseForStmt() {
+  LOGvvv << "Parsing for statement...";
+
+  // Treat for as a new scope since it might define new varibles.
+  BeginScope();
+
+  // Parse the initializer.
+  Consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+  if (Match(TOKEN_SEMICOLON)) {
+    // No initializer.
+  }
+  else if (Match(TOKEN_VAR)) {
+    ParseVarDeclaration();
+  }
+  else {
+    ParseExpressStmt();
+  }
+
+  // Parse the for condition.
+  int loop_start = GetChunk()->size();
+  int exit_jump = -1;
+  if (!Match(TOKEN_SEMICOLON)) {
+    ParseExpression();
+    Consume(TOKEN_SEMICOLON, "Expect ';' after loop condition");
+
+    exit_jump = EmitJump(OP_JUMP_IF_FALSE);
+    EmitByte(OP_POP);
+  }
+
+  // Parse the increment statement.
+  if (!Match(TOKEN_RIGHT_PAREN)) {
+    int inc_jump = EmitJump(OP_JUMP);
+
+    int inc_start = GetChunk()->size();
+    LOGvvv << "Increment start: " << inc_start;
+    ParseExpression();
+    EmitByte(OP_POP);
+    Consume(TOKEN_RIGHT_PAREN, "Expect ')' after finishing 'for'.");
+
+    EmitLoop(loop_start);
+    loop_start = inc_start;
+    PatchJump(inc_jump);
+  }
+
+  // Parse the main body of the for statement.
+  ParseStmt();
+
+  EmitLoop(loop_start);
+
+  EndScope();
+
+  // Finish the jump if the condition becomes false.
+  if (exit_jump != -1) {
+    PatchJump(exit_jump);
+    // Pop out the condition value left on the stack.
+    EmitByte(OP_POP);
+  }
+}
+
+void Compiler::EmitLoop(int loop_start) {
+  EmitByte(OP_LOOP);
+
+  int offset = GetChunk()->size() - loop_start - 1;
+  if (offset > UINT16_MAX) {
+    CHECK(false) << "Loop body too large.";
+  }
+
+  LOGrrr << "Emiting OP_LOOP"
+         << " " << offset;
+  LOGrrr << "Emiting OP_POP";
+
+  EmitByte((offset >> 8) & 0xff);
+  EmitByte(offset & 0xff);
+}
+
+void Compiler::ParseWhileStmt() {
+  LOGvvv << "Parsing while statement...";
+  int loop_start = GetChunk()->size();
+
+  Consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while' ");
+  ParseExpression();
+  Consume(TOKEN_RIGHT_PAREN, "Expect ')' after 'while' condition");
+
+  int exit_jump = EmitJump(OP_JUMP_IF_FALSE);
+
+  LOGrrr << "Emiting OP_POP";
+  EmitByte(OP_POP);
+  ParseStmt();
+
+  EmitLoop(loop_start);
+
+  PatchJump(exit_jump);
+  LOGrrr << "Emiting OP_POP";
+  // Pop the condition value on the stack.
+  EmitByte(OP_POP);
 }
 
 void Compiler::PatchJump(int patch_place) {
@@ -434,28 +558,30 @@ void Compiler::PatchJump(int patch_place) {
     CHECK(false) << "Too much code to jump over.";
   }
 
-  GetChunk()->WriteAt(patch_place, (jump_count >> 8) & 0xff);  // high
-  GetChunk()->WriteAt(patch_place, jump_count & 0xff);         // low
+  LOGrrr << "Jump over: " << jump_count;
+  GetChunk()->WriteAt(patch_place, (jump_count >> 8) & 0xff);
+  GetChunk()->WriteAt(patch_place + 1, jump_count & 0xff);
 }
 
-void Compiler::ParseIfStatement() {
+void Compiler::ParseIfStmt() {
+  LOGvvv << "Parsing if statement...";
   Consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if' ");
-
-  LOGrrr << "Emiting OP_JUMP_IF_FALSE";
-  ParseExpression(/*can_assign=*/false);
+  ParseExpression();
   Consume(TOKEN_RIGHT_PAREN, "Expect ')' after 'if' condition");
 
-  int then_jump = EmitJump(OP_JUMP_IF_FALSE);
+  int then_branch = EmitJump(OP_JUMP_IF_FALSE);
+  LOGrrr << "Emiting OP_POP";
   EmitByte(OP_POP);
-  ParseStatement();
-  int else_jump = EmitJump(then_jump);
-  PatchJump(then_jump);
+  ParseStmt();
+  int else_branch = EmitJump(OP_JUMP);
+  PatchJump(then_branch);
 
+  LOGrrr << "Emiting OP_POP";
   EmitByte(OP_POP);
   if (Match(TOKEN_ELSE)) {
-    ParseStatement();
+    ParseStmt();
   }
-  PatchJump(else_jump);
+  PatchJump(else_branch);
 }
 
 void Compiler::BeginScope() { scope_depth_++; }
@@ -479,20 +605,20 @@ void Compiler::ParseBlock() {
   Consume(TOKEN_RIGHT_BRACE, "Expect '}' after block.");
 }
 
-void Compiler::ParsePrintStatement() {
+void Compiler::ParsePrintStmt() {
   LOGvvv << "Parsing print...";
 
-  ParseExpression(/*can_assign=*/false);
+  ParseExpression();
   Consume(TOKEN_SEMICOLON, "Expect ';' after a value.");
 
   LOGrrr << "Emiting OP_PRINT";
   EmitByte(OP_PRINT);
 }
 
-void Compiler::ParseExpressStatement() {
+void Compiler::ParseExpressStmt() {
   LOGvvv << "Parsing expression statement...";
 
-  ParseExpression(/*can_assign=*/false);
+  ParseExpression();
   Consume(TOKEN_SEMICOLON, "Expect ';' after an expression.");
 
   LOGrrr << "Emiting OP_POP";
