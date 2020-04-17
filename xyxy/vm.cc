@@ -161,6 +161,14 @@ void VM::DumpInsts() {
   LOGvv << "---------------------------------------";
 }
 
+void VM::DumpStack() {
+  LOGvv << "-------------DUMP STACK----------------";
+  for (int i = 0; i < stack_.Size(); i++) {
+    LOGvv << stack_.Get(i).ToString();
+  }
+  LOGvv << "---------------------------------------";
+}
+
 Status VM::Run() {
   DumpInsts();
   for (; pc_ < chunk_->size();) {
@@ -251,6 +259,7 @@ Status VM::Run() {
         break;
       }
       case OP_POP: {
+        LOGcc << "Pop out: " << stack_.Top().ToString();
         stack_.Pop();
         break;
       }

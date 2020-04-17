@@ -11,7 +11,7 @@
 
 namespace xyxy {
 
-typedef enum {
+enum PrecOrder {
   PREC_NONE,
   PREC_ASSIGNMENT,  // =
   PREC_OR,          // or
@@ -23,17 +23,43 @@ typedef enum {
   PREC_UNARY,       // ! -
   PREC_CALL,        // . ()
   PREC_PRIMARY
-} PrecOrder;
+};
 
 class Compiler;
 
 typedef std::function<void(Compiler*, bool can_assign)> ParseFunc;
 
-typedef struct {
+struct PrecedenceRule {
   ParseFunc prefix_rule;
   ParseFunc infix_rule;
   PrecOrder prec_order;
-} PrecedenceRule;
+};
+
+enum ScopeType {
+  SCOPE_UNDEF,
+  SCOPE_BLOCK,
+  SCOPE_FOR,
+  SCOPE_FUNC,
+  SCOPE_CLASS,
+  SCOPE_MAIN
+};
+
+struct Scope {
+  Scope() {}
+  explicit Scope(ScopeType tp, int pc, int ln, int dp)
+      : type(tp), start_pc(pc), start_ln(ln), depth(dp) {}
+  ScopeType type;
+  int start_pc = 0;
+  int end_pc = 0;
+  int start_ln = 0;
+  int end_ln = 0;
+  int depth = 0;
+  int owned_stack_num = 0;
+  bool met_break_stmt = false;
+  std::vector<int> breaks;
+};
+
+std::string DebugScope(Scope sp);
 
 class Compiler {
  public:
@@ -83,7 +109,7 @@ class Compiler {
   void LogicOr(bool can_assign);
 
   void ParseBlock();
-  void BeginScope();
+  void BeginScope(ScopeType type);
   void EndScope();
   void DeclareLocals();
   bool ResolveLocal(const std::string& name, uint8* arg);
@@ -92,9 +118,11 @@ class Compiler {
   void ParseIfStmt();
   void ParseForStmt();
   void ParseWhileStmt();
+  void ParseContinueStmt();
+  void ParseBreakStmt();
 
   // Continue parsing until read a token that has a higher precedence.
-  void ParseWithPrecedenceOrder(PrecOrder prec_order);
+  void ParseUntilHigherOrder(PrecOrder prec_order);
 
   string GetLexeme(Token tt);
 
@@ -111,7 +139,7 @@ class Compiler {
     return it->second;
   }
 
-  // Local variable defition.
+  // Local variable definition.
   struct LocalDef {
     Token token;
     int depth;
@@ -121,12 +149,13 @@ class Compiler {
   static const int kLocalUnitialized;
 
  private:
-  std::vector<LocalDef> locals_;
-  int scope_depth_ = 0;
   Token curr_;
   Token prev_;
   std::unique_ptr<Chunk> chunk_;
   std::unique_ptr<Scanner> scanner_;
+  int scope_depth_ = 0;
+  std::vector<Scope> scopes_;
+  std::vector<LocalDef> locals_;
   // bool has_error_ = false;
   // bool panic_mode_ = false;
 };

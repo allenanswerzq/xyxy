@@ -71,15 +71,18 @@ TEST(Basic, TestCompiler) {
   EXPECT_TRUE(vm.GetStack().Empty());
 }
 
+// TOOD(): OP_GET_GLOBAL will leave a value onto the stack, figure out
+// how to deal with that.
 #define XY_COMPILE_AND_RUN(source, result) \
   Compiler compiler;                       \
   compiler.Compile(source);                \
   VM vm(compiler.GetChunk());              \
   vm.Run();                                \
-  EXPECT_EQ(vm.FinalResult(), result);
-// TOOD(): OP_GET_GLOBAL will leave a value onto the stack, figure out
-// how to deal with that.
-// EXPECT_TRUE(vm.GetStack().Empty());
+  EXPECT_EQ(vm.FinalResult(), result);     \
+  if (!vm.GetStack().Empty()) {            \
+    vm.DumpStack();                        \
+  }                                        \
+  EXPECT_TRUE(vm.GetStack().Empty());
 
 TEST(SingleStmt, TestCompiler) {
   XY_COMPILE_AND_RUN("print 1 + 2;", "3.000000")
@@ -408,6 +411,36 @@ TEST(ForStmt, TestCompiler) {
                      "10.000000");
 }
 
+TEST(MultipleForStmt, TestCompiler) {
+  // Test 2 for statements.
+  XY_COMPILE_AND_RUN(R"(
+    var a = 0;
+    for (var i = 0; i < 10; i = i + 1) {
+      for (var j = 0; j < 10; j = j + 1) {
+        a = a + 1;
+      }
+    }
+    print a;
+  )",
+                     "100.000000");
+}
+
+TEST(MultipleForStmt1, TestCompiler) {
+  // Test 3 for statements.
+  XY_COMPILE_AND_RUN(R"(
+    var a = 0;
+    for (var i = 0; i < 10; i = i + 1) {
+      for (var j = 0; j < 10; j = j + 1) {
+        for (var k = 0; k < 10; k = k + 1) {
+          a = a + 1;
+        }
+      }
+    }
+    print a;
+  )",
+                     "1000.000000");
+}
+
 TEST(ForStmt1, TestCompiler) {
   // Test for statement.
   XY_COMPILE_AND_RUN(R"(
@@ -435,18 +468,159 @@ TEST(ForStmt2, TestCompiler) {
                      "10.000000");
 }
 
-// TEST(ForStmt3, TestCompiler) {
-//   // Test for statement.
-//   XY_COMPILE_AND_RUN(R"(
-//     var a = 0;
-//     for (;;) {
-//       a = a + 1;
-//       if (a > 10) {
-//         break;
-//       }
-//     }
-//     print a;
-//   )",
-//                      "11.000000");
-// }
+TEST(ForBreak0, TestCompiler) {
+  // Test break in a for statement.
+  XY_COMPILE_AND_RUN(R"(
+    var a = 0;
+    for (;;) {
+      break;
+    }
+    print a;
+  )",
+                     "0.000000");
+}
+
+TEST(ForBreak1, TestCompiler) {
+  // Test break in a for statement.
+  XY_COMPILE_AND_RUN(R"(
+    var a = 0;
+    for (var i = 2; i < 10; i = i + 1) {
+      var b;
+      var c;
+      var d;
+      a = a + 1;
+      if (a > 0) {
+        break;
+      }
+      var e;
+      var f;
+      var g;
+      a = a + 1;
+    }
+    print a;
+  )",
+                     "1.000000");
+}
+
+TEST(ForBreak2, TestCompiler) {
+  // Test break in a for statement.
+  XY_COMPILE_AND_RUN(R"(
+    var a = 0;
+    for (var i = 0; i < 100; i = i + 1) {
+      a = a + 1;
+      if (a > 10) {
+        break;
+      }
+    }
+    print a;
+  )",
+                     "11.000000");
+}
+
+TEST(ForBreak3, TestCompiler) {
+  // Test remove all local variables after breaking
+  XY_COMPILE_AND_RUN(R"(
+    var a = 2;
+    for (var i = 0; i < 1; i = i + 1) {
+      {
+        a = a + 1;
+        var b;
+        var c;
+        if (a > 0) {
+          break;
+        }
+        var d;
+        var e;
+        a = a + 1;
+      }
+    }
+    print a;
+  )",
+                     "3.000000");
+}
+
+TEST(ForBreak4, TestCompiler) {
+  // Test remove all local variables after breaking
+  XY_COMPILE_AND_RUN(R"(
+    var a = 2;
+    for (var i = 0; i < 10; i = i + 1) {
+      {
+        a = a + 1;
+        var b = "b";
+        var c = "c";
+        if (a > 10) {
+          // should only pop var b and c out from stack.
+          break;
+        }
+        var d;
+        var e;
+        if (a > 0) {
+          break;
+        }
+        a = a + 1;
+      }
+    }
+    print a;
+  )",
+                     "3.000000");
+}
+
+TEST(ForBreak5, TestCompiler) {
+  // Test remove all local variables after breaking
+  XY_COMPILE_AND_RUN(R"(
+    var a = 2;
+    for (var i = 0; i < 10; i = i + 1) {
+      a = a + 1;
+      var b = "b";
+      var c = "c";
+      if (a > 10) {
+        break;
+      }
+      for (var j = 2; j < 20; j = j + 1) {
+        var e = "e";
+        var f = "f";
+        var g = "g";
+        var h = "h";
+        a = a + 1;
+        if (a > 0) {
+          // Break from here
+          break;
+        }
+      }
+    }
+    print a;
+  )",
+                     "11.000000");
+}
+
+TEST(ForBreak6, TestCompiler) {
+  // Test remove all local variables after breaking
+  XY_COMPILE_AND_RUN(R"(
+    var a = 0;
+    for (var i = 0; i < 10; i = i + 1) {
+      {
+          a = a + 1;
+          var b;
+          var c;
+          for (var j = 0; j < 2; j = j + 1) {
+            var e;
+            var f;
+            var g;
+            var h;
+            a = a + 1;
+          }
+          if (a > 0) {
+            // Break from here
+            break;
+          }
+          var e;
+          var f;
+          var g;
+          var h;
+      }
+    }
+    print a;
+  )",
+                     "3.000000");
+}
 }  // namespace xyxy

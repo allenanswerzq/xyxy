@@ -6,7 +6,7 @@
 
 namespace xyxy {
 
-typedef enum {
+enum TokenType {
   // Single character tokens.
   TOKEN_LEFT_PAREN,   // "("
   TOKEN_RIGHT_PAREN,  // ")"
@@ -63,7 +63,7 @@ typedef enum {
   TOKEN_EOF,    // "eof"
 
   TOKEN_NONE,  // None token
-} TokenType;
+};
 
 struct Token {
   TokenType type = TOKEN_NONE;

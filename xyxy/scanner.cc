@@ -86,8 +86,19 @@ TokenType Scanner::IdentifierType() {
   switch (c) {
     case 'a':
       return CheckKeyword("and", TOKEN_AND);
-    case 'c':
-      return CheckKeyword("class", TOKEN_CLASS);
+    case 'b':
+      return CheckKeyword("break", TOKEN_BREAK);
+    case 'c': {
+      char n = source_[start_ + 1];
+      switch (n) {
+        case 'l':
+          return CheckKeyword("class", TOKEN_CLASS);
+        case 'o':
+          return CheckKeyword("continue", TOKEN_CLASS);
+        default:
+          break;
+      }
+    }
     case 'i':
       return CheckKeyword("if", TOKEN_IF);
     case 'n':

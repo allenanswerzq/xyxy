@@ -49,6 +49,8 @@ const std::unordered_map<int, PrecedenceRule>& Compiler::kPrecedenceTable =
         {TOKEN_IF, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_ELSE, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_FALSE, CreateRule(&Compiler::ParseLiteral, nullptr, PREC_NONE)},
+        {TOKEN_CONTINUE, CreateRule(nullptr, nullptr, PREC_NONE)},
+        {TOKEN_BREAK, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_FUN, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_FOR, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_NIL, CreateRule(&Compiler::ParseLiteral, nullptr, PREC_NONE)},
@@ -75,6 +77,7 @@ Compiler::Compiler() {
   curr_ = Token{TOKEN_NONE, 0, 0, 0};
   prev_ = Token{TOKEN_NONE, 0, 0, 0};
   chunk_ = std::make_unique<Chunk>();
+  scopes_.push_back(Scope());
 }
 
 Compiler::Compiler(const string& source) {
@@ -82,6 +85,7 @@ Compiler::Compiler(const string& source) {
   curr_ = Token{TOKEN_NONE, 0, 0, 0};
   prev_ = Token{TOKEN_NONE, 0, 0, 0};
   chunk_ = std::make_unique<Chunk>();
+  scopes_.push_back(Scope());
 }
 
 void Compiler::Compile(const string& source_code) {
@@ -116,7 +120,7 @@ void Compiler::Consume(TokenType type, const string& msg) {
 void Compiler::EmitByte(uint8 byte) { GetChunk()->Write(byte, prev_.line); }
 
 void Compiler::EmitReturn() {
-  LOGrrr << "Emiting OP_RETURN";
+  LOGccc << "Emiting OP_RETURN";
   EmitByte(OP_RETURN);
 }
 
@@ -140,7 +144,7 @@ int Compiler::MakeConstant(Value val) {
 }
 
 void Compiler::EmitConstant(Value val) {
-  LOGrrr << "Emiting OP_CONSTANT: " << val.ToString();
+  LOGccc << "Emiting OP_CONSTANT: " << val.ToString();
   EmitByte(OP_CONSTANT, MakeConstant(val));
 }
 
@@ -155,9 +159,9 @@ string Compiler::GetLexeme(Token tt) { return scanner_->GetLexeme(tt); }
 
 void Compiler::LogicAnd(bool can_assign) {
   int end_jump = EmitJump(OP_JUMP_IF_FALSE);
-  LOGrrr << "Emiting OP_POP";
+  LOGccc << "Emiting OP_POP";
   EmitByte(OP_POP);
-  ParseWithPrecedenceOrder(PREC_AND);
+  ParseUntilHigherOrder(PREC_AND);
   PatchJump(end_jump);
 }
 
@@ -166,10 +170,10 @@ void Compiler::LogicOr(bool can_assign) {
   // If current condition is true, then skip all the rest condition checks.
   int end_jump = EmitJump(OP_JUMP);
   PatchJump(else_jump);
-  LOGrrr << "Emiting OP_POP";
+  LOGccc << "Emiting OP_POP";
   EmitByte(OP_POP);
 
-  ParseWithPrecedenceOrder(PREC_OR);
+  ParseUntilHigherOrder(PREC_OR);
   PatchJump(end_jump);
 }
 
@@ -178,7 +182,7 @@ void Compiler::ParseNumber(bool can_assign) {
   EmitConstant(Value(val));
 }
 
-void Compiler::ParseExpression() { ParseWithPrecedenceOrder(PREC_ASSIGNMENT); }
+void Compiler::ParseExpression() { ParseUntilHigherOrder(PREC_ASSIGNMENT); }
 
 void Compiler::ParseGrouping(bool can_assign) {
   ParseExpression();
@@ -187,7 +191,7 @@ void Compiler::ParseGrouping(bool can_assign) {
 
 void Compiler::ParseUnary(bool can_assign) {
   TokenType op_type = prev_.type;
-  ParseWithPrecedenceOrder(PREC_UNARY);
+  ParseUntilHigherOrder(PREC_UNARY);
   switch (op_type) {
     case TOKEN_MINUS:
       EmitByte(OP_NEGATE);
@@ -204,37 +208,46 @@ void Compiler::ParseUnary(bool can_assign) {
 void Compiler::ParseBinary(bool can_assign) {
   TokenType op_type = prev_.type;
   PrecedenceRule rule = GetRule(op_type);
-  ParseWithPrecedenceOrder(PrecOrder(rule.prec_order + 1));
+  ParseUntilHigherOrder(PrecOrder(rule.prec_order + 1));
   switch (op_type) {
     case TOKEN_PLUS:
-      LOGrrr << "Emiting OP_ADD";
+      LOGccc << "Emiting OP_ADD";
       EmitByte(OP_ADD);
       break;
     case TOKEN_MINUS:
+      LOGccc << "Emiting OP_SUB";
       EmitByte(OP_SUB);
       break;
     case TOKEN_STAR:
+      LOGccc << "Emiting OP_MUL";
       EmitByte(OP_MUL);
       break;
     case TOKEN_SLASH:
+      LOGccc << "Emiting OP_SLAH";
       EmitByte(OP_DIV);
       break;
     case TOKEN_BANG_EQUAL:
+      LOGccc << "Emiting OP_EQUAL OP_NOT";
       EmitByte(OP_EQUAL, OP_NOT);
       break;
     case TOKEN_EQUAL_EQUAL:
+      LOGccc << "Emiting OP_EQUAL";
       EmitByte(OP_EQUAL);
       break;
     case TOKEN_GREATER:
+      LOGccc << "Emiting OP_GREATER";
       EmitByte(OP_GREATER);
       break;
     case TOKEN_GREATER_EQUAL:
+      LOGccc << "Emiting OP_LESS OP_NOT";
       EmitByte(OP_LESS, OP_NOT);
       break;
     case TOKEN_LESS:
+      LOGccc << "Emiting OP_LESS";
       EmitByte(OP_LESS);
       break;
     case TOKEN_LESS_EQUAL:
+      LOGccc << "Emiting OP_GREATER OP_NOT";
       EmitByte(OP_GREATER, OP_NOT);
       break;
     default:
@@ -246,12 +259,15 @@ void Compiler::ParseBinary(bool can_assign) {
 void Compiler::ParseLiteral(bool can_assign) {
   switch (prev_.type) {
     case TOKEN_FALSE:
+      LOGccc << "Emiting OP_FALSE";
       EmitByte(OP_FALSE);
       break;
     case TOKEN_TRUE:
+      LOGccc << "Emiting OP_TRUE";
       EmitByte(OP_TRUE);
       break;
     case TOKEN_NIL:
+      LOGccc << "Emiting OP_NIL";
       EmitByte(OP_NIL);
       break;
     default:
@@ -260,8 +276,11 @@ void Compiler::ParseLiteral(bool can_assign) {
   }
 }
 
-void Compiler::ParseWithPrecedenceOrder(PrecOrder order) {
+void Compiler::ParseUntilHigherOrder(PrecOrder order) {
   Advance();
+
+  LOGvvv << "Parsing until a higher order: " << GetLexeme(curr_) << " "
+         << GetLexeme(prev_);
 
   auto rule = GetRule(prev_.type);
   ParseFunc prefix_rule = rule.prefix_rule;
@@ -336,8 +355,11 @@ void Compiler::DeclareLocals() {
                    << "` already defined in this scope.";
     }
   }
-  LOGrrr << "New local variable: " << GetLexeme(prev_)
+  LOGccc << "New local variable: " << GetLexeme(prev_)
          << " slot: " << std::to_string(locals_.size());
+  if (!scopes_[scope_depth_].met_break_stmt) {
+    scopes_[scope_depth_].owned_stack_num++;
+  }
   locals_.push_back(LocalDef{prev_, kLocalUnitialized, GetLexeme(prev_)});
 }
 
@@ -361,12 +383,12 @@ void Compiler::DefineVariable(uint8 global) {
   if (scope_depth_ > 0) {
     // Mark the local variable as initialized.
     CHECK(!locals_.empty());
-    LOGrrr << "Initializing local variable: " << locals_.back().name;
+    LOGccc << "Initializing local variable: " << locals_.back().name;
     locals_.back().depth = scope_depth_;
   }
   else {
     // This is a global variable.
-    LOGrrr << "Emiting OP_DEFINE_GLOBAL " << global;
+    LOGccc << "Emiting OP_DEFINE_GLOBAL " << global;
     EmitByte(OP_DEFINE_GLOBAL, global);
   }
 }
@@ -377,6 +399,7 @@ bool Compiler::ResolveLocal(const std::string& name, uint8* arg) {
       if (locals_[i - 1].depth == kLocalUnitialized) {
         CHECK(false) << "Cannot read local variable in its own initializer.";
       }
+      LOGccc << "Resolving local: " << name;
       *arg = i - 1;
       return true;
     }
@@ -409,13 +432,13 @@ void Compiler::NamedVariable(bool can_assign) {
 
   if (can_assign && Match(TOKEN_EQUAL)) {
     ParseExpression();
-    LOGrrr << "Emiting "
+    LOGccc << "Emiting "
            << (set_op == OP_SET_LOCAL ? "OP_SET_LOCAL" : "OP_SET_GLOBAL") << " "
            << name;
     EmitByte(set_op, arg);
   }
   else {
-    LOGrrr << "Emiting "
+    LOGccc << "Emiting "
            << (get_op == OP_GET_LOCAL ? "OP_GET_LOCAL" : "OP_GET_GLOBAL") << " "
            << name;
     EmitByte(get_op, arg);
@@ -430,7 +453,8 @@ void Compiler::NamedVariable(bool can_assign) {
 //               |   block ;
 // block         ->  "{" declaration* "}"
 void Compiler::ParseStmt() {
-  LOGvvv << "Parsing statement...";
+  LOGvvv << "Parsing statement with curr token: " << GetLexeme(curr_);
+
   if (Match(TOKEN_PRINT)) {
     ParsePrintStmt();
   }
@@ -444,20 +468,60 @@ void Compiler::ParseStmt() {
     ParseForStmt();
   }
   else if (Match(TOKEN_LEFT_BRACE)) {
-    BeginScope();
+    BeginScope(SCOPE_BLOCK);
     ParseBlock();
     EndScope();
+  }
+  else if (Match(TOKEN_CONTINUE)) {
+    ParseContinueStmt();
+  }
+  else if (Match(TOKEN_BREAK)) {
+    ParseBreakStmt();
   }
   else {
     ParseExpressStmt();
   }
 }
 
+void Compiler::ParseBreakStmt() {
+  Consume(TOKEN_SEMICOLON, "Expect `;` after a break stmt");
+
+  LOGvvv << "Parsing break stmt...";
+  if (scope_depth_ == 0) {
+    CHECK(false);
+  }
+
+  scopes_[scope_depth_].met_break_stmt = true;
+
+  int for_scope = -1;
+  int totol_stack_num = 0;
+  for (int i = scope_depth_; i >= 0; i--) {
+    LOGccc << "Scope " << i << " has " << scopes_[i].owned_stack_num
+           << " values left on stack.";
+    totol_stack_num += scopes_[i].owned_stack_num;
+    if (scopes_[i].type == SCOPE_FOR) {
+      for_scope = i;
+      break;
+    }
+  }
+
+  CHECK(for_scope != -1) << "Break can't find for stmt.";
+  for (int i = 0; i < totol_stack_num; i++) {
+    LOGccc << "Emiting OP_POP to remove locals after break";
+    EmitByte(OP_POP);
+  }
+
+  // Emit OP_JUMP, will refill how long it jumps.
+  int break_jump = EmitJump(OP_JUMP);
+  LOGccc << "Emiting OP_JUMP to break execution at pc: " << break_jump - 1;
+  scopes_[for_scope].breaks.push_back(break_jump);
+}
+
 void Compiler::ParseForStmt() {
   LOGvvv << "Parsing for statement...";
 
   // Treat for as a new scope since it might define new varibles.
-  BeginScope();
+  BeginScope(SCOPE_FOR);
 
   // Parse the initializer.
   Consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
@@ -478,7 +542,9 @@ void Compiler::ParseForStmt() {
     ParseExpression();
     Consume(TOKEN_SEMICOLON, "Expect ';' after loop condition");
 
+    LOGccc << "Emiting OO_JUMP_IF_FALSE to check for";
     exit_jump = EmitJump(OP_JUMP_IF_FALSE);
+    LOGccc << "Emiting OP_POP to pop the for condition";
     EmitByte(OP_POP);
   }
 
@@ -489,9 +555,11 @@ void Compiler::ParseForStmt() {
     int inc_start = GetChunk()->size();
     LOGvvv << "Increment start: " << inc_start;
     ParseExpression();
+    LOGccc << "Emiting OP_POP to pop the expression value";
     EmitByte(OP_POP);
     Consume(TOKEN_RIGHT_PAREN, "Expect ')' after finishing 'for'.");
 
+    LOGccc << "Emiting OP_LOOP by increment stmt";
     EmitLoop(loop_start);
     loop_start = inc_start;
     PatchJump(inc_jump);
@@ -500,16 +568,18 @@ void Compiler::ParseForStmt() {
   // Parse the main body of the for statement.
   ParseStmt();
 
+  LOGccc << "Emiting OP_LOOP by for main body";
   EmitLoop(loop_start);
-
-  EndScope();
 
   // Finish the jump if the condition becomes false.
   if (exit_jump != -1) {
     PatchJump(exit_jump);
     // Pop out the condition value left on the stack.
+    LOGccc << "Emiting OP_POP to pop the for condition";
     EmitByte(OP_POP);
   }
+
+  EndScope();
 }
 
 void Compiler::EmitLoop(int loop_start) {
@@ -519,10 +589,6 @@ void Compiler::EmitLoop(int loop_start) {
   if (offset > UINT16_MAX) {
     CHECK(false) << "Loop body too large.";
   }
-
-  LOGrrr << "Emiting OP_LOOP"
-         << " " << offset;
-  LOGrrr << "Emiting OP_POP";
 
   EmitByte((offset >> 8) & 0xff);
   EmitByte(offset & 0xff);
@@ -538,14 +604,15 @@ void Compiler::ParseWhileStmt() {
 
   int exit_jump = EmitJump(OP_JUMP_IF_FALSE);
 
-  LOGrrr << "Emiting OP_POP";
+  LOGccc << "Emiting OP_POP";
   EmitByte(OP_POP);
   ParseStmt();
 
+  LOGccc << "Emiting OP_LOOP by while main body";
   EmitLoop(loop_start);
 
   PatchJump(exit_jump);
-  LOGrrr << "Emiting OP_POP";
+  LOGccc << "Emiting OP_POP to pop while condition";
   // Pop the condition value on the stack.
   EmitByte(OP_POP);
 }
@@ -558,7 +625,8 @@ void Compiler::PatchJump(int patch_place) {
     CHECK(false) << "Too much code to jump over.";
   }
 
-  LOGrrr << "Jump over: " << jump_count;
+  LOGvvv << "Patching at address " << patch_place << " to jump over "
+         << jump_count;
   GetChunk()->WriteAt(patch_place, (jump_count >> 8) & 0xff);
   GetChunk()->WriteAt(patch_place + 1, jump_count & 0xff);
 }
@@ -570,13 +638,13 @@ void Compiler::ParseIfStmt() {
   Consume(TOKEN_RIGHT_PAREN, "Expect ')' after 'if' condition");
 
   int then_branch = EmitJump(OP_JUMP_IF_FALSE);
-  LOGrrr << "Emiting OP_POP";
+  LOGccc << "Emiting OP_POP to pop if condition";
   EmitByte(OP_POP);
   ParseStmt();
   int else_branch = EmitJump(OP_JUMP);
   PatchJump(then_branch);
 
-  LOGrrr << "Emiting OP_POP";
+  LOGccc << "Emiting OP_POP to pop if condition";
   EmitByte(OP_POP);
   if (Match(TOKEN_ELSE)) {
     ParseStmt();
@@ -584,16 +652,63 @@ void Compiler::ParseIfStmt() {
   PatchJump(else_branch);
 }
 
-void Compiler::BeginScope() { scope_depth_++; }
+std::string DebugScope(Scope sp) {
+  std::string ret;
+  ret += "Scope";
+  ret += std::to_string(sp.depth);
+  ret += (sp.type == SCOPE_FOR ? "For" : "");
+  ret += "{";
+  ret += std::to_string(sp.start_ln);
+  ret += ", ";
+  ret += std::to_string(sp.end_ln);
+  ret += ", ";
+  ret += std::to_string(sp.start_pc);
+  ret += ", ";
+  ret += std::to_string(sp.end_pc);
+  ret += ", ";
+  ret += ", ";
+  ret += std::to_string(sp.owned_stack_num);
+  ret += "}";
+  return ret;
+}
+
+void Compiler::BeginScope(ScopeType type) {
+  scope_depth_ = scopes_.size();
+  // Don't know the end_pc yet, will refill after we know it.
+  scopes_.push_back(Scope(type,
+                          /*start_pc=*/GetChunk()->size(),
+                          /*start_ln=*/prev_.line,
+                          /*depth=*/scope_depth_));
+
+  LOGrrr << "Entering scope: " << DebugScope(scopes_[scope_depth_]);
+}
 
 void Compiler::EndScope() {
-  scope_depth_--;
-  // Remove all the local varibles that are out of its scope.
-  while (!locals_.empty() && locals_.back().depth > scope_depth_) {
-    LOGrrr << "Emiting OP_POP";
+  // Refill the end_pc for every scope.
+  auto& scope = scopes_[scope_depth_];
+
+  scope.end_pc = GetChunk()->size();
+  scope.end_ln = prev_.line;
+
+  LOGrrr << "Exiting scope: " << DebugScope(scope);
+
+  // Remove all the local varibles that are out of this scope.
+  while (!locals_.empty() && locals_.back().depth >= scope_depth_) {
+    LOGccc << "Emiting OP_POP to remove local varibles..."
+           << GetLexeme(locals_.back().token);
     EmitByte(OP_POP);
     locals_.pop_back();
   }
+
+  if (scope.type == SCOPE_FOR) {
+    for (auto break_jump : scope.breaks) {
+      PatchJump(break_jump);
+      scope.breaks.pop_back();
+    }
+  }
+
+  scopes_.pop_back();
+  scope_depth_--;
 }
 
 void Compiler::ParseBlock() {
@@ -611,7 +726,7 @@ void Compiler::ParsePrintStmt() {
   ParseExpression();
   Consume(TOKEN_SEMICOLON, "Expect ';' after a value.");
 
-  LOGrrr << "Emiting OP_PRINT";
+  LOGccc << "Emiting OP_PRINT";
   EmitByte(OP_PRINT);
 }
 
@@ -621,7 +736,7 @@ void Compiler::ParseExpressStmt() {
   ParseExpression();
   Consume(TOKEN_SEMICOLON, "Expect ';' after an expression.");
 
-  LOGrrr << "Emiting OP_POP";
+  LOGccc << "Emiting OP_POP to pop the expression value";
   EmitByte(OP_POP);
 }
 

@@ -91,6 +91,8 @@ class VM {
 
   hash_table<string, Value>& GetGlobal() { return global_; }
 
+  void DumpStack();
+
   uint32 PC() { return pc_; }
 
  private:
