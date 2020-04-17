@@ -2,17 +2,19 @@ dist: xenial
 
 language: cpp
 
+os:
+  - linux
 
 compiler:
   - clang
   - gcc
 
-os:
-  - linux
+env:
+  # TODO(): why this not work?
+  - GLOG_v=3
 
 install:
   - ./install-bazel.sh
 
 script:
-  - bazel test -c dbg //...:all --test_output=all --action_env="GTEST_COLOR=1"
-
+  - bazel test -c dbg //...:all --test_output=all --action_env="GTEST_COLOR=1" -s
