@@ -1,11 +1,13 @@
 ### xyxy
 
-
-
 Build:
 
 ```shell
+# Debug build
 bazel build -c dbg //...:all -s --sandbox_debug
+
+# Release build
+bazel build //...:all -s --sandbox_debug
 ```
 
 
