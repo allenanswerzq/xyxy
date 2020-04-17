@@ -1,5 +1,7 @@
 ### xyxy
 
+[![Build Status](https://travis-ci.com/landcold7/xyxy.svg?branch=master)](https://travis-ci.com/landcold7/xyxy)
+
 Build:
 
 ```shell
