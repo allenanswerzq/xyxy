@@ -1,6 +1,7 @@
 #ifndef XYXY_TYPE_H_
 #define XYXY_TYPE_H_
 
+#include <cassert>
 #include <cstring>
 
 #include "xyxy/object.h"
@@ -58,6 +59,7 @@ class Value {
     return as_.obj->Type();
   }
 
+  // TODO(): Is this really sets the union to be zero?
   void Reset() { std::memset((void*)&as_, 0, sizeof(as_)); }
 
   bool IsBool() { return type_ == ValueType::VAL_BOOL; }
@@ -101,7 +103,7 @@ class Value {
       return std::to_string(AsBool());
     }
     else if (IsFloat()) {
-      // TODO(): make consistant with float number format.
+      // TODO(): make consistant float number formating.
       return std::to_string(AsFloat());
     }
     else if (IsNil()) {

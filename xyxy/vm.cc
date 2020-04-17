@@ -1,21 +1,31 @@
 #include "xyxy/vm.h"
 
-#include <glog/logging.h>
-
+#include "xyxy/logging.h"
 #include "xyxy/type.h"
 
 namespace xyxy {
 
-std::string Inst::DebugInfo() {
+const int Inst::kDumpWidth = 20;
+
+void Inst::DebugInfo() {
   std::string ret;
+  char buf[64];
+  snprintf(buf, 64, "%010d", address_);
+  ret += string(buf);
+  ret += " ";
   ret += name_;
   ret += string(kDumpWidth - name_.size(), ' ');
-  for (int i = 0; i < operands_.size(); i++) {
+  for (size_t i = 0; i < operands_.size(); i++) {
     Value val = operands_[i];
     ret += val.ToString();
   }
-  ret += "\n";
-  return ret;
+  for (size_t i = 0; i < metadata_.size(); i++) {
+    if (i > 0) {
+      ret += " ";
+    }
+    ret += std::to_string(metadata_[i]);
+  }
+  LOGvv << ret;
 }
 
 #define DEFINE_INST(opcode, length) DEFINE_INST_HELPER(#opcode, opcode, length)
@@ -49,6 +59,11 @@ DEFINE_INST(OP_POP, 1)
 DEFINE_INST(OP_DEFINE_GLOBAL, 2)
 DEFINE_INST(OP_SET_GLOBAL, 2)
 DEFINE_INST(OP_GET_GLOBAL, 2)
+DEFINE_INST(OP_SET_LOCAL, 2)
+DEFINE_INST(OP_GET_LOCAL, 2)
+DEFINE_INST(OP_JUMP_IF_FALSE, 3)
+DEFINE_INST(OP_JUMP, 3)
+DEFINE_INST(OP_LOOP, 3)
 
 VM::VM(Chunk* chunk) : chunk_(chunk) { pc_ = 0; }
 
@@ -78,6 +93,11 @@ static std::unique_ptr<Inst> DispatchInst(uint8 opcode) {
     CREATE_INST_INSTANCE(OP_DEFINE_GLOBAL)
     CREATE_INST_INSTANCE(OP_SET_GLOBAL)
     CREATE_INST_INSTANCE(OP_GET_GLOBAL)
+    CREATE_INST_INSTANCE(OP_SET_LOCAL)
+    CREATE_INST_INSTANCE(OP_GET_LOCAL)
+    CREATE_INST_INSTANCE(OP_JUMP_IF_FALSE)
+    CREATE_INST_INSTANCE(OP_JUMP)
+    CREATE_INST_INSTANCE(OP_LOOP)
     default: {
       CHECK(false);
       break;
@@ -86,55 +106,81 @@ static std::unique_ptr<Inst> DispatchInst(uint8 opcode) {
   return nullptr;
 }
 
+// TODO(): refact this function.
 std::unique_ptr<Inst> VM::CreateInst(uint8 offset) {
   OpCode byte = (OpCode)chunk_->GetByte(offset);
   auto inst = DispatchInst(byte);
-  for (int i = 1; i <= inst->Length() - 1; i++) {
-    int index = chunk_->GetByte(offset + i);
-    Value val = chunk_->GetConstant(index);
-    inst->AddOperand(val);
+  inst->address_ = offset;
+  if (byte == OP_SET_LOCAL || byte == OP_GET_LOCAL) {
+    CHECK(inst->metadata_.empty());
+    inst->metadata_.push_back(chunk_->GetByte(offset + 1));
+  }
+  else if (byte == OP_JUMP_IF_FALSE || byte == OP_JUMP || byte == OP_LOOP) {
+    CHECK(inst->metadata_.empty());
+    inst->metadata_.push_back(chunk_->GetByte(offset + 1));
+    inst->metadata_.push_back(chunk_->GetByte(offset + 2));
+  }
+  else {
+    for (int i = 1; i <= inst->Length() - 1; i++) {
+      int index = chunk_->GetByte(offset + i);
+      Value val = chunk_->GetConstant(index);
+      inst->AddOperand(val);
+    }
   }
   return inst;
 }
 
 #define BINARY_OP(op)                                                \
   do {                                                               \
-    auto lhs = stack_.Pop();                                         \
     auto rhs = stack_.Pop();                                         \
+    auto lhs = stack_.Pop();                                         \
     if (lhs.IsFloat()) {                                             \
       if (!rhs.IsFloat()) {                                          \
         return Status(RUNTIME_ERROR, "Operand must be a number.");   \
       }                                                              \
       double a = lhs.AsFloat();                                      \
       double b = rhs.AsFloat();                                      \
-      stack_.Push(Value(a op b));                                    \
-      return Status();                                               \
+      Value res = Value(a op b);                                     \
+      LOGcc << "Binary op: " << lhs.ToString() << " " << #op << " "  \
+            << rhs.ToString() << " = " << res.ToString();            \
+      stack_.Push(res);                                              \
+      break;                                                         \
     }                                                                \
     else {                                                           \
       return Status(RUNTIME_ERROR, "Unsupported binary operation."); \
     }                                                                \
   } while (false)
 
-std::string VM::DumpInsts() {
-  std::string ret;
+void VM::DumpInsts() {
+  LOGvv << "-------------RAW CODE-------------------";
   for (int pc = 0; pc < chunk_->size();) {
     auto inst = CreateInst(pc);
-    ret += inst->DebugInfo();
+    inst->DebugInfo();
     pc += inst->Length();
   }
-  return ret;
+  LOGvv << "---------------------------------------";
+}
+
+void VM::DumpStack() {
+  LOGvv << "-------------DUMP STACK----------------";
+  for (int i = 0; i < stack_.Size(); i++) {
+    LOGvv << stack_.Get(i).ToString();
+  }
+  LOGvv << "---------------------------------------";
 }
 
 Status VM::Run() {
+  DumpInsts();
   for (; pc_ < chunk_->size();) {
     auto inst = CreateInst(pc_);
-    std::cout << inst->DebugInfo();
+    inst->DebugInfo();
     switch (inst->opcode_) {
       case OP_RETURN: {
         break;
       }
       case OP_CONSTANT: {
         CHECK(!inst->operands_.empty());
+        LOGcc << "Define constant: " << inst->operands_[0].ToString();
         stack_.Push(inst->operands_[0]);
         break;
       }
@@ -147,16 +193,19 @@ Status VM::Run() {
         break;
       }
       case OP_ADD: {
+        // TODO(): support a += b.
         if (stack_.Top().IsString()) {
           auto lhs = stack_.Pop();
           auto rhs = stack_.Pop();
+          LOGcc << "Binary add: " << lhs.ToString() << " " << rhs.ToString();
           if (!rhs.IsString()) {
             return Status(RUNTIME_ERROR, "Operand must be a string.");
           }
           string a = lhs.AsString();
           string b = rhs.AsString();
-          a += b;
-          stack_.Push(Value(new ObjString(a)));
+          // NOTE: the order here must be `b + a`.
+          b += a;
+          stack_.Push(Value(new ObjString(b)));
         }
         else {
           BINARY_OP(+);
@@ -204,18 +253,23 @@ Status VM::Run() {
         break;
       }
       case OP_PRINT: {
+        final_print_ = stack_.Top().ToString();
         printf("%s\n", stack_.Pop().ToString().c_str());
+        LOGcc << "Stack size after print: " << stack_.Size();
         break;
       }
       case OP_POP: {
+        LOGcc << "Pop out: " << stack_.Top().ToString();
         stack_.Pop();
         break;
       }
       case OP_DEFINE_GLOBAL: {
+        // Pop one value out from stack and assign it as the global variable.
         CHECK(!inst->operands_.empty());
-        Value val = inst->operands_[0];
-        global_.Insert(val.ToString(), val);
-        stack_.Pop();
+        std::string var_name = inst->operands_[0].ToString();
+        LOGcc << "Define global: " << var_name << " "
+              << stack_.Top().ToString();
+        global_.Insert(var_name, stack_.Pop());
         break;
       }
       case OP_GET_GLOBAL: {
@@ -226,11 +280,70 @@ Status VM::Run() {
           // TODO(): Error handling
           CHECK(false);
         }
+        LOGcc << "Get global: " << var_name << " " << val.ToString();
         stack_.Push(val);
         break;
       }
+      case OP_SET_GLOBAL: {
+        CHECK(!inst->operands_.empty());
+        string var_name = inst->operands_[0].ToString();
+        if (!global_.Find(var_name)) {
+          // TODO(): Error handling
+          CHECK(false);
+        }
+        // Sets to a new value.
+        LOGcc << "Set global: " << var_name << " " << stack_.Top().ToString();
+        // NOTE: here we dont pop the value from stack.
+        global_.Insert(var_name, stack_.Top());
+        break;
+      }
+      case OP_GET_LOCAL: {
+        CHECK(!inst->metadata_.empty());
+        uint8 slot = inst->metadata_[0];
+        LOGcc << "Get local: " << stack_.Get(slot).ToString();
+        stack_.Push(stack_.Get(slot));
+        break;
+      }
+      case OP_SET_LOCAL: {
+        CHECK(!inst->metadata_.empty());
+        uint8 slot = inst->metadata_[0];
+        // NOTE: here we dont pop the value from stack.
+        LOGcc << "Set local: " << stack_.Top().ToString();
+        stack_.Set(slot, stack_.Top());
+        break;
+      }
+      case OP_JUMP_IF_FALSE: {
+        auto meta = inst->metadata_;
+        CHECK(meta.size() == 2);
+        uint16_t count = (uint16_t)((meta[0] << 8) | meta[1]);
+        // Also skip the inst itself.
+        count += inst->Length();
+        if (stack_.Top().IsFalsey()) {
+          pc_ += count;
+          LOGcc << "Jump over " << count << " to " << pc_;
+          continue;
+        }
+        break;
+      }
+      case OP_JUMP: {
+        auto meta = inst->metadata_;
+        CHECK(meta.size() == 2);
+        uint16_t count = (uint16_t)((meta[0] << 8) | meta[1]);
+        count += inst->Length();
+        pc_ += count;
+        LOGcc << "Jump over " << count << " to " << pc_;
+        continue;
+      }
+      case OP_LOOP: {
+        auto meta = inst->metadata_;
+        CHECK(meta.size() == 2);
+        uint16_t count = (uint16_t)((meta[0] << 8) | meta[1]);
+        pc_ -= count;
+        LOGcc << "Jump back " << count << " to " << pc_;
+        continue;
+      }
       default: {
-        CHECK(false);
+        CHECK(false) << "Unkown inst to run with pc: " << pc_;
         break;
       }
     }

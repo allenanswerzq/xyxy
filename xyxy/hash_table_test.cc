@@ -20,6 +20,18 @@ TEST(String, hash_tableTest) {
   EXPECT_FALSE(ht.Find("tar"));
 }
 
+TEST(InsertSameKey, hash_tableTest) {
+  hash_table<std::string, int> ht;
+  ht.Insert("foo", 1);
+  ht.Insert("foo", 2);
+  EXPECT_TRUE(ht.Find("foo"));
+  EXPECT_TRUE(!ht.Find("bar"));
+  int val;
+  ht.Find("foo", &val);
+  EXPECT_EQ(val, 2);
+  EXPECT_FALSE(ht.Find("tar"));
+}
+
 TEST(String, hash_setTest) {
   hash_set<std::string> hs;
   hs.Insert("foo");

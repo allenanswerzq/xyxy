@@ -11,7 +11,7 @@
 
 namespace xyxy {
 
-typedef enum {
+enum PrecOrder {
   PREC_NONE,
   PREC_ASSIGNMENT,  // =
   PREC_OR,          // or
@@ -23,39 +23,53 @@ typedef enum {
   PREC_UNARY,       // ! -
   PREC_CALL,        // . ()
   PREC_PRIMARY
-} PrecOrder;
+};
 
 class Compiler;
 
-typedef std::function<void(Compiler*)> ParseFunc;
+typedef std::function<void(Compiler*, bool can_assign)> ParseFunc;
 
-typedef struct {
+struct PrecedenceRule {
   ParseFunc prefix_rule;
   ParseFunc infix_rule;
   PrecOrder prec_order;
-} PrecedenceRule;
+};
+
+enum ScopeType {
+  SCOPE_UNDEF,
+  SCOPE_BLOCK,
+  SCOPE_FOR,
+  SCOPE_FUNC,
+  SCOPE_CLASS,
+  SCOPE_MAIN
+};
+
+// TODO(): may consider write this as a class.
+struct Scope {
+  Scope() {}
+  explicit Scope(ScopeType tp, int pc, int ln, int dp)
+      : type(tp), start_pc(pc), start_ln(ln), depth(dp) {}
+  ScopeType type;
+  int start_pc = 0;
+  int end_pc = 0;
+  int start_ln = 0;
+  int end_ln = 0;
+  int depth = 0;
+  int loop_start = 0;
+  int owned_stack_num = 0;
+  bool met_break_stmt = false;
+  std::vector<int> breaks;
+};
+
+std::string DebugScope(Scope sp);
 
 class Compiler {
  public:
-  Compiler() {
-    scanner_ = std::make_unique<Scanner>();
-    curr_ = Token{TOKEN_NONE, 0, 0, 0};
-    prev_ = Token{TOKEN_NONE, 0, 0, 0};
-    chunk_ = std::make_unique<Chunk>();
-  }
-
+  Compiler();
+  explicit Compiler(const string& source);
   virtual ~Compiler() = default;
 
-  void Compile(const string& source_code) {
-    VLOG(1) << "Compiling: " << source_code;
-    scanner_->SetSource(source_code);
-    curr_ = Token{TOKEN_NONE, 0, 0, 0};
-    prev_ = Token{TOKEN_NONE, 0, 0, 0};
-    Advance();
-    while (!Match(TOKEN_EOF)) {
-      ParseDeclaration();
-    }
-  }
+  void Compile(const string& source_code);
 
   void Advance();
   bool Match(TokenType type);
@@ -75,21 +89,42 @@ class Compiler {
   void EmitByte(uint8 byte);
   void EmitByte(uint8 byte1, uint8 byte2);
   void EmitReturn();
+  int EmitJump(uint8 inst);
+  void PatchJump(int place);
+  void EmitLoop(int loop_start);
 
   void ParseDeclaration();
   void ParseVarDeclaration();
-  void ParseVariable();
-  void ParseStatement();
-  void ParsePrintStatement();
-  void ParseExpressStatement();
-  void ParseNumber();
-  void ParseGrouping();
-  void ParseUnary();
-  void ParseBinary();
+  void ParseVariable(bool can_assign);
+  void NamedVariable(bool can_assign);
+  void ParseStmt();
+  void ParsePrintStmt();
+  void ParseExpressStmt();
+  void ParseNumber(bool can_assign);
+  void ParseGrouping(bool can_assign);
+  void ParseUnary(bool can_assign);
+  void ParseBinary(bool can_assign);
+  void ParseLiteral(bool can_assign);
+  void ParseString(bool can_assign);
   void ParseExpression();
-  void ParseLiteral();
-  void ParseString();
-  void ParseWithPrecedenceOrder(PrecOrder prec_order);
+  void LogicAnd(bool can_assign);
+  void LogicOr(bool can_assign);
+
+  void ParseBlock();
+  void BeginScope(ScopeType type);
+  void EndScope();
+  void DeclareLocals();
+  bool ResolveLocal(const std::string& name, uint8* arg);
+  uint8 HandleVariable(const string& msg);
+
+  void ParseIfStmt();
+  void ParseForStmt();
+  void ParseWhileStmt();
+  void ParseContinueStmt();
+  void ParseBreakStmt();
+
+  // Continue parsing until read a token that has a higher precedence.
+  void ParseUntilHigherOrder(PrecOrder prec_order);
 
   string GetLexeme(Token tt);
 
@@ -106,23 +141,25 @@ class Compiler {
     return it->second;
   }
 
-  struct DebugParser {
-    int parse_depth = 0;
-    int enter_pos;
-    int exit_pos;
-    string msg;
+  // Local variable definition.
+  struct LocalDef {
+    Token token;
+    int depth;
+    string name;
   };
 
-  void DebugParsing(const DebugParser& debug);
+  static const int kLocalUnitialized;
 
  private:
   Token curr_;
   Token prev_;
   std::unique_ptr<Chunk> chunk_;
   std::unique_ptr<Scanner> scanner_;
-  bool has_error_ = false;
-  bool panic_mode_ = false;
-  int parse_depth_ = 1;
+  int scope_depth_ = 0;
+  std::vector<Scope> scopes_;
+  std::vector<LocalDef> locals_;
+  // bool has_error_ = false;
+  // bool panic_mode_ = false;
 };
 }  // namespace xyxy
 

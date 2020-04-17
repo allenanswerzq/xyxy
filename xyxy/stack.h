@@ -1,6 +1,8 @@
 #ifndef XYXY_STACK_H_
 #define XYXY_STACK_H_
 
+#include <glog/logging.h>
+
 #include "xyxy/base.h"
 
 namespace xyxy {
@@ -30,12 +32,27 @@ class Stack {
     *top_++ = value;
   }
 
+  T Get(int idx) {
+    assert(idx < N);
+    return *(stk_ + idx);
+  }
+
+  int Size() { return top_ - stk_; }
+
+  void Set(int idx, const T& val) {
+    assert(idx < N);
+    *(stk_ + idx) = val;
+  }
+
   T Pop() {
     assert(!Empty());
     return *(--top_);
   }
 
-  T Top() { return *top_; }
+  T Top() {
+    assert(!Empty());
+    return *(top_ - 1);
+  }
 
  private:
   T* stk_;

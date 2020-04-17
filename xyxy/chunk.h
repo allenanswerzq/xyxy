@@ -22,6 +22,8 @@ class Chunk {
   void Write(uint8 byte, int index, Value val);
   void Write(uint8 byte, int index, Value val, int ln);
 
+  void WriteAt(int place, uint8 val);
+
   uint8 GetByte(int index) const;
   uint8 GetLine(int index) const;
 

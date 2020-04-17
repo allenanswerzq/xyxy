@@ -30,6 +30,11 @@ typedef enum {
   OP_DEFINE_GLOBAL,
   OP_SET_GLOBAL,
   OP_GET_GLOBAL,
+  OP_GET_LOCAL,
+  OP_SET_LOCAL,
+  OP_JUMP_IF_FALSE,
+  OP_JUMP,
+  OP_LOOP,
 } OpCode;
 
 // Forward declaration.
@@ -44,7 +49,7 @@ class Inst {
 
   uint8 Length() { return length_; }
 
-  std::string DebugInfo();
+  void DebugInfo();
 
   uint8 Opcode() { return opcode_; }
 
@@ -54,11 +59,16 @@ class Inst {
 
  protected:
   friend class VM;
-  const int kDumpWidth = 16;
+  static const int kDumpWidth;
   string name_;
   uint8 opcode_;
   uint8 length_;
   std::vector<Value> operands_;
+  // Address where this inst locate in bytecode.
+  int address_;
+  // Stores some meta data to use.
+  // TODO(): may make this into a class.
+  std::vector<uint8> metadata_;
 };
 
 class VM {
@@ -73,15 +83,23 @@ class VM {
 
   Chunk* GetChunk() { return chunk_; }
 
-  std::string DumpInsts();
+  void DumpInsts();
+
+  std::string FinalResult() { return final_print_; }
 
   Stack<Value, STACK_SIZE>& GetStack() { return stack_; }
 
   hash_table<string, Value>& GetGlobal() { return global_; }
 
+  void DumpStack();
+
   uint32 PC() { return pc_; }
 
  private:
+  // A simple way to remember the last print result for verifying,
+  // TODO(): not only verfiy the final result, but also the intermediate
+  // execution result.
+  std::string final_print_;
   Chunk* chunk_;  // Not owned.
   // Virtual machine stack.
   Stack<Value, STACK_SIZE> stack_;

@@ -41,7 +41,7 @@ class hash_table {
   hash_table() {
     table_.resize(kMaxSlot);
     for (int i = 0; i < kMaxSlot; i++) {
-      table_[i] = std::make_shared<List<KeyType>>();
+      table_[i] = std::make_unique<List<KeyType>>();
       assert(table_[i].get());
     }
   }
@@ -67,16 +67,17 @@ class hash_table {
     return Insert(make_pair(key, val));
   }
 
-  void Insert(const K& key) { Insert(std::make_pair(key, false)); }
+  bool Insert(const K& key) { return Insert(std::make_pair(key, false)); }
 
+  // Returns true if an insertion took place.
   bool Insert(const KeyType& key) {
-    bool ret = false;
-    if (Find(key.first)) {
-      ret = true;
+    auto val = key.second;
+    if (Find(key.first, &val, /*change=*/true)) {
+      return false;
     }
     int slot = hash_.Hash(key.first) % kMaxSlot;
     table_[slot]->AppendTail(key);
-    return ret;
+    return true;
   }
 
   // int val;
@@ -84,18 +85,23 @@ class hash_table {
   // if (ok) {
   //   cout << "Found value: " << val << '\n';
   // }
-  bool Find(const K& key, V* val = nullptr) const {
+  bool Find(const K& key, V* val = nullptr, bool set = false) const {
     int32 slot = hash_.Hash(key) % kMaxSlot;
     assert(table_[slot]);
-    return Find(table_[slot], key, val);
+    return Find(table_[slot].get(), key, val, set);
   }
 
-  bool Find(std::shared_ptr<List<KeyType>> li, const K& key, V* val) const {
+  bool Find(List<KeyType>* li, const K& key, V* val, bool set = false) const {
     auto root = li->GetHead();
     while (root) {
       if (root->value.first == key) {
         if (val) {
-          *val = root->value.second;
+          if (set) {
+            root->value.second = *val;
+          }
+          else {
+            *val = root->value.second;
+          }
         }
         return true;
       }
@@ -105,7 +111,7 @@ class hash_table {
   }
 
  private:
-  std::vector<std::shared_ptr<List<KeyType>>> table_;
+  std::vector<std::unique_ptr<List<KeyType>>> table_;
   Hasher hash_;
 };
 

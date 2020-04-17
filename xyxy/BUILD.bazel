@@ -3,7 +3,6 @@ package(default_visibility = ["//visibility:public"])
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 
 XYXY_DEFAULT_COPTS = [
-        "-O0",
         "--std=c++17",
     ]
 
@@ -66,6 +65,16 @@ cc_test(
 cc_test(
     name = "compiler_test",
     srcs = ["compiler_test.cc"],
+    copts = XYXY_DEFAULT_COPTS,
+    deps = [
+        ":xyxy",
+        "@com_google_googletest//:gtest_main",
+    ],
+ )
+
+cc_test(
+    name = "compiler_error_test",
+    srcs = ["compiler_error_test.cc"],
     copts = XYXY_DEFAULT_COPTS,
     deps = [
         ":xyxy",

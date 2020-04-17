@@ -1,13 +1,12 @@
 #ifndef XYXY_SCANNER_H_
 #define XYXY_SCANNER_H_
 
-#include <glog/logging.h>
-
 #include "xyxy/base.h"
+#include "xyxy/logging.h"
 
 namespace xyxy {
 
-typedef enum {
+enum TokenType {
   // Single character tokens.
   TOKEN_LEFT_PAREN,   // "("
   TOKEN_RIGHT_PAREN,  // ")"
@@ -37,22 +36,25 @@ typedef enum {
   TOKEN_NUMBER,      // "number"
 
   // Keywords
-  TOKEN_AND,     // "and"
-  TOKEN_IF,      // "if"
-  TOKEN_ELSE,    // "else"
-  TOKEN_FALSE,   // "false"
-  TOKEN_FUN,     // "fun"
-  TOKEN_FOR,     // "for"
-  TOKEN_NIL,     // "nil"
-  TOKEN_OR,      // "or"
-  TOKEN_CLASS,   // "class"
-  TOKEN_PRINT,   // "print"
-  TOKEN_RETURN,  // "return"
-  TOKEN_SUPER,   // "super"
-  TOKEN_THIS,    // "this"
-  TOKEN_TRUE,    // "true"
-  TOKEN_VAR,     // "var"
-  TOKEN_WHILE,   // "while"
+  TOKEN_AND,       // "and"
+  TOKEN_IF,        // "if"
+  TOKEN_ELSE,      // "else"
+  TOKEN_ELIF,      // "elif"
+  TOKEN_FALSE,     // "false"
+  TOKEN_CONTINUE,  // "continue"
+  TOKEN_BREAK,     // "break"
+  TOKEN_FUN,       // "fun"
+  TOKEN_FOR,       // "for"
+  TOKEN_NIL,       // "nil"
+  TOKEN_OR,        // "or"
+  TOKEN_CLASS,     // "class"
+  TOKEN_PRINT,     // "print"
+  TOKEN_RETURN,    // "return"
+  TOKEN_SUPER,     // "super"
+  TOKEN_THIS,      // "this"
+  TOKEN_TRUE,      // "true"
+  TOKEN_VAR,       // "var"
+  TOKEN_WHILE,     // "while"
 
   TOKEN_NEWLINE,     // "\n"
   TOKEN_WHITESPACE,  // "white"
@@ -61,16 +63,17 @@ typedef enum {
   TOKEN_EOF,    // "eof"
 
   TOKEN_NONE,  // None token
-} TokenType;
+};
 
 struct Token {
-  TokenType type;
-  int start;
-  int length;
-  int line;
-  friend bool operator==(const Token& a, const Token& b);
-  friend bool operator!=(const Token& a, const Token& b);
+  TokenType type = TOKEN_NONE;
+  int start = 0;
+  int length = 0;
+  int line = 0;
 };
+
+bool operator==(const Token& a, const Token& b);
+bool operator!=(const Token& a, const Token& b);
 
 class Scanner {
  public:
@@ -88,7 +91,7 @@ class Scanner {
   void SetSource(const string& source) {
     Reset();
     source_ = StripSource(source);
-    VLOG(1) << "Scanner: `" << source_ << "`";
+    LOGvvv << "Scanner: \n`" << source_ << "`";
   }
 
   string StripSource(const string& str);
