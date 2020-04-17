@@ -54,4 +54,19 @@ TEST(IfElse, DISABLED_TestCompiler) {
   )")
 }
 
+TEST(ForBreak, TestCompiler) {
+  // TODO(): This test should fail.
+  XY_COMPILE_SHOLD_ERROR(R"(
+    var a = 1;
+    break;
+  )")
+}
+
+TEST(ForContinue, TestCompiler) {
+  // TODO(): This test should fail.
+  XY_COMPILE_SHOLD_ERROR(R"(
+    var a = 1;
+    continue;
+  )")
+}
 }  // namespace xyxy

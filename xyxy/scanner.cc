@@ -94,7 +94,7 @@ TokenType Scanner::IdentifierType() {
         case 'l':
           return CheckKeyword("class", TOKEN_CLASS);
         case 'o':
-          return CheckKeyword("continue", TOKEN_CLASS);
+          return CheckKeyword("continue", TOKEN_CONTINUE);
         default:
           break;
       }

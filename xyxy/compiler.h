@@ -44,6 +44,7 @@ enum ScopeType {
   SCOPE_MAIN
 };
 
+// TODO(): may consider write this as a class.
 struct Scope {
   Scope() {}
   explicit Scope(ScopeType tp, int pc, int ln, int dp)
@@ -54,6 +55,7 @@ struct Scope {
   int start_ln = 0;
   int end_ln = 0;
   int depth = 0;
+  int loop_start = 0;
   int owned_stack_num = 0;
   bool met_break_stmt = false;
   std::vector<int> breaks;

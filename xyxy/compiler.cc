@@ -483,6 +483,37 @@ void Compiler::ParseStmt() {
   }
 }
 
+void Compiler::ParseContinueStmt() {
+  Consume(TOKEN_SEMICOLON, "Expect `;` after a break stmt");
+  LOGvvv << "Parsing break stmt...";
+  if (scope_depth_ == 0) {
+    CHECK(false);
+  }
+
+  int for_scope = -1;
+  int totol_stack_num = 0;
+  for (int i = scope_depth_; i >= 0; i--) {
+    if (scopes_[i].type == SCOPE_FOR) {
+      for_scope = i;
+      break;
+    }
+    LOGccc << "Scope " << i << " has " << scopes_[i].owned_stack_num
+           << " values left on stack.";
+    totol_stack_num += scopes_[i].owned_stack_num;
+  }
+
+  CHECK(for_scope != -1) << "Continue can't find for stmt.";
+  for (int i = 0; i < totol_stack_num; i++) {
+    LOGccc << "Emiting OP_POP to remove locals after continue";
+    EmitByte(OP_POP);
+  }
+
+  int pc = GetChunk()->size();
+  LOGccc << "Emiting OP_LOOP by continue at pc " << pc << " go back to "
+         << scopes_[for_scope].loop_start;
+  EmitLoop(scopes_[for_scope].loop_start);
+}
+
 void Compiler::ParseBreakStmt() {
   Consume(TOKEN_SEMICOLON, "Expect `;` after a break stmt");
 
@@ -537,12 +568,15 @@ void Compiler::ParseForStmt() {
 
   // Parse the for condition.
   int loop_start = GetChunk()->size();
+  scopes_[scope_depth_].loop_start = loop_start;
+
   int exit_jump = -1;
   if (!Match(TOKEN_SEMICOLON)) {
     ParseExpression();
     Consume(TOKEN_SEMICOLON, "Expect ';' after loop condition");
 
-    LOGccc << "Emiting OO_JUMP_IF_FALSE to check for";
+    int pc = GetChunk()->size();
+    LOGccc << "Emiting OO_JUMP_IF_FALSE at pc " << pc;
     exit_jump = EmitJump(OP_JUMP_IF_FALSE);
     LOGccc << "Emiting OP_POP to pop the for condition";
     EmitByte(OP_POP);
@@ -562,6 +596,7 @@ void Compiler::ParseForStmt() {
     LOGccc << "Emiting OP_LOOP by increment stmt";
     EmitLoop(loop_start);
     loop_start = inc_start;
+    scopes_[scope_depth_].loop_start = loop_start;
     PatchJump(inc_jump);
   }
 

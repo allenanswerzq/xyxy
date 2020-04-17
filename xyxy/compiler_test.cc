@@ -569,11 +569,12 @@ TEST(ForBreak5, TestCompiler) {
   // Test remove all local variables after breaking
   XY_COMPILE_AND_RUN(R"(
     var a = 2;
-    for (var i = 0; i < 10; i = i + 1) {
+    for (var i = 0; i < 100; i = i + 1) {
       a = a + 1;
       var b = "b";
       var c = "c";
       if (a > 10) {
+        // Exit place.
         break;
       }
       for (var j = 2; j < 20; j = j + 1) {
@@ -583,7 +584,7 @@ TEST(ForBreak5, TestCompiler) {
         var h = "h";
         a = a + 1;
         if (a > 0) {
-          // Break from here
+          // First break from here
           break;
         }
       }
@@ -623,4 +624,56 @@ TEST(ForBreak6, TestCompiler) {
   )",
                      "3.000000");
 }
+
+TEST(ForContinue, TestCompiler) {
+  // Test continue inside a for statement.
+  XY_COMPILE_AND_RUN(R"(
+    var a = 0;
+    for (var i = 0; i < 1; i = i + 1) {
+      continue;
+      a = a + 1;
+    }
+    print a;
+  )",
+                     "0.000000");
+}
+
+TEST(ForContinue1, TestCompiler) {
+  // Test remove all local variables.
+  XY_COMPILE_AND_RUN(R"(
+    var a = 0;
+    for (var i = 0; i < 1; i = i + 1) {
+      var b = "b"; // should be poped.
+      var c = "c"; // should be poped.
+      var d = "d"; // should be poped.
+      continue;
+      a = a + 1;
+      var e = "e"; // should do nothing.
+    }
+    print a;
+  )",
+                     "0.000000");
+}
+
+TEST(ForContinue2, TestCompiler) {
+  // Test nesting use continue.
+  XY_COMPILE_AND_RUN(R"(
+    var a = 0;
+    for (var i = 0; i < 2; i = i + 1) {
+      for (var j = 0; j < 3; j = j + 1) {
+        if (j > 1) {
+          continue;
+        }
+        a = a + 1;
+      }
+      if (i > 0) {
+        continue;
+      }
+      a = a + 1;
+    }
+    print a;
+  )",
+                     "5.000000");
+}
+
 }  // namespace xyxy
