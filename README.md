@@ -1,11 +1,15 @@
 ### xyxy
 
-
+[![Build Status](https://travis-ci.com/landcold7/xyxy.svg?branch=master)](https://travis-ci.com/landcold7/xyxy)
 
 Build:
 
 ```shell
+# Debug build
 bazel build -c dbg //...:all -s --sandbox_debug
+
+# Release build
+bazel build //...:all -s --sandbox_debug
 ```
 
 
