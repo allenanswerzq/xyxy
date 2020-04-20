@@ -3,10 +3,14 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace xyxy {
 
+
+// Forward declaration.
 class Object;
+class Chunk;
 
 // Temporary garbage collector to free all objects, later when we
 // add a real garbage collector, this will be removed.
@@ -16,7 +20,9 @@ static std::vector<Object*>* Collector() {
 }
 
 enum class ObjType {
+  OBJ_UNDEF,
   OBJ_STRING,
+  OBJ_FUNCTION,
 };
 
 class Object {
@@ -28,8 +34,8 @@ class Object {
   ObjType Type() const { return type_; }
 
   bool IsString() { return type_ == ObjType::OBJ_STRING; }
+  bool IsFunction() { return type_ == ObjType::OBJ_FUNCTION; }
 
-  // Must inherted by all subclasses.
   virtual std::string ToString() = 0;
 
  private:
@@ -46,6 +52,38 @@ class ObjString : Object {
 
  private:
   std::string str_;
+};
+
+
+enum FunctionType {
+  FUNCTION_UNDEF,
+  FUNCTION_FUNC,
+  FUNCTION_SCRIPT,
+};
+
+class ObjFunction : Object {
+ public:
+  ObjFunction(const std::string& name, FunctionType type)
+      : Object(ObjType::OBJ_FUNCTION), name_(name), type_(type) {
+    Collector()->push_back(this);
+    chunk_ = std::make_unique<Chunk>();
+  }
+
+  std::string ToString() override { return name_; }
+
+  Chunk* GetChunk() { return chunk_.get(); }
+  void AddArg() { args_num_++; }
+  int ArgNum() { return args_num_; }
+  FunctionType Type() { return type_; }
+
+  // Function name.
+  string name_;
+  // Function type.
+  FunctionType type_;
+  // The number of arguments this function has.
+  int args_num_ = 0;
+  // Bytecode of this function.
+  std::unique_ptr<Chunk> chunk_;
 };
 
 }  // namespace xyxy
