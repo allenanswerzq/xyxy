@@ -5,9 +5,11 @@
 #include <vector>
 
 #include "xyxy/base.h"
-#include "xyxy/type.h"
 
 namespace xyxy {
+
+// Forward declaration.
+class Value;
 
 // A class used to represent bytecode.
 class Chunk {

@@ -68,6 +68,7 @@ class Value {
   bool IsNil() { return type_ == ValueType::VAL_NIL; }
   bool IsFalsey() { return IsNil() || (IsBool() && !AsBool()); }
   bool IsString() { return IsObject() && AsRawObject()->IsString(); }
+  bool IsFunction() { return IsObject() && AsRawObject()->IsFunction(); }
 
   bool AsBool() {
     assert(IsBool());
@@ -98,6 +99,11 @@ class Value {
     return reinterpret_cast<ObjString*>(AsRawObject())->ToString();
   }
 
+  ObjFunction* AsFunction() {
+    assert(IsFunction());
+    return reinterpret_cast<ObjFunction*>(AsRawObject());
+  }
+
   std::string ToString() {
     if (IsBool()) {
       return std::to_string(AsBool());
@@ -120,7 +126,7 @@ class Value {
   }
 };
 
-inline bool is_equal(Value a, Value b) {
+inline static bool is_equal(Value a, Value b) {
   if (a.Type() != b.Type()) {
     return false;
   }

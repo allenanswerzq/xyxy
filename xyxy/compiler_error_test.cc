@@ -1,11 +1,6 @@
-#include "xyxy/compiler.h"
-
-// clang-format off
-
 #include "gtest/gtest.h"
+#include "xyxy/compiler.h"
 #include "xyxy/vm.h"
-
-// clang-format on
 
 namespace xyxy {
 
@@ -55,7 +50,6 @@ TEST(IfElse, DISABLED_TestCompiler) {
 }
 
 TEST(ForBreak, TestCompiler) {
-  // TODO(): This test should fail.
   XY_COMPILE_SHOLD_ERROR(R"(
     var a = 1;
     break;
@@ -63,7 +57,6 @@ TEST(ForBreak, TestCompiler) {
 }
 
 TEST(ForContinue, TestCompiler) {
-  // TODO(): This test should fail.
   XY_COMPILE_SHOLD_ERROR(R"(
     var a = 1;
     continue;

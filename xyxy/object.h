@@ -1,12 +1,13 @@
 #ifndef XYXY_OBJECT_H_
 #define XYXY_OBJECT_H_
 
+#include <memory>
 #include <string>
 #include <vector>
-#include <memory>
+
+#include "xyxy/chunk.h"
 
 namespace xyxy {
-
 
 // Forward declaration.
 class Object;
@@ -42,7 +43,7 @@ class Object {
   ObjType type_;
 };
 
-class ObjString : Object {
+class ObjString : public Object {
  public:
   ObjString(const std::string& str) : Object(ObjType::OBJ_STRING), str_(str) {
     Collector()->push_back(this);
@@ -54,14 +55,13 @@ class ObjString : Object {
   std::string str_;
 };
 
-
 enum FunctionType {
   FUNCTION_UNDEF,
   FUNCTION_FUNC,
   FUNCTION_SCRIPT,
 };
 
-class ObjFunction : Object {
+class ObjFunction : public Object {
  public:
   ObjFunction(const std::string& name, FunctionType type)
       : Object(ObjType::OBJ_FUNCTION), name_(name), type_(type) {
@@ -77,7 +77,7 @@ class ObjFunction : Object {
   FunctionType Type() { return type_; }
 
   // Function name.
-  string name_;
+  std::string name_;
   // Function type.
   FunctionType type_;
   // The number of arguments this function has.

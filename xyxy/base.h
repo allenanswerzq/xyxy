@@ -8,8 +8,6 @@
 
 // #define NDEBUG
 
-#define STACK_SIZE 256
-
 using std::string;
 
 typedef signed char int8;

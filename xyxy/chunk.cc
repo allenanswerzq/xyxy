@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "xyxy/logging.h"
+#include "xyxy/type.h"
 
 namespace xyxy {
 

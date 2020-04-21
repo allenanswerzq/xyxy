@@ -37,6 +37,11 @@ class Stack {
     return *(stk_ + idx);
   }
 
+  void Shrink(int idx) {
+    assert(idx < N);
+    top_ = stk_ + idx;
+  }
+
   int Size() { return top_ - stk_; }
 
   void Set(int idx, const T& val) {

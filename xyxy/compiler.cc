@@ -15,7 +15,7 @@ static PrecedenceRule CreateRule(ParseFunc prefix, ParseFunc infix,
 const std::unordered_map<int, PrecedenceRule>& Compiler::kPrecedenceTable =
     *new std::unordered_map<int, PrecedenceRule>({
         {TOKEN_LEFT_PAREN,
-         CreateRule(&Compiler::ParseGrouping, nullptr, PREC_NONE)},
+         CreateRule(&Compiler::ParseGrouping, &Compiler::ParseCall, PREC_CALL)},
         {TOKEN_RIGHT_PAREN, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_LEFT_BRACE, CreateRule(nullptr, nullptr, PREC_NONE)},
         {TOKEN_RIGHT_BRACE, CreateRule(nullptr, nullptr, PREC_NONE)},
@@ -76,16 +76,18 @@ Compiler::Compiler() {
   scanner_ = std::make_unique<Scanner>();
   curr_ = Token{TOKEN_NONE, 0, 0, 0};
   prev_ = Token{TOKEN_NONE, 0, 0, 0};
-  chunk_ = std::make_unique<Chunk>();
+  function_ = new ObjFunction("__main__", FUNCTION_SCRIPT);
   scopes_.push_back(Scope());
+  locals_.push_back(LocalDef());
 }
 
 Compiler::Compiler(const string& source) {
   scanner_ = std::make_unique<Scanner>(source);
   curr_ = Token{TOKEN_NONE, 0, 0, 0};
   prev_ = Token{TOKEN_NONE, 0, 0, 0};
-  chunk_ = std::make_unique<Chunk>();
+  function_ = new ObjFunction("__main__", FUNCTION_SCRIPT);
   scopes_.push_back(Scope());
+  locals_.push_back(LocalDef());
 }
 
 void Compiler::Compile(const string& source_code) {
@@ -97,6 +99,7 @@ void Compiler::Compile(const string& source_code) {
   while (!Match(TOKEN_EOF)) {
     ParseDeclaration();
   }
+  EmitReturn();
 }
 
 void Compiler::Advance() {
@@ -121,6 +124,7 @@ void Compiler::EmitByte(uint8 byte) { GetChunk()->Write(byte, prev_.line); }
 
 void Compiler::EmitReturn() {
   LOGccc << "Emiting OP_RETURN";
+  EmitByte(OP_NIL);
   EmitByte(OP_RETURN);
 }
 
@@ -320,9 +324,75 @@ void Compiler::ParseDeclaration() {
   if (Match(TOKEN_VAR)) {
     ParseVarDeclaration();
   }
+  else if (Match(TOKEN_FUN)) {
+    ParseFuncDeclaration();
+  }
   else {
     ParseStmt();
   }
+}
+
+uint8 Compiler::ArgumentList() {
+  uint8 arg_count = 0;
+  if (!CheckType(TOKEN_RIGHT_PAREN)) {
+    do {
+      ParseExpression();
+      if (arg_count >= 255) {
+        CHECK(false);
+      }
+      arg_count++;
+    } while (Match(TOKEN_COMMA));
+  }
+
+  Consume(TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+  return arg_count;
+}
+
+void Compiler::ParseCall(bool can_assign) {
+  uint8 arg_count = ArgumentList();
+  EmitByte(OP_CALL, arg_count);
+}
+
+void Compiler::ParseFunction(FunctionType type) {
+  // Create and switch to the new function context.
+  ObjFunction* new_func = new ObjFunction(GetLexeme(prev_), type);
+  ObjFunction* old_function = function_;
+  function_ = new_func;
+
+  BeginScope(SCOPE_FUNC);
+
+  // Compile the parameter list.
+  Consume(TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+  if (!CheckType(TOKEN_RIGHT_PAREN)) {
+    do {
+      new_func->AddArg();
+      ;
+      if (new_func->ArgNum() > 255) {
+        CHECK(false) << "Cannot have more than 255 parameters.";
+      }
+
+      uint8_t arg = HandleVariable("Expect parameter name.");
+      DefineVariable(arg);
+    } while (Match(TOKEN_COMMA));
+  }
+
+  // The body.
+  Consume(TOKEN_LEFT_BRACE, "Expect '{' before function body.");
+  ParseBlock();
+
+  LOGvvv << "Emiting OP_CONSTANT to push a function onto the stack";
+  uint8 index = MakeConstant(Value(GetFunction()));
+  EmitByte(OP_CONSTANT, index);
+
+  // Restore back the function pointer.
+  function_ = old_function;
+}
+
+void Compiler::ParseFuncDeclaration() {
+  uint8 global = HandleVariable("Expect Function name");
+  MarkVaribleInitialized();
+  ParseFunction(FUNCTION_FUNC);
+  DefineVariable(global);
 }
 
 uint8 Compiler::IdentifierConstant(const string& name) {
@@ -343,7 +413,7 @@ void Compiler::DeclareLocals() {
   if (scope_depth_ == 0) return;
 
   if (locals_.size() >= UINT8_MAX) {
-    CHECK(false) << "Too many local variables defined";
+    CHECK(false) << "Too many local variables defined.";
   }
   for (size_t i = locals_.size(); i >= 1; i--) {
     if (locals_[i - 1].depth != kLocalUnitialized &&
@@ -379,12 +449,17 @@ void Compiler::ParseVarDeclaration() {
   DefineVariable(global);
 }
 
+void Compiler::MarkVaribleInitialized() {
+  if (scope_depth_ == 0) return;
+  // Mark the local variable as initialized.
+  CHECK(!locals_.empty());
+  LOGccc << "Initializing local variable: " << locals_.back().name;
+  locals_.back().depth = scope_depth_;
+}
+
 void Compiler::DefineVariable(uint8 global) {
   if (scope_depth_ > 0) {
-    // Mark the local variable as initialized.
-    CHECK(!locals_.empty());
-    LOGccc << "Initializing local variable: " << locals_.back().name;
-    locals_.back().depth = scope_depth_;
+    MarkVaribleInitialized();
   }
   else {
     // This is a global variable.
@@ -461,6 +536,9 @@ void Compiler::ParseStmt() {
   else if (Match(TOKEN_IF) || Match(TOKEN_ELIF)) {
     ParseIfStmt();
   }
+  else if (Match(TOKEN_RETURN)) {
+    ParseReturnStmt();
+  }
   else if (Match(TOKEN_WHILE)) {
     ParseWhileStmt();
   }
@@ -480,6 +558,20 @@ void Compiler::ParseStmt() {
   }
   else {
     ParseExpressStmt();
+  }
+}
+
+void Compiler::ParseReturnStmt() {
+  if (function_->Type() == FUNCTION_SCRIPT) {
+    CHECK(false);
+  }
+  if (Match(TOKEN_SEMICOLON)) {
+    EmitReturn();
+  }
+  else {
+    ParseExpression();
+    Consume(TOKEN_SEMICOLON, "Expect ';' after return value.");
+    EmitByte(OP_RETURN);
   }
 }
 
@@ -709,7 +801,6 @@ std::string DebugScope(Scope sp) {
 
 void Compiler::BeginScope(ScopeType type) {
   scope_depth_ = scopes_.size();
-  // Don't know the end_pc yet, will refill after we know it.
   scopes_.push_back(Scope(type,
                           /*start_pc=*/GetChunk()->size(),
                           /*start_ln=*/prev_.line,

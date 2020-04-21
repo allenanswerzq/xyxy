@@ -97,6 +97,7 @@ class Compiler {
   void ParseVarDeclaration();
   void ParseVariable(bool can_assign);
   void NamedVariable(bool can_assign);
+  void ParseCall(bool can_assign);
   void ParseStmt();
   void ParsePrintStmt();
   void ParseExpressStmt();
@@ -122,13 +123,20 @@ class Compiler {
   void ParseWhileStmt();
   void ParseContinueStmt();
   void ParseBreakStmt();
+  void ParseReturnStmt();
+
+  uint8 ArgumentList();
+  void ParseFunction(FunctionType type);
+  void ParseFuncDeclaration();
+  void MarkVaribleInitialized();
 
   // Continue parsing until read a token that has a higher precedence.
   void ParseUntilHigherOrder(PrecOrder prec_order);
 
   string GetLexeme(Token tt);
 
-  Chunk* GetChunk() { return chunk_.get(); }
+  Chunk* GetChunk() { return GetFunction()->GetChunk(); }
+  ObjFunction* GetFunction() { return function_; }
 
   Token PrevToken() { return prev_; }
   Token CurrToken() { return curr_; }
@@ -153,13 +161,12 @@ class Compiler {
  private:
   Token curr_;
   Token prev_;
-  std::unique_ptr<Chunk> chunk_;
   std::unique_ptr<Scanner> scanner_;
   int scope_depth_ = 0;
   std::vector<Scope> scopes_;
   std::vector<LocalDef> locals_;
-  // bool has_error_ = false;
-  // bool panic_mode_ = false;
+
+  ObjFunction* function_;
 };
 }  // namespace xyxy
 

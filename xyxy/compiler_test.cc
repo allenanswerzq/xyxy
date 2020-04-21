@@ -9,7 +9,7 @@ static Token CreateToken(TokenType type, int start, int len, int line) {
   return Token{type, start, len, line};
 }
 
-TEST(TokenParse, TestCompiler) {
+TEST(ParseToken, TestCompiler) {
   string source = "      ! (5 - 4 > 3 * 2 == ! nil) ";
   std::unique_ptr<Compiler> compiler = std::make_unique<Compiler>(source);
   auto chunk = compiler->GetChunk();
@@ -36,14 +36,15 @@ TEST(TokenParse, TestCompiler) {
   EXPECT_EQ(chunk->GetByte(1), 1);
   EXPECT_EQ(chunk->GetByte(2), 2);
   compiler->EmitReturn();
-  EXPECT_EQ(chunk->GetByte(3), uint8(OP_RETURN));
+  EXPECT_EQ(chunk->GetByte(3), uint8(OP_NIL));
+  EXPECT_EQ(chunk->GetByte(4), uint8(OP_RETURN));
   // The first value has index 0.
   EXPECT_EQ(compiler->MakeConstant(Value(1.23)), 0);
   EXPECT_EQ(compiler->MakeConstant(Value(false)), 1);
   EXPECT_EQ(compiler->MakeConstant(XYXY_NIL), 2);
   // Test emit a constant.
   compiler->EmitConstant(Value(4.56));
-  EXPECT_EQ(chunk->GetByte(4), uint8(OP_CONSTANT));
+  EXPECT_EQ(chunk->GetByte(5), uint8(OP_CONSTANT));
   // Since EmitConstant will add one value into chunk.
   // here the index should be 4.
   EXPECT_EQ(compiler->MakeConstant(XYXY_NIL), 4);
@@ -65,7 +66,7 @@ TEST(Basic, TestCompiler) {
 
   EXPECT_EQ(chunk->GetByte(4), uint8(OP_CONSTANT));
 
-  VM vm(chunk);
+  VM vm(compiler.GetFunction());
   vm.Run();
   EXPECT_EQ(vm.FinalResult(), "-9.000000");
   EXPECT_TRUE(vm.GetStack().Empty());
@@ -76,7 +77,7 @@ TEST(Basic, TestCompiler) {
 #define XY_COMPILE_AND_RUN(source, result) \
   Compiler compiler;                       \
   compiler.Compile(source);                \
-  VM vm(compiler.GetChunk());              \
+  VM vm(compiler.GetFunction());              \
   vm.Run();                                \
   EXPECT_EQ(vm.FinalResult(), result);     \
   if (!vm.GetStack().Empty()) {            \
@@ -93,7 +94,7 @@ TEST(CompileMultipleStmts, TestCompiler) {
   compiler.Compile("print 1 + 2;");
   compiler.Compile("print 1 + 3;");
   compiler.Compile("print 1 + 2 * 10 - (2 + 3) * 6;");
-  VM vm(compiler.GetChunk());
+  VM vm(compiler.GetFunction());
   vm.Run();
   EXPECT_EQ(vm.FinalResult(), "-9.000000");
   EXPECT_TRUE(vm.GetStack().Empty());
@@ -384,7 +385,7 @@ TEST(WhileStmt, TestCompiler) {
     }
     print a;
   )",
-                     "10.000000");
+                     "10.000000")
 }
 
 TEST(WhileFalseStmt, TestCompiler) {
@@ -396,7 +397,7 @@ TEST(WhileFalseStmt, TestCompiler) {
     }
     print a;
   )",
-                     "10.000000");
+                     "10.000000")
 }
 
 TEST(ForStmt, TestCompiler) {
@@ -408,7 +409,7 @@ TEST(ForStmt, TestCompiler) {
     }
     print a;
   )",
-                     "10.000000");
+                     "10.000000")
 }
 
 TEST(MultipleForStmt, TestCompiler) {
@@ -422,7 +423,7 @@ TEST(MultipleForStmt, TestCompiler) {
     }
     print a;
   )",
-                     "100.000000");
+                     "100.000000")
 }
 
 TEST(MultipleForStmt1, TestCompiler) {
@@ -438,7 +439,7 @@ TEST(MultipleForStmt1, TestCompiler) {
     }
     print a;
   )",
-                     "1000.000000");
+                     "1000.000000")
 }
 
 TEST(ForStmt1, TestCompiler) {
@@ -451,7 +452,7 @@ TEST(ForStmt1, TestCompiler) {
     }
     print a;
   )",
-                     "10.000000");
+                     "10.000000")
 }
 
 TEST(ForStmt2, TestCompiler) {
@@ -465,7 +466,7 @@ TEST(ForStmt2, TestCompiler) {
     }
     print a;
   )",
-                     "10.000000");
+                     "10.000000")
 }
 
 TEST(ForBreak0, TestCompiler) {
@@ -477,7 +478,7 @@ TEST(ForBreak0, TestCompiler) {
     }
     print a;
   )",
-                     "0.000000");
+                     "0.000000")
 }
 
 TEST(ForBreak1, TestCompiler) {
@@ -499,7 +500,7 @@ TEST(ForBreak1, TestCompiler) {
     }
     print a;
   )",
-                     "1.000000");
+                     "1.000000")
 }
 
 TEST(ForBreak2, TestCompiler) {
@@ -514,7 +515,7 @@ TEST(ForBreak2, TestCompiler) {
     }
     print a;
   )",
-                     "11.000000");
+                     "11.000000")
 }
 
 TEST(ForBreak3, TestCompiler) {
@@ -536,7 +537,7 @@ TEST(ForBreak3, TestCompiler) {
     }
     print a;
   )",
-                     "3.000000");
+                     "3.000000")
 }
 
 TEST(ForBreak4, TestCompiler) {
@@ -562,7 +563,7 @@ TEST(ForBreak4, TestCompiler) {
     }
     print a;
   )",
-                     "3.000000");
+                     "3.000000")
 }
 
 TEST(ForBreak5, TestCompiler) {
@@ -591,7 +592,7 @@ TEST(ForBreak5, TestCompiler) {
     }
     print a;
   )",
-                     "11.000000");
+                     "11.000000")
 }
 
 TEST(ForBreak6, TestCompiler) {
@@ -622,7 +623,7 @@ TEST(ForBreak6, TestCompiler) {
     }
     print a;
   )",
-                     "3.000000");
+                     "3.000000")
 }
 
 TEST(ForContinue, TestCompiler) {
@@ -635,7 +636,7 @@ TEST(ForContinue, TestCompiler) {
     }
     print a;
   )",
-                     "0.000000");
+                     "0.000000")
 }
 
 TEST(ForContinue1, TestCompiler) {
@@ -652,7 +653,7 @@ TEST(ForContinue1, TestCompiler) {
     }
     print a;
   )",
-                     "0.000000");
+                     "0.000000")
 }
 
 TEST(ForContinue2, TestCompiler) {
@@ -673,7 +674,7 @@ TEST(ForContinue2, TestCompiler) {
     }
     print a;
   )",
-                     "5.000000");
+                     "5.000000")
 }
 
 }  // namespace xyxy

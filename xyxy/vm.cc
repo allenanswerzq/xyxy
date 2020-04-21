@@ -5,129 +5,91 @@
 
 namespace xyxy {
 
-const int Inst::kDumpWidth = 20;
+#define OPCODE_NAME(opcode) #opcode
 
-void Inst::DebugInfo() {
-  std::string ret;
-  char buf[64];
-  snprintf(buf, 64, "%010d", address_);
-  ret += string(buf);
-  ret += " ";
-  ret += name_;
-  ret += string(kDumpWidth - name_.size(), ' ');
-  for (size_t i = 0; i < operands_.size(); i++) {
-    Value val = operands_[i];
-    ret += val.ToString();
+#define SIMPLE_INST(opcode)                             \
+  case opcode: {                                        \
+    std::string name = OPCODE_NAME(opcode);             \
+    dis += name;                                        \
+    dis += std::string(kDisassWidth - dis.size(), ' '); \
+    LOGvv << dis;                                       \
+    if (opcode == OP_RETURN) return;                    \
+    break;                                              \
   }
-  for (size_t i = 0; i < metadata_.size(); i++) {
-    if (i > 0) {
-      ret += " ";
+
+#define CONSTANT_INST(opcode)                           \
+  case opcode: {                                        \
+    std::string name = OPCODE_NAME(opcode);             \
+    dis += name;                                        \
+    dis += std::string(kDisassWidth - dis.size(), ' '); \
+    dis += ReadConstant().ToString();                   \
+    LOGvv << dis;                                       \
+    break;                                              \
+  }
+
+#define JUMP_INST(opcode) SIMPLE_INST(opcode)
+#define BYTE_INST(opcode) SIMPLE_INST(opcode)
+
+void VM::DisassFrame(CallFrame frame) {
+  LOGvv << "-------------Raw Code----------------";
+  CallFrame curr = curr_frame_;
+  for (; curr_frame_.ip < GetChunk()->size(); ) {
+    uint8 inst = ReadByte();
+    string dis;
+    char buf[64];
+    snprintf(buf, 64, "%010d ", curr_frame_.ip);
+    dis += string(buf);
+    switch (inst) {
+      CONSTANT_INST(OP_CONSTANT)
+      CONSTANT_INST(OP_GET_GLOBAL)
+      CONSTANT_INST(OP_DEFINE_GLOBAL)
+      CONSTANT_INST(OP_SET_GLOBAL)
+      SIMPLE_INST(OP_NIL)
+      SIMPLE_INST(OP_TRUE)
+      SIMPLE_INST(OP_FALSE)
+      SIMPLE_INST(OP_POP)
+      BYTE_INST(OP_GET_LOCAL)
+      BYTE_INST(OP_SET_LOCAL)
+      SIMPLE_INST(OP_EQUAL)
+      SIMPLE_INST(OP_GREATER)
+      SIMPLE_INST(OP_LESS)
+      SIMPLE_INST(OP_ADD)
+      SIMPLE_INST(OP_SUB)
+      SIMPLE_INST(OP_MUL)
+      SIMPLE_INST(OP_DIV)
+      SIMPLE_INST(OP_NOT)
+      SIMPLE_INST(OP_NEGATE)
+      SIMPLE_INST(OP_PRINT)
+      JUMP_INST(OP_JUMP)
+      JUMP_INST(OP_JUMP_IF_FALSE)
+      JUMP_INST(OP_LOOP)
+      SIMPLE_INST(OP_RETURN)
+      default: {
+        CHECK(false) << "Unknown opcode: " << inst;
+        break;
+      }
     }
-    ret += std::to_string(metadata_[i]);
   }
-  LOGvv << ret;
+  curr_frame_ = curr;
+  LOGvv << "---------------------------------------";
 }
 
-#define DEFINE_INST(opcode, length) DEFINE_INST_HELPER(#opcode, opcode, length)
-
-#define DEFINE_INST_HELPER(name, opcode, length) \
-  class Inst_##opcode : public Inst {            \
-   public:                                       \
-    Inst_##opcode() {                            \
-      this->opcode_ = opcode;                    \
-      this->name_ = name;                        \
-      this->length_ = length;                    \
-    }                                            \
-  };
-
-DEFINE_INST(OP_RETURN, 1)
-DEFINE_INST(OP_CONSTANT, 2)
-DEFINE_INST(OP_NEGATE, 1)
-DEFINE_INST(OP_ADD, 1)
-DEFINE_INST(OP_SUB, 1)
-DEFINE_INST(OP_MUL, 1)
-DEFINE_INST(OP_DIV, 1)
-DEFINE_INST(OP_NIL, 1)
-DEFINE_INST(OP_TRUE, 1)
-DEFINE_INST(OP_FALSE, 1)
-DEFINE_INST(OP_NOT, 1)
-DEFINE_INST(OP_EQUAL, 1)
-DEFINE_INST(OP_GREATER, 1)
-DEFINE_INST(OP_LESS, 1)
-DEFINE_INST(OP_PRINT, 1)
-DEFINE_INST(OP_POP, 1)
-DEFINE_INST(OP_DEFINE_GLOBAL, 2)
-DEFINE_INST(OP_SET_GLOBAL, 2)
-DEFINE_INST(OP_GET_GLOBAL, 2)
-DEFINE_INST(OP_SET_LOCAL, 2)
-DEFINE_INST(OP_GET_LOCAL, 2)
-DEFINE_INST(OP_JUMP_IF_FALSE, 3)
-DEFINE_INST(OP_JUMP, 3)
-DEFINE_INST(OP_LOOP, 3)
-
-VM::VM(Chunk* chunk) : chunk_(chunk) { pc_ = 0; }
-
-#define CREATE_INST_INSTANCE(inst)          \
-  case inst: {                              \
-    return std::make_unique<Inst_##inst>(); \
+void VM::DumpStack() {
+  LOGvv << "-------------DUMP STACK----------------";
+  for (int i = 0; i < stack_.Size(); i++) {
+    LOGvv << stack_.Get(i).ToString();
   }
-
-static std::unique_ptr<Inst> DispatchInst(uint8 opcode) {
-  switch (opcode) {
-    CREATE_INST_INSTANCE(OP_RETURN)
-    CREATE_INST_INSTANCE(OP_CONSTANT)
-    CREATE_INST_INSTANCE(OP_NEGATE)
-    CREATE_INST_INSTANCE(OP_ADD)
-    CREATE_INST_INSTANCE(OP_SUB)
-    CREATE_INST_INSTANCE(OP_MUL)
-    CREATE_INST_INSTANCE(OP_DIV)
-    CREATE_INST_INSTANCE(OP_NIL)
-    CREATE_INST_INSTANCE(OP_TRUE)
-    CREATE_INST_INSTANCE(OP_FALSE)
-    CREATE_INST_INSTANCE(OP_NOT)
-    CREATE_INST_INSTANCE(OP_EQUAL)
-    CREATE_INST_INSTANCE(OP_GREATER)
-    CREATE_INST_INSTANCE(OP_LESS)
-    CREATE_INST_INSTANCE(OP_PRINT)
-    CREATE_INST_INSTANCE(OP_POP)
-    CREATE_INST_INSTANCE(OP_DEFINE_GLOBAL)
-    CREATE_INST_INSTANCE(OP_SET_GLOBAL)
-    CREATE_INST_INSTANCE(OP_GET_GLOBAL)
-    CREATE_INST_INSTANCE(OP_SET_LOCAL)
-    CREATE_INST_INSTANCE(OP_GET_LOCAL)
-    CREATE_INST_INSTANCE(OP_JUMP_IF_FALSE)
-    CREATE_INST_INSTANCE(OP_JUMP)
-    CREATE_INST_INSTANCE(OP_LOOP)
-    default: {
-      CHECK(false);
-      break;
-    }
-  }
-  return nullptr;
+  LOGvv << "---------------------------------------";
 }
 
-// TODO(): refact this function.
-std::unique_ptr<Inst> VM::CreateInst(uint8 offset) {
-  OpCode byte = (OpCode)chunk_->GetByte(offset);
-  auto inst = DispatchInst(byte);
-  inst->address_ = offset;
-  if (byte == OP_SET_LOCAL || byte == OP_GET_LOCAL) {
-    CHECK(inst->metadata_.empty());
-    inst->metadata_.push_back(chunk_->GetByte(offset + 1));
-  }
-  else if (byte == OP_JUMP_IF_FALSE || byte == OP_JUMP || byte == OP_LOOP) {
-    CHECK(inst->metadata_.empty());
-    inst->metadata_.push_back(chunk_->GetByte(offset + 1));
-    inst->metadata_.push_back(chunk_->GetByte(offset + 2));
-  }
-  else {
-    for (int i = 1; i <= inst->Length() - 1; i++) {
-      int index = chunk_->GetByte(offset + i);
-      Value val = chunk_->GetConstant(index);
-      inst->AddOperand(val);
-    }
-  }
-  return inst;
+VM::VM(ObjFunction* function) {
+  stack_.Push(Value(function));
+  CallFrame frame;
+  frame.function = function;
+  frame.ip = 0;
+  frame.offset = 1;
+  frames_.push_back(frame);
+  curr_frame_ = frame;
 }
 
 #define BINARY_OP(op)                                                \
@@ -151,37 +113,98 @@ std::unique_ptr<Inst> VM::CreateInst(uint8 offset) {
     }                                                                \
   } while (false)
 
-void VM::DumpInsts() {
-  LOGvv << "-------------RAW CODE-------------------";
-  for (int pc = 0; pc < chunk_->size();) {
-    auto inst = CreateInst(pc);
-    inst->DebugInfo();
-    pc += inst->Length();
+Status VM::Call(Value* callee, int arg_count) {
+  CHECK(callee->IsObject());
+  if (callee->IsFunction()) {
+    return Call(callee->AsFunction(), arg_count);
   }
-  LOGvv << "---------------------------------------";
+  return Status();
 }
 
-void VM::DumpStack() {
-  LOGvv << "-------------DUMP STACK----------------";
-  for (int i = 0; i < stack_.Size(); i++) {
-    LOGvv << stack_.Get(i).ToString();
+Status VM::Call(ObjFunction* func, int arg_count) {
+  if (arg_count != func->ArgNum()) {
+    CHECK(false);
   }
-  LOGvv << "---------------------------------------";
+  if (frames_.size() == FRAME_MAX) {
+    CHECK(false);
+  }
+  CallFrame frame;
+  frame.function = func;
+  frame.ip = 0;
+  frame.offset = stack_.Size() - arg_count - 1;
+  frames_.push_back(frame);
+  curr_frame_ = frames_.back();
+  return Status();
 }
 
 Status VM::Run() {
-  DumpInsts();
-  for (; pc_ < chunk_->size();) {
-    auto inst = CreateInst(pc_);
-    inst->DebugInfo();
-    switch (inst->opcode_) {
-      case OP_RETURN: {
+  // DisassFrame(curr_frame_);
+  for (;;) {
+    uint8 inst = ReadByte();
+    switch (inst) {
+      case OP_CONSTANT: {
+        Value val = ReadConstant();
+        LOGcc << "Define constant: " << val.ToString();
+        stack_.Push(val);
         break;
       }
-      case OP_CONSTANT: {
-        CHECK(!inst->operands_.empty());
-        LOGcc << "Define constant: " << inst->operands_[0].ToString();
-        stack_.Push(inst->operands_[0]);
+      case OP_NIL: {
+        stack_.Push(Value());
+        break;
+      }
+      case OP_TRUE: {
+        stack_.Push(Value(true));
+        break;
+      }
+      case OP_FALSE: {
+        stack_.Push(Value(false));
+        break;
+      }
+      case OP_POP: {
+        LOGcc << "Pop out: " << stack_.Top().ToString();
+        stack_.Pop();
+        break;
+      }
+      case OP_GET_LOCAL: {
+        uint8 slot = ReadByte();
+        auto val = GetFrame(slot);
+        LOGcc << "Get local: " << val.ToString();
+        stack_.Push(val);
+        break;
+      }
+      case OP_SET_LOCAL: {
+        uint8 slot = ReadByte();
+        auto val = stack_.Top();
+
+        LOGcc << "Set local: " << val.ToString();
+        SetFrame(slot, val);
+        break;
+      }
+      case OP_GET_GLOBAL: {
+        string name = ReadConstant().AsString();
+        Value val;
+        if (!global_.Find(name, &val)) {
+          CHECK(false);
+        }
+        LOGcc << "Get global: " << name << " " << val.ToString();
+        stack_.Push(val);
+        break;
+      }
+      case OP_DEFINE_GLOBAL: {
+        string name = ReadConstant().AsString();
+        LOGcc << "Define global: " << name << " " << stack_.Top().ToString();
+        global_.Insert(name, stack_.Pop());
+        break;
+      }
+      case OP_SET_GLOBAL: {
+        string name = ReadConstant().AsString();
+        if (!global_.Find(name)) {
+          CHECK(false);
+        }
+
+        LOGcc << "Set global: " << name << " " << stack_.Top().ToString();
+
+        global_.Insert(name, stack_.Top());
         break;
       }
       case OP_NEGATE: {
@@ -193,7 +216,6 @@ Status VM::Run() {
         break;
       }
       case OP_ADD: {
-        // TODO(): support a += b.
         if (stack_.Top().IsString()) {
           auto lhs = stack_.Pop();
           auto rhs = stack_.Pop();
@@ -203,7 +225,7 @@ Status VM::Run() {
           }
           string a = lhs.AsString();
           string b = rhs.AsString();
-          // NOTE: the order here must be `b + a`.
+
           b += a;
           stack_.Push(Value(new ObjString(b)));
         }
@@ -224,18 +246,6 @@ Status VM::Run() {
         BINARY_OP(/);
         break;
       }
-      case OP_NIL: {
-        stack_.Push(XYXY_NIL);
-        break;
-      }
-      case OP_TRUE: {
-        stack_.Push(Value(true));
-        break;
-      }
-      case OP_FALSE: {
-        stack_.Push(Value(false));
-        break;
-      }
       case OP_NOT: {
         stack_.Push(Value(stack_.Pop().IsFalsey()));
         break;
@@ -253,103 +263,62 @@ Status VM::Run() {
         break;
       }
       case OP_PRINT: {
-        final_print_ = stack_.Top().ToString();
-        printf("%s\n", stack_.Pop().ToString().c_str());
-        LOGcc << "Stack size after print: " << stack_.Size();
-        break;
-      }
-      case OP_POP: {
-        LOGcc << "Pop out: " << stack_.Top().ToString();
-        stack_.Pop();
-        break;
-      }
-      case OP_DEFINE_GLOBAL: {
-        // Pop one value out from stack and assign it as the global variable.
-        CHECK(!inst->operands_.empty());
-        std::string var_name = inst->operands_[0].ToString();
-        LOGcc << "Define global: " << var_name << " "
-              << stack_.Top().ToString();
-        global_.Insert(var_name, stack_.Pop());
-        break;
-      }
-      case OP_GET_GLOBAL: {
-        CHECK(!inst->operands_.empty());
-        string var_name = inst->operands_[0].ToString();
-        Value val;
-        if (!global_.Find(var_name, &val)) {
-          // TODO(): Error handling
-          CHECK(false);
-        }
-        LOGcc << "Get global: " << var_name << " " << val.ToString();
-        stack_.Push(val);
-        break;
-      }
-      case OP_SET_GLOBAL: {
-        CHECK(!inst->operands_.empty());
-        string var_name = inst->operands_[0].ToString();
-        if (!global_.Find(var_name)) {
-          // TODO(): Error handling
-          CHECK(false);
-        }
-        // Sets to a new value.
-        LOGcc << "Set global: " << var_name << " " << stack_.Top().ToString();
-        // NOTE: here we dont pop the value from stack.
-        global_.Insert(var_name, stack_.Top());
-        break;
-      }
-      case OP_GET_LOCAL: {
-        CHECK(!inst->metadata_.empty());
-        uint8 slot = inst->metadata_[0];
-        LOGcc << "Get local: " << stack_.Get(slot).ToString();
-        stack_.Push(stack_.Get(slot));
-        break;
-      }
-      case OP_SET_LOCAL: {
-        CHECK(!inst->metadata_.empty());
-        uint8 slot = inst->metadata_[0];
-        // NOTE: here we dont pop the value from stack.
-        LOGcc << "Set local: " << stack_.Top().ToString();
-        stack_.Set(slot, stack_.Top());
-        break;
-      }
-      case OP_JUMP_IF_FALSE: {
-        auto meta = inst->metadata_;
-        CHECK(meta.size() == 2);
-        uint16_t count = (uint16_t)((meta[0] << 8) | meta[1]);
-        // Also skip the inst itself.
-        count += inst->Length();
-        if (stack_.Top().IsFalsey()) {
-          pc_ += count;
-          LOGcc << "Jump over " << count << " to " << pc_;
-          continue;
-        }
+        auto val = stack_.Pop();
+        final_print_ = val.ToString();
+        printf("%s\n", val.ToString().c_str());
         break;
       }
       case OP_JUMP: {
-        auto meta = inst->metadata_;
-        CHECK(meta.size() == 2);
-        uint16_t count = (uint16_t)((meta[0] << 8) | meta[1]);
-        count += inst->Length();
-        pc_ += count;
-        LOGcc << "Jump over " << count << " to " << pc_;
-        continue;
+        uint16 offset = ReadShort();
+        curr_frame_.ip += offset;
+        LOGcc << "Jump over " << offset << " to " << curr_frame_.ip;
+      }
+      case OP_JUMP_IF_FALSE: {
+        uint16 offset = ReadShort();
+        if (stack_.Top().IsFalsey()) {
+          curr_frame_.ip += offset;
+          LOGcc << "Jump over " << offset << " to " << curr_frame_.ip;
+        }
+        break;
       }
       case OP_LOOP: {
-        auto meta = inst->metadata_;
-        CHECK(meta.size() == 2);
-        uint16_t count = (uint16_t)((meta[0] << 8) | meta[1]);
-        pc_ -= count;
-        LOGcc << "Jump back " << count << " to " << pc_;
+        uint16 offset = ReadShort();
+        curr_frame_.ip -= offset;
+        LOGcc << "Jump back " << offset << " to " << curr_frame_.ip;
         continue;
       }
+      case OP_CALL: {
+        int arg_count = ReadByte();
+        auto val = GetFrame(arg_count);
+        if (Call(&val, arg_count) != Status()) {
+          CHECK(false);
+        }
+        curr_frame_ = frames_.back();
+        break;
+      }
+      case OP_RETURN: {
+        LOGcc << "Returning from " << curr_frame_.function->ToString();
+        auto ret = stack_.Pop();
+        frames_.pop_back();
+        if (frames_.empty()) {
+          stack_.Pop();
+          return Status();
+        }
+
+        stack_.Shrink(curr_frame_.offset);
+        stack_.Push(ret);
+        curr_frame_ = frames_.back();
+        if (!stack_.Empty()) {
+          DumpStack();
+        }
+        break;
+      }
       default: {
-        CHECK(false) << "Unkown inst to run with pc: " << pc_;
+        CHECK(false) << "Unkown inst to run.";
         break;
       }
     }
-    pc_ += inst->Length();
   }
   return Status();
 }
-
 }  // namespace xyxy
